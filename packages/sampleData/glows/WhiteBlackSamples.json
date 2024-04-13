@@ -1,0 +1,94 @@
+{
+    "Reference": {
+        "glowType": "long",
+        "startTime": 0,
+        "endTime": 0
+    },
+    "set1": {
+        "1": {
+            "glowType": "short",
+            "startDate": "March 21, 2024 9:51:16 PM PST",
+            "startTime": 1711083076000,
+            "endTime": 1711087332000
+        }
+    },
+    "set2": {
+        "1": {
+            "glowType": "short",
+            "startDate": "March 10, 2024 7:44:59 AM PST",
+            "startTime": 1710081899000,
+            "endTime": 1710086160000
+        },
+        "2": {
+            "glowType": "long",
+            "startDate": "March 4, 2024 10:55:29 AM PST",
+            "startTime": 1709578529000,
+            "endTime": 1709588341000
+        },
+        "3": {
+            "glowType": "short",
+            "startDate": "February 27, 2024 4:38:41 PM PST",
+            "startTime": 1709080721000,
+            "endTime": 1709084971000
+        },
+        "4": {
+            "glowType": "long",
+            "startDate": "February 21, 2024 8:49:10 PM PST",
+            "startTime": 1708577350000,
+            "endTime": 1708587162000
+        }
+    },
+    "set3": {
+        "1": {
+            "glowType": "long",
+            "startDate": "February 10, 2024 6:42:40 AM PST",
+            "startTime": 1707576160000,
+            "endTime": 1707585986000
+        },
+        "2": {
+            "glowType": "short",
+            "startDate": "February 4, 2024 12:26:08 PM PST",
+            "startTime": 1707078368000,
+            "endTime": 1707082604000
+        },
+        "3": {
+            "glowType": "long",
+            "startDate": "January 29, 2024 4:36:19 PM PST",
+            "startTime": 1706574979000,
+            "endTime": 1706584804000
+        },
+        "4": {
+            "glowType": "short",
+            "startDate": "January 23, 2024 10:19:34 PM PST",
+            "startTime": 1706077174000,
+            "endTime": 1706081427000
+        }
+    },
+    "set4": {
+        "1": {
+            "glowType": "long",
+            "startDate": "January 6, 2024 12:23:40 PM PST",
+            "startTime": 1704572620000,
+            "endTime": 1704582437000
+        },
+        "2": {
+            "glowType": "short",
+            "startDate": "December 31, 2023 6:06:51 PM PST",
+            "startTime": 1704074811000,
+            "endTime": 1704079066000
+        },
+        "3": {
+            "glowType": "long",
+            "startDate": "December 25, 2023 10:17:22 PM PST",
+            "startTime": 1703571442000,
+            "endTime": 1703581262000
+        },
+        "4": {
+            "glowType": "short",
+            "startDate": "December 20, 2023 4:00:32 AM PST",
+            "startTime": 1703073632000,
+            "endTime": 1703077888000
+        }
+    }
+
+}

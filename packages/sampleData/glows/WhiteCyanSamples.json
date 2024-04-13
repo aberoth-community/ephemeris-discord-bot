@@ -1,0 +1,194 @@
+{
+    "Reference": {
+        "glowType": "long",
+        "startTime": 0,
+        "endTime": 0
+    },
+    "set1": {
+        "1": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "2": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "3": {
+            "glowType": "long",
+            "startDate": "", 
+            "startTime": 0,
+            "endTime": 0
+        },
+        "4": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "5": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "6": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "7": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "8": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "9": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "10": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        }
+    },
+    "set2": {
+        "1": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "2": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "3": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "4": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "5": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "6": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "7": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "8": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "9": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "10": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        }
+    },
+    "set3": {
+        "1": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "2": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "3": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "4": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "5": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "6": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "7": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "8": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "9": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        },
+        "10": {
+            "glowType": "long",
+            "startDate": "",
+            "startTime": 0,
+            "endTime": 0
+        }
+    }
+
+}
