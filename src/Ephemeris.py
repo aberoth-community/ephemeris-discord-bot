@@ -1,10 +1,13 @@
 
 import json
 import numpy as np
+import bisect
 
 class Ephemeris:
     # add function to re calibrate and re calc cached events
     def __init__(self) -> None:
+        self.glowThresh = 0.5
+        self.darkThresh = 1
         self.variablesFile = "src\\variables.json"
         self.v = self.getVariables(self.variablesFile)
         self.periods = self.getPeriods()
@@ -14,24 +17,79 @@ class Ephemeris:
         self.setRefPositions()
         self.refPositions = self.getRefPositions()
         
-        print(self.posRelCandle(1714005444000))
+        # Boolean that indicates if orb is aligned
+        # Ordered as ['shadow', 'white', 'black', 'green', 'red', 'purple', 'yellow', 'cyan', 'blue']
+        self.alignmentStates = np.full(9, False)
+        self.lastAlignmentStates = np.full(9, False)
+        # self.lastAlignmentStates = [False, True, True, False, True, True, True, False, True]
+        self.eventsCache = []
+        self.setAlignmentStates(1713885673000)
+        self.createAlignmentEvent(1713885673000)
+        print(self.eventsCache)
+        #print(self.calcAlignmentDifs(self.posRelCandle(1714005444000)))
     
-    def checkAlignmentChange(self):
-        # names = [shadow, white, black, green, etc]
-        # outline of check set up
-        # blkAlignments = [3:-1] - [2]
-        # for range in blkAlignments
-        #     if range < thresh and change state:
-        #         add change state event
-        # greenAlignments = [4:-1] - [3]
-        # for range in greenAlignments
-        #     if range < thresh and change state:
-        #         add change state event
+    def createEventRange(self, startTime, stopTime, cache=False):
         pass
+    
+    def getEventsInRange(self, timeStart, timeEnd):
+        # bisect O(log(n)), total O(2log(n))
+        startIndex = bisect.bisect_left(self.eventsCache, (timeStart,))
+        stopIndex = bisect.bisect_right(self.eventsCache, (timeEnd,))
+        return [events for _, events in self.eventsCache[startIndex:stopIndex]]
+    
+    def createAlignmentEvent(self, timestamp):
+        names = ['Shadow', 'White', 'Black', 'Green', 'Red', 'Purple', 'Yellow', 'Cyan', 'Blue']
+        darkList = []
+        glowList = []
+        returnedToNormal = []
+        aligned = []
+        stillAligned = []
+        for i, v in enumerate(self.alignmentStates):
+            if v != self.lastAlignmentStates[i]:
+                # if changed to being aligned
+                if v == True:
+                    aligned.append(names[i])
+                # if changed to being unaligned
+                else: returnedToNormal.append(names[i])
+            # if still aligned
+            elif v == True: stillAligned.append(names[i])
+            
+        if len(aligned) > 0 and (aligned[0] == names[0] or (len(stillAligned) > 0 and stillAligned[0] == names[0])): 
+            darkList.extend(aligned)
+            if len(stillAligned) > 0 and not self.lastAlignmentStates[0]: 
+                darkList.extend(stillAligned)
+        elif len(returnedToNormal) > 0 and returnedToNormal[0] == names[0]:
+            if len(aligned) > 0: glowList.extend(aligned)
+            if len(stillAligned) > 0: glowList.extend(stillAligned)
+        else: glowList.extend(aligned)
+            
+        self.eventsCache.append((timestamp, {
+            "newGlows": glowList,
+            "newDarks": darkList,
+            "returnedToNormal": returnedToNormal,
+            # "discordTS": f'<t:{np.floor(timestamp/1000)}:D> <t:{np.floor(timestamp/1000)}:T>',
+            # "discordRelTS": f'<t:{np.floor(timestamp/1000)}:R>'
+        }))
+    
+    def setAlignmentStates(self, time):
+        difs = self.calcAlignmentDifs(self.posRelCandle(time))
+        for i, arr in enumerate(difs):
+            if i == 0:
+                alignmentPos = arr < self.darkThresh 
+            else: 
+                alignmentPos = arr < self.glowThresh
+            for j in np.where(alignmentPos)[0]:
+                self.alignmentStates[i] = self.alignmentStates[i+j+1] = True
+        
+        # for i, arr in enumerate(difs):
+        #     for j, val in enumerate(arr):
+        #         if (val < self.glowThresh or (i == 0 and val < self.darkThresh)):
+        #             self.alignmentStates[i] = self.alignmentStates[i+j+1] = True            
+        
+    
+    def calcAlignmentDifs(self, positions):
+        return [abs((positions[i:9]%180) - (positions[i-1]%180)) for i in range(1,9)]
      
-    def updatePositions(self): 
-        pass
-    
     def posRelCandle(self, time):
         rw = self.posRelWhite(time)
         positions = np.array([self.shadowPos(time), (rw[0]+180)%360])
