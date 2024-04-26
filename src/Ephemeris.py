@@ -3,6 +3,7 @@ import json
 import numpy as np
 
 class Ephemeris:
+    # add function to re calibrate and re calc cached events
     def __init__(self) -> None:
         self.variablesFile = "src\\variables.json"
         self.v = self.getVariables(self.variablesFile)
@@ -34,10 +35,9 @@ class Ephemeris:
     def posRelCandle(self, time):
         rw = self.posRelWhite(time)
         positions = np.array([self.shadowPos(time), (rw[0]+180)%360])
-        print(rw[0])
-        # =MOD(DEGREES(ATAN2(E9*cos(RADIANS(C9))-E4*cos(RADIANS(C4)),E9*sin(RADIANS(C9))-E4*sin(RADIANS(C4)))),360)
-        x = self.radii[1:8]*np.cos(np.radians(rw[1:8]))-np.cos(np.radians(rw[0]))
-        y = self.radii[1:8]*np.sin(np.radians(rw[1:8]))-np.sin(np.radians(rw[0]))
+        
+        x = self.radii[1:8] * np.cos(np.radians(rw[1:8])) - np.cos(np.radians(rw[0]))
+        y = self.radii[1:8] * np.sin(np.radians(rw[1:8])) - np.sin(np.radians(rw[0]))
         positions = np.append(positions, (np.degrees(np.arctan2(y, x))) % 360)
         return positions
     
