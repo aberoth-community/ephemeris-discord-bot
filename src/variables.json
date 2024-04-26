@@ -1,73 +1,73 @@
 {
     "shadow": {
-        "Period": 236058480,
+        "period": 236058480,
         "refTime": 1591368974082,
         "refOffset": 270
     },
     "candle": {
-        "Period": 3155690880,
+        "period": 3155690880,
         "radius": 1,
         "refTime": 1713111731000,
         "refOffset": 0,
-        "refPos": 0
+        "refPos": 173.28348161862232
     },
     "white": {
         "school": "Divination"
     },
     "black": {
         "school": "Evocation",
-        "Period": 760047290,
+        "period": 760047290,
         "radius": 0.3952033046,
         "refTime": 1713087572000,
         "refOffset": 180,
-        "refPos": 0
+        "refPos": 350.527432204809
     },
     "green": {
         "school": "Enchantment",
-        "Period": 1941367640,
+        "period": 1941367640,
         "radius": 0.72333199,
         "refTime": 1711802459000,
         "refOffset": 180,
-        "refPos": 0
+        "refPos": 203.92223619777806
     },
     "red": {
         "school": "Necromancy",
-        "Period": 5934970046,
+        "period": 5934970046,
         "radius": 1.530240201,
         "refTime": 1713044109500,
         "refOffset": 0,
-        "refPos": 0
+        "refPos": 165.56924694681567
     },
     "purple": {
         "school": "Transmutation",
-        "Period": 37418000800,
+        "period": 37418000800,
         "radius": 5.21106301,
         "refTime": 1710886438500,
         "refOffset": 0,
-        "refPos": 0
+        "refPos": 279.42297041417885
     },
     "yellow": {
         "school": "Conjuration",
-        "Period": 92822061600,
+        "period": 92822061600,
         "radius": 9.55207032,
         "refTime": 1712060517000,
         "refOffset": 180,
-        "refPos": 0
+        "refPos": 233.36139343234217
     },
     "cyan": {
         "school": "Abjuration",
-        "Period": 264286713600,
+        "period": 264286713600,
         "radius": 19.21026393,
         "refTime": 1712182778000,
         "refOffset": 0,
-        "refPos": 0
+        "refPos": 67.30888121669702
     },
     "blue": {
         "school": "Illusion",
-        "Period": 516671136000,
+        "period": 516671136000,
         "radius": 30.06896348,
         "refTime": 1712081339500,
         "refOffset": 0,
-        "refPos": 0
+        "refPos": 55.7368162113946
     }
 }
