@@ -1,0 +1,105 @@
+{
+    "Reference": {
+        "glowType": "long",
+        "startTime": 0,
+        "endTime": 0
+    },
+    "set1": {
+        "1": {
+            "glowType": "short",
+            "startDate": "April 8, 2024 12:48:53 PM PST",
+            "startTime": 1712605733000,
+            "endTime": 1712613472000
+        },
+        "2": {
+            "glowType": "long",
+            "startDate": "March 19, 2024 1:38:55 PM PST",
+            "startTime": 1710880735000,
+            "endTime": 1710892142000
+        },
+        "3": {
+            "glowType": "short",
+            "startDate": "February 28, 2024 2:30:01 PM PST",
+            "startTime": 1709159401000,
+            "endTime": 1709167130000
+        },
+        "4": {
+            "glowType": "long",
+            "startDate": "February 8, 2024 3:19:50 PM PST",
+            "startTime": 1707434390000,
+            "endTime": 1707445796000
+        }
+    },
+    "set2": {
+        "1": {
+            "glowType": "long",
+            "startDate": "December 30, 2023 6:00:53 PM PST",
+            "startTime": 1703988053000,
+            "endTime": 1703999456000
+        },
+        "2": {
+            "glowType": "short",
+            "startDate": "December 10, 2023 7:51:47 PM PST",
+            "startTime": 1702266707000,
+            "endTime": 1702274449000
+        },
+        "3": {
+            "glowType": "long",
+            "startDate": "November 20, 2023 8:41:41 PM PST",
+            "startTime": 1700541701000,
+            "endTime": 1700553111000
+        },
+        "4": {
+            "glowType": "short",
+            "startDate": "October 31, 2023 11:32:49 PM PST",
+            "startTime": 1698820369000,
+            "endTime": 1698828102000
+        }
+    },
+    "set3": {
+        "1": {
+            "glowType": "short",
+            "startDate": "September 22, 2023 2:13:45 AM PST",
+            "startTime": 1695374025000,
+            "endTime": 1695381769000
+        },
+        "2": {
+            "glowType": "long",
+            "startDate": "September 2, 2023 3:03:39 AM PST",
+            "startTime": 1693649019000,
+            "endTime": 1693660435000
+        },
+        "3": {
+            "glowType": "short",
+            "startDate": "August 13, 2023 4:54:51 AM PST",
+            "startTime": 1691927691000,
+            "endTime": 1691935427000
+        },
+        "4": {
+            "glowType": "long",
+            "startDate": "July 24, 2023 5:44:41 AM PST",
+            "startTime": 1690202681000,
+            "endTime": 1690214092000
+        },
+        "5": {
+            "glowType": "short",
+            "startDate": "July 4, 2023 7:36:02 AM PST",
+            "startTime": 1688481362000,
+            "endTime": 1688489100000
+        }
+    },
+    "set4": {
+        "1": {
+            "glowType": "long",
+            "startDate": "May 5, 2023 11:06:37 AM PST",
+            "startTime": 1683309997000,
+            "endTime": 1683321412000
+        },
+        "2": {
+            "glowType": "short",
+            "startDate": "April 15, 2023 12:57:44 PM PST",
+            "startTime": 1681588664000,
+            "endTime": 1681596402000
+        }
+    }
+}

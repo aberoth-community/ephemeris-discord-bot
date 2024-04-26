@@ -1,0 +1,88 @@
+{
+    "Reference": {
+        "glowType": "short",
+        "startDate": "April 2, 2024 4:14:11 AM PST",
+        "startTime": 1712056451000,
+        "endTime": 1712064583000
+    },
+    "set1": {
+        "1": {
+            "glowType": "long",
+            "startDate": "February 5, 2024 9:49:43 AM PST",
+            "startTime": 1707155383000,
+            "endTime": 1707165401000
+        }
+    },
+    "set2": {
+        "1": {
+            "glowType": "short",
+            "startDate": "January 17, 2024 12:22:37 PM PST",
+            "startTime": 1705522957000,
+            "endTime": 1705531074000
+        },
+        "2": {
+            "glowType": "long",
+            "startDate": "December 29, 2023 2:23:49 PM PST",
+            "startTime": 1703888629000,
+            "endTime": 1703898649000
+        },
+        "3": {
+            "glowType": "short",
+            "startDate": "December 10, 2023 4:56:41 PM PST",
+            "startTime": 1702256201000,
+            "endTime": 1702264325000
+        },
+        "4": {
+            "glowType": "long",
+            "startDate": "November 21, 2023 6:57:52 PM PST",
+            "startTime": 1700621872000,
+            "endTime": 1700631906000
+        },
+        "5": {
+            "glowType": "short",
+            "startDate": "November 2, 2023 10:30:51 PM PST",
+            "startTime": 1698989451000,
+            "endTime": 1698997575000
+        },
+        "6": {
+            "glowType": "long",
+            "startDate": "October 15, 2023 12:32:03 AM PST",
+            "startTime": 1697355123000,
+            "endTime": 1697365154000
+        },
+        "7": {
+            "glowType": "short",
+            "startDate": "September 26, 2023 3:04:55 AM PST",
+            "startTime": 1695722695000,
+            "endTime": 1695730828000
+        }
+    },
+    "set3": {
+        "1": {
+            "glowType": "short",
+            "startDate": "August 19, 2023 7:39:18 AM PST",
+            "startTime": 1692455958000,
+            "endTime": 1692464074000
+        },
+        "2": {
+            "glowType": "long",
+            "startDate": "July 31, 2023 9:40:16 AM PST",
+            "startTime": 1690821616000,
+            "endTime": 1690831642000
+        }
+    },
+    "set4": {
+        "1": {
+            "glowType": "long",
+            "startDate": "June 23, 2023 2:14:33 PM PST",
+            "startTime": 1687554873000,
+            "endTime": 1687564899000
+        },
+        "2": {
+            "glowType": "short",
+            "startDate": "June 4, 2023 4:47:27 PM PST",
+            "startTime": 1685922447000,
+            "endTime": 1685930568000
+        }
+    }
+}
