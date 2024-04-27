@@ -3,11 +3,14 @@ import json
 import numpy as np
 import bisect
 
+import timeit
+
 class Ephemeris:
     # add function to re calibrate and re calc cached events
     def __init__(self) -> None:
         self.glowThresh = 0.5
         self.darkThresh = 1
+        self.increment = 60 * 1000
         self.variablesFile = "src\\variables.json"
         self.v = self.getVariables(self.variablesFile)
         self.periods = self.getPeriods()
@@ -23,19 +26,49 @@ class Ephemeris:
         self.lastAlignmentStates = np.full(9, False)
         # self.lastAlignmentStates = [False, True, True, False, True, True, True, False, True]
         self.eventsCache = []
-        self.setAlignmentStates(1713885673000)
-        self.createAlignmentEvent(1713885673000)
-        print(self.eventsCache)
+        start = 1714200296609+1*86400000
+        end = start+1.4*86400000
+        self.eventsCache = self.createEventRange(start, end)
+        # for e in self.eventsCache:
+        #     print(e)
+        self.saveCache("src\\cache.json")
+        
         #print(self.calcAlignmentDifs(self.posRelCandle(1714005444000)))
     
-    def createEventRange(self, startTime, stopTime, cache=False):
-        pass
+    def createEventRange(self, startTime, stopTime, saveToCache=False):
+        currentTime = startTime
+        tempCache = []
+        # create event for the starting alignments
+        self.lastAlignmentStates = np.full(9, False)
+        self.setAlignmentStates(currentTime)
+        tempCache.append(self.createAlignmentEvent(currentTime))
+        self.lastAlignmentStates = self.alignmentStates[:]
+        # iterate through time range and find events
+        while currentTime < stopTime:
+            self.setAlignmentStates(currentTime)
+            if self.checkForAlignmentChange():
+                currentTime -= self.increment
+                # if an alignment is found go back a step and step through with small step size to find more accurate start
+                while currentTime <= (currentTime + self.increment):
+                    self.setAlignmentStates(currentTime)
+                    if self.checkForAlignmentChange():
+                        tempCache.append(self.createAlignmentEvent(currentTime))
+                        self.lastAlignmentStates = self.alignmentStates[:]
+                        break
+                    currentTime += 1000
+            currentTime += self.increment
+        if saveToCache: 
+            self.eventsCache = tempCache
+        return tempCache
     
-    def getEventsInRange(self, timeStart, timeEnd):
+    def getEventsInRange(self, startTime, endTime):
         # bisect O(log(n)), total O(2log(n))
-        startIndex = bisect.bisect_left(self.eventsCache, (timeStart,))
-        stopIndex = bisect.bisect_right(self.eventsCache, (timeEnd,))
+        startIndex = bisect.bisect_left(self.eventsCache, (startTime,))
+        stopIndex = bisect.bisect_right(self.eventsCache, (endTime,))
         return [events for _, events in self.eventsCache[startIndex:stopIndex]]
+    
+    def checkForAlignmentChange(self):
+        return not np.array_equal(self.alignmentStates, self.lastAlignmentStates)
     
     def createAlignmentEvent(self, timestamp):
         names = ['Shadow', 'White', 'Black', 'Green', 'Red', 'Purple', 'Yellow', 'Cyan', 'Blue']
@@ -63,15 +96,16 @@ class Ephemeris:
             if len(stillAligned) > 0: glowList.extend(stillAligned)
         else: glowList.extend(aligned)
             
-        self.eventsCache.append((timestamp, {
+        return (timestamp, {
             "newGlows": glowList,
             "newDarks": darkList,
             "returnedToNormal": returnedToNormal,
-            # "discordTS": f'<t:{np.floor(timestamp/1000)}:D> <t:{np.floor(timestamp/1000)}:T>',
-            # "discordRelTS": f'<t:{np.floor(timestamp/1000)}:R>'
-        }))
+            "discordTS": f'<t:{int(np.floor(timestamp/1000))}:D> <t:{int(np.floor(timestamp/1000))}:T>',
+            #"discordRelTS": f'<t:{np.floor(timestamp/1000)}:R>'
+        })
     
     def setAlignmentStates(self, time):
+        self.alignmentStates = np.full(9, False)
         difs = self.calcAlignmentDifs(self.posRelCandle(time))
         for i, arr in enumerate(difs):
             if i == 0:
@@ -80,12 +114,6 @@ class Ephemeris:
                 alignmentPos = arr < self.glowThresh
             for j in np.where(alignmentPos)[0]:
                 self.alignmentStates[i] = self.alignmentStates[i+j+1] = True
-        
-        # for i, arr in enumerate(difs):
-        #     for j, val in enumerate(arr):
-        #         if (val < self.glowThresh or (i == 0 and val < self.darkThresh)):
-        #             self.alignmentStates[i] = self.alignmentStates[i+j+1] = True            
-        
     
     def calcAlignmentDifs(self, positions):
         return [abs((positions[i:9]%180) - (positions[i-1]%180)) for i in range(1,9)]
@@ -178,11 +206,15 @@ class Ephemeris:
                         self.v['cyan']['refOffset'],
                         self.v['blue']['refOffset']])
         
+    def saveCache(self, fileLoc):
+        json_object = json.dumps(self.eventsCache, indent=4)
+        with open(fileLoc, "w") as outfile:
+            outfile.write(json_object)
+        
     def updateVariables(self, variablesFile):
         json_object = json.dumps(self.v, indent=4)
         with open(variablesFile, "w") as outfile:
             outfile.write(json_object)
-    
     def getVariables(self, variablesFile):
         variables ={}
         with open(variablesFile, 'r') as json_file:
