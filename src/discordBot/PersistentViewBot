@@ -1,0 +1,35 @@
+import discord
+from discord import app_commands
+from discord.ext import commands
+from config import TOKEN
+
+bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
+
+@bot.event
+async def on_ready():
+    print('Bot is up and ready!')
+    try:
+        synched = await bot.tree.sync()
+        print(f"synched {len(synched)} command(s)")
+    except Exception as e:
+        print(e)
+        
+@bot.tree.command(name='hello')
+async def hello(interaction: discord.Interaction):
+    await interaction.response.send_message(f"Hello {interaction.user.mention}!", ephemeral=True)
+    
+bot.run(TOKEN)
+
+class PersistentViewBot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents().all()
+        super().__init__(command_prefix=commands.when_mentioned_or('.'), intents=intents)
+    async def setup_hook(self) -> None:
+        self.add_view(Cf())
+        
+client = PersistentViewBot()
+
+class Cf(discord.iu.view):
+    def __init__(self):
+        super().__init__(timeout=None)
+   

@@ -26,12 +26,13 @@ class Ephemeris:
         self.lastAlignmentStates = np.full(9, False)
         # self.lastAlignmentStates = [False, True, True, False, True, True, True, False, True]
         self.eventsCache = []
-        start = 1714200296609+1*86400000
-        end = start+1.4*86400000
+        start = 1714452382226
+        end = 1714736744000
         self.eventsCache = self.createEventRange(start, end)
-        # for e in self.eventsCache:
-        #     print(e)
         self.saveCache("src\\cache.json")
+        for e in self.eventsCache:
+            print(e)
+        
         
         #print(self.calcAlignmentDifs(self.posRelCandle(1714005444000)))
     
