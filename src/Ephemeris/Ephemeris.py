@@ -3,15 +3,15 @@ import json
 import numpy as np
 import bisect
 
-import timeit
+import time
 
 class Ephemeris:
     # add function to re calibrate and re calc cached events
-    def __init__(self) -> None:
+    def __init__(self, start=0, end=0) -> None:
         self.glowThresh = 0.5
         self.darkThresh = 1
         self.increment = 60 * 1000
-        self.variablesFile = "src\\variables.json"
+        self.variablesFile = "src\\ephemeris\\variables.json"
         self.v = self.getVariables(self.variablesFile)
         self.periods = self.getPeriods()
         self.radii = self.getRadii()
@@ -24,18 +24,10 @@ class Ephemeris:
         # Ordered as ['shadow', 'white', 'black', 'green', 'red', 'purple', 'yellow', 'cyan', 'blue']
         self.alignmentStates = np.full(9, False)
         self.lastAlignmentStates = np.full(9, False)
-        # self.lastAlignmentStates = [False, True, True, False, True, True, True, False, True]
         self.eventsCache = []
-        start = 1714452382226
-        end = 1714736744000
         self.eventsCache = self.createEventRange(start, end)
-        self.saveCache("src\\cache.json")
-        for e in self.eventsCache:
-            print(e)
+        self.saveCache("src\\ephemeris\\cache.json")
         
-        
-        #print(self.calcAlignmentDifs(self.posRelCandle(1714005444000)))
-    
     def createEventRange(self, startTime, stopTime, saveToCache=False):
         currentTime = startTime
         tempCache = []
@@ -222,4 +214,5 @@ class Ephemeris:
              variables = json.load(json_file)
         return variables
     
-ephermis = Ephemeris()
+if __name__ == "__main__":
+    ephermis = Ephemeris(start=round((time.time()*1000)-2*86400000), end=round((time.time()*1000)+16*86400000))
