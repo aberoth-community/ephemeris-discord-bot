@@ -1,0 +1,3 @@
+discord.py==2.4.0a5012+g08b138cc
+numpy==1.26.4
+python-dotenv==1.0.1
