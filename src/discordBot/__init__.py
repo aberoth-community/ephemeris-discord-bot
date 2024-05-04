@@ -12,7 +12,7 @@ with open('src\\discordBot\\guildWhiteList.json') as f:
 with open('src\\discordBot\\userWhiteList.json') as f:
     userWhiteList = json.load(f)
     
-thumbnailURL = 'https://i.imgur.com/CkCJDlT.png'
+thumbnailURL = 'https://i.imgur.com/Lpa96Ry.png'
 oneDay = 86400000
 ephemeris = Ephemeris.Ephemeris(start=(time.time()*1000)-2*86400000, end=(time.time()*1000)+16*86400000)
 
@@ -43,7 +43,7 @@ async def on_ready():
 async def hello(interaction: discord.Interaction):
     await interaction.response.send_message(f"Hello {interaction.user.mention}!", ephemeral=True)
 
-@bot.tree.command(name="prediction_menu", description="...")
+@bot.tree.command(name="prediction_menu", description="Creates predictions menu. All users will be able to use the menu. Has a timeout.")
 @app_commands.allowed_installs(guilds=False, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
 async def userInstallMenu(interaction: discord.Interaction):
@@ -54,19 +54,19 @@ async def userInstallMenu(interaction: discord.Interaction):
     embed = discord.Embed(title='**Select what day you would like the scroll events for**',
                           description='*Glows should be accurate within a minute*',
                           color=0xA21613)
-    embed.add_field(name="**__Details:__**",
+    embed.add_field(name="**__Options:__**",
                     value=
-                    "​\n**``Yesterday:``** Returns all scroll events between now and 24 hours ago."
-                    "\n\n**``Today:    ``** Returns all scroll events between 6 hours ago and 24 hours from now."
-                    "\n\n**``Tomorrow: ``** Returns all scroll events between 24 hours from now to 48 hours from now."
-                    "\n\n**``Later:    ``** Use the drop down menu to select what day from now you'd like the scroll events for",
+                    "​\n**``Yesterday:``**\n```Returns all scroll events between now and 24 hours ago.```"
+                    "\n**``Today:    ``**\n```Returns all scroll events between 6 hours ago and 24 hours from now.```"
+                    "\n**``Tomorrow: ``**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
+                    "\n**``Later:    ``**\n```Use the drop down menu to select what day from now you'd like the scroll events for.```",
                     inline=False
     )
     embed.set_thumbnail(url=thumbnailURL)
-    embed.set_footer(text='⏱️ Menu times out in five minutes ⏱')
-    await interaction.response.send_message(embed=embed, view = MenuNoPersist(), ephemeral=False)
+    embed.set_footer(text='⏱️ Menu expires in five minutes')
+    await interaction.response.send_message(embed=embed, view=MenuNoPersist(), ephemeral=False)
 
-@bot.tree.command(name='create_persistent_menu')
+@bot.tree.command(name='create_persistent_menu', description="Creates prediction menu with no timeout. Requires admin. All users will be able to use interface.")
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
 @app_commands.default_permissions()
@@ -80,10 +80,10 @@ async def guildMenu(interaction: discord.Interaction):
                           color=0xA21613)
     embed.add_field(name="**__Details:__**",
                     value=
-                    "​\n**``Yesterday:``** Returns all scroll events between now and 24 hours ago."
-                    "\n\n**``Today:    ``** Returns all scroll events between 6 hours ago and 24 hours from now."
-                    "\n\n**``Tomorrow: ``** Returns all scroll events between 24 hours from now to 48 hours from now."
-                    "\n\n**``Later:    ``** Use the drop down menu to select what day from now you'd like the scroll events for",
+                    "​\n**``Yesterday:``**\n```Returns all scroll events between now and 24 hours ago.```"
+                    "\n**``Today:    ``**\n```Returns all scroll events between 6 hours ago and 24 hours from now.```"
+                    "\n**``Tomorrow: ``**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
+                    "\n**``Later:    ``**\n```Use the drop down menu to select what day from now you'd like the scroll events for.```",
                     inline=False
     )
     embed.set_thumbnail(url=thumbnailURL)

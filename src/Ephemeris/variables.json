@@ -7,9 +7,9 @@
     "candle": {
         "period": 3155690880,
         "radius": 1,
-        "refTime": 1713111731000,
+        "refTime": 1714770173500,
         "refOffset": 0,
-        "refPos": 173.28348161862232
+        "refPos": 182.4842966031283
     },
     "white": {
         "school": "Divination"
@@ -20,7 +20,7 @@
         "radius": 0.3952033046,
         "refTime": 1713087572000,
         "refOffset": 180,
-        "refPos": 350.527432204809
+        "refPos": 170.5337656309692
     },
     "green": {
         "school": "Enchantment",
@@ -28,7 +28,7 @@
         "radius": 0.72333199,
         "refTime": 1711802459000,
         "refOffset": 180,
-        "refPos": 203.92223619777806
+        "refPos": 23.928569623938245
     },
     "red": {
         "school": "Necromancy",
@@ -36,38 +36,38 @@
         "radius": 1.530240201,
         "refTime": 1713044109500,
         "refOffset": 0,
-        "refPos": 165.56924694681567
+        "refPos": 345.5755803729759
     },
     "purple": {
         "school": "Transmutation",
         "period": 37418000800,
         "radius": 5.21106301,
-        "refTime": 1710886438500,
-        "refOffset": 0,
-        "refPos": 279.42297041417885
+        "refTime": 1712609602500,
+        "refOffset": 180,
+        "refPos": 116.0071891875883
     },
     "yellow": {
         "school": "Conjuration",
         "period": 92822061600,
         "radius": 9.55207032,
-        "refTime": 1712060517000,
-        "refOffset": 180,
-        "refPos": 233.36139343234217
+        "refTime": 1713693899500,
+        "refOffset": 0,
+        "refPos": 59.703373270105274
     },
     "cyan": {
         "school": "Abjuration",
         "period": 264286713600,
         "radius": 19.21026393,
-        "refTime": 1712182778000,
-        "refOffset": 0,
-        "refPos": 67.30888121669702
+        "refTime": 1713779691000,
+        "refOffset": 180,
+        "refPos": 249.4904345427227
     },
     "blue": {
         "school": "Illusion",
         "period": 516671136000,
         "radius": 30.06896348,
-        "refTime": 1712081339500,
+        "refTime": 1712081339000,
         "refOffset": 0,
-        "refPos": 55.7368162113946
+        "refPos": 235.74309259774742
     }
 }
