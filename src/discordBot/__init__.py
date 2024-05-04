@@ -3,7 +3,7 @@ import json
 import discord
 from discord import app_commands
 from discord.ext import commands
-from src.ephemeris import Ephemeris
+from src.Ephemeris import Ephemeris
 
 guildWhiteList = ''
 userWhiteList = ''

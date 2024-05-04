@@ -7,8 +7,8 @@ class VariableSolver:
         # long, short = self.calcAverageEventLength('packages\sampleData\glows\WhiteBlackSamples.json')
         # print('long Avg', long, 'short Avg', short)
         # print(self.format_time(long), self.format_time(short))
-        print(self.calcRadiusLong('src\sampleData\glows\WhiteYellowSamples.json', 1))
-        # print(self.calcRadiusShort('packages\sampleData\glows\WhiteBlackSamples.json', 1))
+        #print(self.calcRadiusLong('src\sampleData\glows\WhiteYellowSamples.json', 1))
+        print(self.calcRadiusShort('src\sampleData\glows\WhiteBlackSamples.json', 1))
     
     def calcAverageEventLength(self, fileExtention: str) -> tuple:
         longEvents = np.array([])
