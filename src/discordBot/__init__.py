@@ -5,8 +5,14 @@ from discord import app_commands
 from discord.ext import commands
 from src.ephemeris import Ephemeris
 
-f = open('src\\discordBot\\guildWhiteList.json')
-whiteList = json.load(f)
+guildWhiteList = ''
+userWhiteList = ''
+with open('src\\discordBot\\guildWhiteList.json') as f:
+    guildWhiteList = json.load(f)
+with open('src\\discordBot\\userWhiteList.json') as f:
+    userWhiteList = json.load(f)
+    
+thumbnailURL = 'https://i.imgur.com/CkCJDlT.png'
 oneDay = 86400000
 ephemeris = Ephemeris.Ephemeris(start=(time.time()*1000)-2*86400000, end=(time.time()*1000)+16*86400000)
 
@@ -15,7 +21,7 @@ class PersistentViewBot(commands.Bot):
         intents = discord.Intents().all()
         super().__init__(command_prefix='', intents=intents)
     async def setup_hook(self) -> None:
-        self.add_view(Menu())
+        self.add_view(GuildMenu())
         
 bot = PersistentViewBot()
         
@@ -32,27 +38,21 @@ async def on_ready():
 #    COMMANDS
 ####################   
 @bot.tree.command(name='hello')
+@app_commands.allowed_installs(guilds=True, users=False)
+@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
 async def hello(interaction: discord.Interaction):
     await interaction.response.send_message(f"Hello {interaction.user.mention}!", ephemeral=True)
 
-@bot.tree.command(name="apptest", description="...")
-@app_commands.allowed_installs(guilds=True, users=True)
+@bot.tree.command(name="prediction_menu", description="...")
+@app_commands.allowed_installs(guilds=False, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-async def apptest(interaction: discord.Interaction):
-    await interaction.response.send_message("I can be used anywhere, and am installed to guilds and users.")
-
-@bot.tree.command(name='create_prediction_menu')
-async def menu(interaction: discord.Interaction):
-    ephRes = True
-    fromGuild = False if interaction.guild is None else True
-    # check if the menu is a guild menu or user install
-    userInstall = False
-    if userInstall: ephRes = False
-    if str(interaction.guild_id) not in whiteList:
-            await interaction.response.send_message(content='Server does not have permission to use this command', ephemeral=True)
+async def userInstallMenu(interaction: discord.Interaction):
+    ephRes = False
+    if str(interaction.user.id) not in userWhiteList:
+            await interaction.response.send_message(content='You do not have permission to use this command', ephemeral=True)
             return
-    embed = discord.Embed(title='**Select What day you would like the scroll events for.**',
-                          description='*Glows should be accurate within a handful of seconds*',
+    embed = discord.Embed(title='**Select what day you would like the scroll events for**',
+                          description='*Glows should be accurate within a minute*',
                           color=0xA21613)
     embed.add_field(name="**__Details:__**",
                     value=
@@ -62,21 +62,76 @@ async def menu(interaction: discord.Interaction):
                     "\n\n**``Later:    ``** Use the drop down menu to select what day from now you'd like the scroll events for",
                     inline=False
     )
-    embed.set_thumbnail(url='https://i.imgur.com/CkCJDlT.png')
-    await interaction.response.send_message(embed=embed, view = Menu(ephemeralRes=ephRes, fromGuild=fromGuild), ephemeral=False)
+    embed.set_thumbnail(url=thumbnailURL)
+    embed.set_footer(text='⏱️ Menu times out in five minutes ⏱')
+    await interaction.response.send_message(embed=embed, view = MenuNoPersist(), ephemeral=False)
+
+@bot.tree.command(name='create_persistent_menu')
+@app_commands.allowed_installs(guilds=True, users=False)
+@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.default_permissions()
+async def guildMenu(interaction: discord.Interaction):
+    ephRes = True
+    if str(interaction.guild_id) not in guildWhiteList:
+            await interaction.response.send_message(content='Server does not have permission to use this command', ephemeral=True)
+            return
+    embed = discord.Embed(title='**Select what day you would like the scroll events for**',
+                          description='*Glows should be accurate within a minute*',
+                          color=0xA21613)
+    embed.add_field(name="**__Details:__**",
+                    value=
+                    "​\n**``Yesterday:``** Returns all scroll events between now and 24 hours ago."
+                    "\n\n**``Today:    ``** Returns all scroll events between 6 hours ago and 24 hours from now."
+                    "\n\n**``Tomorrow: ``** Returns all scroll events between 24 hours from now to 48 hours from now."
+                    "\n\n**``Later:    ``** Use the drop down menu to select what day from now you'd like the scroll events for",
+                    inline=False
+    )
+    embed.set_thumbnail(url=thumbnailURL)
+    await interaction.response.send_message(embed=embed, view = GuildMenu(), ephemeral=False)
 
 ####################
 #      Menus
 #################### 
-class SelectMenu(discord.ui.Select):
+class SelectMenuPersist(discord.ui.Select):
     def __init__(self, ephemeralRes=True):
-        self.ephemeralRes =ephemeralRes
+        self.ephemeralRes=ephemeralRes
         options = [discord.SelectOption(label=x) for x in range(2,15)]
         super().__init__(placeholder='Select how many days from today', options=options, custom_id='selectDay')
     
     async def callback(self, interaction: discord.Interaction):
-        if str(interaction.guild_id) not in whiteList:
-            await interaction.response.send_message(content='Server does not have permission to use this command', ephemeral=True)
+        whiteListed = False
+        if 0 in interaction._integration_owners:
+            whiteListed = str(interaction.guild_id) in guildWhiteList
+        elif 1 in interaction._integration_owners:
+            whiteListed = str(interaction.user.id) in userWhiteList
+            
+        if not whiteListed:
+            await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
+            return
+        value = self.values[0]
+        msgArr = splitMsg(getDayList(ephemeris, value))
+        await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
+        if len(msgArr) > 1:
+            for msg in msgArr:
+                await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
+
+class SelectMenu(discord.ui.Select):
+    def __init__(self, ephemeralRes=True):
+        self.ephemeralRes=ephemeralRes
+        options = [discord.SelectOption(label=x) for x in range(2,15)]
+        super().__init__(placeholder='Select how many days from today', options=options)
+    
+    async def callback(self, interaction: discord.Interaction):
+        whiteListed = False
+        if 0 in interaction._integration_owners:
+            whiteListed = str(interaction.guild_id) in guildWhiteList
+        elif 1 in interaction._integration_owners:
+            whiteListed = str(interaction.user.id) in userWhiteList
+            # Overridden as true so that users can use temporary menues made by users with permissions
+            whiteListed = True
+            
+        if not whiteListed:
+            await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
         value = self.values[0]
         msgArr = splitMsg(getDayList(ephemeris, value))
@@ -85,25 +140,102 @@ class SelectMenu(discord.ui.Select):
             for msg in msgArr:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
         
+class SelectViewPersist(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(SelectMenuPersist())
         
 class SelectView(discord.ui.View):
     def __init__(self):
         super().__init__()
         self.add_item(SelectMenu())
         
-class Menu(discord.ui.View):
-    def __init__(self, ephemeralRes=True, fromGuild=True):
-        #self.TO = None if fromGuild else 180
-        super().__init__(timeout=None)
+class MenuNoPersist(discord.ui.View):
+    def __init__(self, ephemeralRes=False, timeout=300):
+        super().__init__(timeout=timeout)
         self.ephemeralRes=ephemeralRes
         self.add_item(SelectMenu(ephemeralRes))
                 
+    @discord.ui.button(label="Yesterday", style=discord.ButtonStyle.red)
+    async def yesterday(self, interaction: discord.Interaction, button: discord.ui.Button):
+        whiteListed = False
+        if 0 in interaction._integration_owners:
+            whiteListed = str(interaction.guild_id) in guildWhiteList
+        elif 1 in interaction._integration_owners:
+            whiteListed = str(interaction.user.id) in userWhiteList
+            # Overridden as true so that users can use temporary menues made by users with permissions
+            whiteListed = True
+            
+        if not whiteListed:
+            await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
+            return
+        
+        msgArr = splitMsg(getDayList(ephemeris, -1))
+        await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
+        if len(msgArr) > 1:
+            for msg in msgArr:
+                await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
+        
+    @discord.ui.button(label="Today", style=discord.ButtonStyle.green)
+    async def today(self, interaction: discord.Interaction, button: discord.ui.Button):
+        whiteListed = False
+        if 0 in interaction._integration_owners:
+            whiteListed = str(interaction.guild_id) in guildWhiteList
+        elif 1 in interaction._integration_owners:
+            whiteListed = str(interaction.user.id) in userWhiteList
+            # Overridden as true so that users can use temporary menues made by users with permissions
+            whiteListed = True
+            
+        if not whiteListed:
+            await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
+            return
+        
+        msgArr = splitMsg(getDayList(ephemeris, 0))
+        await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
+        if len(msgArr) > 1:
+            for msg in msgArr:
+                await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
+    
+    @discord.ui.button(label="Tomorrow", style=discord.ButtonStyle.blurple)
+    async def tomorrow(self, interaction: discord.Interaction, button: discord.ui.Button):
+        whiteListed = False
+        if 0 in interaction._integration_owners:
+            whiteListed = str(interaction.guild_id) in guildWhiteList
+        elif 1 in interaction._integration_owners:
+            whiteListed = str(interaction.user.id) in userWhiteList
+            # Overridden as true so that users can use temporary menues made by users with permissions
+            whiteListed = True
+            
+        if not whiteListed:
+            await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
+            return
+        
+        msgArr = splitMsg(getDayList(ephemeris, 1))
+        await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
+        if len(msgArr) > 1:
+            for msg in msgArr:
+                await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
+    
+
+# Create seperate menu that wont persist
+class GuildMenu(discord.ui.View):
+    def __init__(self, ephemeralRes=True, timeout=None):
+        super().__init__(timeout=timeout)
+        self.ephemeralRes=ephemeralRes
+        self.add_item(SelectMenuPersist(ephemeralRes))
+                
     @discord.ui.button(label="Yesterday", style=discord.ButtonStyle.red, custom_id='yesterday')
     async def yesterday(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if str(interaction.guild_id) not in whiteList:
-            await interaction.response.send_message(content='Server does not have permission to use this command', ephemeral=True)
+        whiteListed = False
+        if 0 in interaction._integration_owners:
+            whiteListed = str(interaction.guild_id) in guildWhiteList
+        elif 1 in interaction._integration_owners:
+            whiteListed = str(interaction.user.id) in userWhiteList
+            
+        if not whiteListed:
+            await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
-        print("interaction:", interaction._integration_owners)
+        
         msgArr = splitMsg(getDayList(ephemeris, -1))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
@@ -112,9 +244,16 @@ class Menu(discord.ui.View):
         
     @discord.ui.button(label="Today", style=discord.ButtonStyle.green, custom_id='today')
     async def today(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if str(interaction.guild_id) not in whiteList:
-            await interaction.response.send_message(content='Server does not have permission to use this command', ephemeral=True)
+        whiteListed = False
+        if 0 in interaction._integration_owners:
+            whiteListed = str(interaction.guild_id) in guildWhiteList
+        elif 1 in interaction._integration_owners:
+            whiteListed = str(interaction.user.id) in userWhiteList
+            
+        if not whiteListed:
+            await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
+        
         msgArr = splitMsg(getDayList(ephemeris, 0))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
@@ -123,17 +262,22 @@ class Menu(discord.ui.View):
     
     @discord.ui.button(label="Tomorrow", style=discord.ButtonStyle.blurple, custom_id='tomorrow')
     async def tomorrow(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if str(interaction.guild_id) not in whiteList:
-            await interaction.response.send_message(content='Server does not have permission to use this command', ephemeral=True)
+        whiteListed = False
+        if 0 in interaction._integration_owners:
+            whiteListed = str(interaction.guild_id) in guildWhiteList
+        elif 1 in interaction._integration_owners:
+            whiteListed = str(interaction.user.id) in userWhiteList
+            
+        if not whiteListed:
+            await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
+        
         msgArr = splitMsg(getDayList(ephemeris, 1))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
             for msg in msgArr:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
     
-    #row1 = discord.ActionRow(components=[yesterday,today])
-   
 #######################
 #  Helper Functions
 #######################
@@ -158,11 +302,11 @@ def createEventMsgLine(event, firstEvent=False):
         tempMsg = ''
         if len(cat) < 1: continue
         elif len(cat) >= 3:
-            tempMsg += ' ' + ', '.join(cat[:-1]) + ', and ' + cat[-1] + ' have '
+            tempMsg += ' __' + '__, __'.join(cat[:-1]) + '__, and __' + cat[-1] + '__ have '
         elif len(cat) == 2:
-            tempMsg += ' ' +  cat[0] + " and " + cat[1] + ' have '
+            tempMsg += ' __' +  cat[0] + "__ and __" + cat[1] + '__ have '
         elif len(cat) == 1: 
-            tempMsg += ' ' +  cat[0] + ' has '
+            tempMsg += ' __' +  cat[0] + '__ has '
             
         if index == 0: tempMsg += 'begun to **glow.**'
         elif index == 1: tempMsg += 'gone **dark.**'
