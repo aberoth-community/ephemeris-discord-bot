@@ -5,12 +5,26 @@ from discord import app_commands
 from discord.ext import commands
 from src.Ephemeris import Ephemeris
 
-guildWhiteList = ''
-userWhiteList = ''
+guildSettings = {}
+guildWhiteList = {}
+userWhiteList = {}
+with open('src\\discordBot\\guildSettings.json') as f:
+    guildSettings = json.load(f)
 with open('src\\discordBot\\guildWhiteList.json') as f:
     guildWhiteList = json.load(f)
 with open('src\\discordBot\\userWhiteList.json') as f:
     userWhiteList = json.load(f)
+    
+emojis = {
+        "White": "<:WhiteOrb:998472151965376602>",
+        "Black": "<:BlackOrb:998472215295164418>",
+        "Green": "<:GreenOrb:998472231640379452>",
+        "Red": "<:RedOrb:998472356303478874>",
+        "Purple": "<:PurpleOrb:998472375400149112>",
+        "Yellow": "<:YellowOrb:998472388406689812>",
+        "Cyan": "<:CyanOrb:998472398707888229>",
+        "Blue": "<:BlueOrb:998472411861233694>"
+        }   
     
 thumbnailURL = 'https://i.imgur.com/Lpa96Ry.png'
 oneDay = 86400000
@@ -70,11 +84,15 @@ async def userInstallMenu(interaction: discord.Interaction):
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
 @app_commands.default_permissions()
-async def guildMenu(interaction: discord.Interaction):
+@app_commands.describe(use_emojis='Whether or not responses use emojis for orb names')
+@app_commands.choices(use_emojis=[discord.app_commands.Choice(name='Yes', value=1), discord.app_commands.Choice(name='No', value=0)])
+async def guildMenu(interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int]):
     ephRes = True
     if str(interaction.guild_id) not in guildWhiteList:
             await interaction.response.send_message(content='Server does not have permission to use this command', ephemeral=True)
             return
+    guildSettings[str(interaction.guild_id)] = {"useEmojis": use_emojis.value}
+    updateGuildSettings(settings=guildSettings)
     embed = discord.Embed(title='**Select what day you would like the scroll events for**',
                           description='*Glows should be accurate within a minute*',
                           color=0xA21613)
@@ -108,8 +126,13 @@ class SelectMenuPersist(discord.ui.Select):
         if not whiteListed:
             await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
+        
+        useEmojis = False
+        if str(interaction.guild_id) in guildSettings and guildSettings[str(interaction.guild_id)]['useEmojis'] == 1:
+            useEmojis = True
+        
         value = self.values[0]
-        msgArr = splitMsg(getDayList(ephemeris, value))
+        msgArr = splitMsg(getDayList(ephemeris, value, useEmojis))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
             for msg in msgArr:
@@ -235,8 +258,10 @@ class GuildMenu(discord.ui.View):
         if not whiteListed:
             await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
-        
-        msgArr = splitMsg(getDayList(ephemeris, -1))
+        useEmojis = False
+        if str(interaction.guild_id) in guildSettings and guildSettings[str(interaction.guild_id)]['useEmojis'] == 1:
+            useEmojis = True
+        msgArr = splitMsg(getDayList(ephemeris, -1, useEmojis))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
             for msg in msgArr:
@@ -254,7 +279,11 @@ class GuildMenu(discord.ui.View):
             await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
         
-        msgArr = splitMsg(getDayList(ephemeris, 0))
+        useEmojis = False
+        if str(interaction.guild_id) in guildSettings and guildSettings[str(interaction.guild_id)]['useEmojis'] == 1:
+            useEmojis = True
+        
+        msgArr = splitMsg(getDayList(ephemeris, 0, useEmojis))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
             for msg in msgArr:
@@ -272,7 +301,11 @@ class GuildMenu(discord.ui.View):
             await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
         
-        msgArr = splitMsg(getDayList(ephemeris, 1))
+        useEmojis = False
+        if str(interaction.guild_id) in guildSettings and guildSettings[str(interaction.guild_id)]['useEmojis'] == 1:
+            useEmojis = True
+        
+        msgArr = splitMsg(getDayList(ephemeris, 1, useEmojis))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
             for msg in msgArr:
@@ -281,19 +314,19 @@ class GuildMenu(discord.ui.View):
 #######################
 #  Helper Functions
 #######################
-def getDayList(ephemeris, day: int):
+def getDayList(ephemeris, day: int, useEmojis = False):
     currentTime = round((time.time()*1000))
-    start = currentTime-round(0.25*oneDay )if day == 0 else currentTime+int(day)*int(oneDay)
+    start = currentTime-round(0.25*oneDay ) if day == 0 else currentTime+int(day)*int(oneDay)
     end = currentTime+oneDay if day == 0 else start+oneDay
     cacheSubSet = ephemeris.getEventsInRange(start, end)
     startState = cacheSubSet[0]
-    eventMsg = createEventMsgLine(startState, True)
+    eventMsg = createEventMsgLine(startState, useEmojis, True)
     if len(cacheSubSet) > 1:
         for event in cacheSubSet[1:]:
-            eventMsg += '\n' + createEventMsgLine(event)
+            eventMsg += '\n' + createEventMsgLine(event, useEmojis)
     return eventMsg
 
-def createEventMsgLine(event, firstEvent=False):
+def createEventMsgLine(event, useEmojis=True, firstEvent=False):
     glows = event['newGlows']
     darks = [i for i in event['newDarks'] if i != 'Shadow']
     normals = [i for i in event['returnedToNormal'] if i != 'Shadow']
@@ -302,11 +335,20 @@ def createEventMsgLine(event, firstEvent=False):
         tempMsg = ''
         if len(cat) < 1: continue
         elif len(cat) >= 3:
-            tempMsg += ' __' + '__, __'.join(cat[:-1]) + '__, and __' + cat[-1] + '__ have '
+            if useEmojis:
+                tempMsg += ' ' + ''.join([emojis[orb] for orb in cat]) + ' have '
+            else:
+                tempMsg += ' __' + '__, __'.join(cat[:-1]) + '__, and __' + cat[-1] + '__ have '
         elif len(cat) == 2:
-            tempMsg += ' __' +  cat[0] + "__ and __" + cat[1] + '__ have '
+            if useEmojis:
+                tempMsg += ' ' + ''.join([emojis[orb] for orb in cat]) + ' have '
+            else:
+                tempMsg += ' __' +  cat[0] + "__ and __" + cat[1] + '__ have '
         elif len(cat) == 1: 
-            tempMsg += ' __' +  cat[0] + '__ has '
+            if useEmojis:
+                tempMsg += ' ' +  emojis[cat[0]] + ' has '
+            else:
+                tempMsg += ' __' +  cat[0] + '__ has '
             
         if index == 0: tempMsg += 'begun to **glow.**'
         elif index == 1: tempMsg += 'gone **dark.**'
@@ -325,3 +367,14 @@ def splitMsg(msg):
         msgArr.append(msg[:i-1])
         msg = msg[i:]
     return msgArr
+
+def updateGuildSettings(settings, guildSettingsFile='src\\discordBot\\guildSettings.json'):
+        json_object = json.dumps(settings, indent=4)
+        with open(guildSettingsFile, "w") as outfile:
+            outfile.write(json_object)
+            
+def getGuildSettings(guildSettingsFile='src\\discordBot\\guildSettings.json'):
+    settings={}
+    with open(guildSettingsFile, 'r') as json_file:
+            settings = json.load(json_file)
+    return settings
