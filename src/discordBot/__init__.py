@@ -8,11 +8,21 @@ from src.Ephemeris import Ephemeris
 guildSettings = {}
 guildWhiteList = {}
 userWhiteList = {}
-with open('src\\discordBot\\guildSettings.json') as f:
+
+GSWindowsPath = 'src\\discordBot\\guildSettings.json'
+GSLinuxPath = 'src/discordBot/guildSettings.json'
+
+GWLWindowsPath = 'src\\discordBot\\guildWhiteList.json'
+GWLLinuxPath = 'src/discordBot/guildWhiteList.json'
+
+UWLWindowsPath = 'src\\discordBot\\userWhiteList.json'
+UWLLinuxPath = 'src/discordBot/userWhiteList.json'
+
+with open(GSWindowsPath) as f:
     guildSettings = json.load(f)
-with open('src\\discordBot\\guildWhiteList.json') as f:
+with open(GWLWindowsPath) as f:
     guildWhiteList = json.load(f)
-with open('src\\discordBot\\userWhiteList.json') as f:
+with open(UWLWindowsPath) as f:
     userWhiteList = json.load(f)
     
 emojis = {
@@ -78,7 +88,7 @@ async def userInstallMenu(interaction: discord.Interaction):
     )
     embed.set_thumbnail(url=thumbnailURL)
     embed.set_footer(text='⏱️ Menu expires in five minutes')
-    await interaction.response.send_message(embed=embed, view=MenuNoPersist(), ephemeral=False)
+    await interaction.response.send_message(embed=embed, view=UserInstallMenu(), ephemeral=False)
 
 @bot.tree.command(name='create_persistent_menu', description="Creates prediction menu with no timeout. Requires admin. All users will be able to use interface.")
 @app_commands.allowed_installs(guilds=True, users=False)
@@ -110,7 +120,7 @@ async def guildMenu(interaction: discord.Interaction, use_emojis: discord.app_co
 ####################
 #      Menus
 #################### 
-class SelectMenuPersist(discord.ui.Select):
+class GuildDaySelMenu(discord.ui.Select):
     def __init__(self, ephemeralRes=True):
         self.ephemeralRes=ephemeralRes
         options = [discord.SelectOption(label=x) for x in range(2,15)]
@@ -135,10 +145,10 @@ class SelectMenuPersist(discord.ui.Select):
         msgArr = splitMsg(getDayList(ephemeris, value, useEmojis))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
-            for msg in msgArr:
+            for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
 
-class SelectMenu(discord.ui.Select):
+class UserInstallSelDayMenu(discord.ui.Select):
     def __init__(self, ephemeralRes=True):
         self.ephemeralRes=ephemeralRes
         options = [discord.SelectOption(label=x) for x in range(2,15)]
@@ -160,24 +170,24 @@ class SelectMenu(discord.ui.Select):
         msgArr = splitMsg(getDayList(ephemeris, value))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
-            for msg in msgArr:
+            for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
         
-class SelectViewPersist(discord.ui.View):
+class GuildSelDayView(discord.ui.View):
     def __init__(self):
         super().__init__()
-        self.add_item(SelectMenuPersist())
+        self.add_item(GuildDaySelMenu())
         
-class SelectView(discord.ui.View):
+class UserInstallSelDayView(discord.ui.View):
     def __init__(self):
         super().__init__()
-        self.add_item(SelectMenu())
+        self.add_item(UserInstallSelDayMenu())
         
-class MenuNoPersist(discord.ui.View):
+class UserInstallMenu(discord.ui.View):
     def __init__(self, ephemeralRes=False, timeout=300):
         super().__init__(timeout=timeout)
         self.ephemeralRes=ephemeralRes
-        self.add_item(SelectMenu(ephemeralRes))
+        self.add_item(UserInstallSelDayMenu(ephemeralRes))
                 
     @discord.ui.button(label="Yesterday", style=discord.ButtonStyle.red)
     async def yesterday(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -196,7 +206,7 @@ class MenuNoPersist(discord.ui.View):
         msgArr = splitMsg(getDayList(ephemeris, -1))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
-            for msg in msgArr:
+            for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
         
     @discord.ui.button(label="Today", style=discord.ButtonStyle.green)
@@ -216,7 +226,7 @@ class MenuNoPersist(discord.ui.View):
         msgArr = splitMsg(getDayList(ephemeris, 0))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
-            for msg in msgArr:
+            for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
     
     @discord.ui.button(label="Tomorrow", style=discord.ButtonStyle.blurple)
@@ -236,7 +246,7 @@ class MenuNoPersist(discord.ui.View):
         msgArr = splitMsg(getDayList(ephemeris, 1))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
-            for msg in msgArr:
+            for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
     
 
@@ -245,7 +255,7 @@ class GuildMenu(discord.ui.View):
     def __init__(self, ephemeralRes=True, timeout=None):
         super().__init__(timeout=timeout)
         self.ephemeralRes=ephemeralRes
-        self.add_item(SelectMenuPersist(ephemeralRes))
+        self.add_item(GuildDaySelMenu(ephemeralRes))
                 
     @discord.ui.button(label="Yesterday", style=discord.ButtonStyle.red, custom_id='yesterday')
     async def yesterday(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -264,7 +274,7 @@ class GuildMenu(discord.ui.View):
         msgArr = splitMsg(getDayList(ephemeris, -1, useEmojis))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
-            for msg in msgArr:
+            for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
         
     @discord.ui.button(label="Today", style=discord.ButtonStyle.green, custom_id='today')
@@ -286,7 +296,7 @@ class GuildMenu(discord.ui.View):
         msgArr = splitMsg(getDayList(ephemeris, 0, useEmojis))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
-            for msg in msgArr:
+            for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
     
     @discord.ui.button(label="Tomorrow", style=discord.ButtonStyle.blurple, custom_id='tomorrow')
@@ -308,7 +318,7 @@ class GuildMenu(discord.ui.View):
         msgArr = splitMsg(getDayList(ephemeris, 1, useEmojis))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
-            for msg in msgArr:
+            for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
     
 #######################
@@ -355,25 +365,26 @@ def createEventMsgLine(event, useEmojis=True, firstEvent=False):
         elif index == 2: tempMsg += 'returned to **normal.**'
         
         msg += tempMsg
+        print(msg)
     
     return msg
     
 def splitMsg(msg):
-    if len(msg) < 2001: return [msg]
     msgArr = []
     while len(msg) > 2000:
         # find last index in range
         i = msg[:2000].rfind('\n')
-        msgArr.append(msg[:i-1])
+        msgArr.append(msg[:i])
         msg = msg[i:]
+    msgArr.append(msg)
     return msgArr
 
-def updateGuildSettings(settings, guildSettingsFile='src\\discordBot\\guildSettings.json'):
+def updateGuildSettings(settings, guildSettingsFile=GSWindowsPath):
         json_object = json.dumps(settings, indent=4)
         with open(guildSettingsFile, "w") as outfile:
             outfile.write(json_object)
             
-def getGuildSettings(guildSettingsFile='src\\discordBot\\guildSettings.json'):
+def getGuildSettings(guildSettingsFile=GSWindowsPath):
     settings={}
     with open(guildSettingsFile, 'r') as json_file:
             settings = json.load(json_file)
