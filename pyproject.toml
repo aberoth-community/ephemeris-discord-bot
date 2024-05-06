@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ephemeris"
+dynamic = ["version"]
+
+requires-python = ">= 3.8"
+dependencies = [
+    "discord.py@git+https://github.com/Rapptz/discord.py.git#egg=feature/user_apps",
+    "numpy==1.26.4",
+    "python-dotenv==1.0.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+ephemeris = "ephemeris:main"
