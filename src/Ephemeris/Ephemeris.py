@@ -215,5 +215,16 @@ class Ephemeris:
              variables = json.load(json_file)
         return variables
     
+    def autoRefreshCache(self, refreshRate=60*60*24):
+        """Automatically regenerates the cache. Should Be used with an asnychronous wrapper
+        Args:
+            refreshRate (int): The frequency in seconds to refresh the cache
+        """
+        while True:
+            time.sleep(refreshRate)
+            self.createEventRange(start=(time.time()*1000)-2*86400000,
+                                    end=(time.time()*1000)+30*86400000,
+                                    saveToCache=True)
+    
 if __name__ == "__main__":
     ephermis = Ephemeris(start=round((time.time()*1000)-2*86400000), end=round((time.time()*1000)+16*86400000))

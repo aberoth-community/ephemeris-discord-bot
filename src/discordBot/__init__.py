@@ -368,7 +368,6 @@ def getDayList(ephemeris, day: int, useEmojis = False, filters=None):
     
     # filter out specific orb events
     if filters != None and len(filters) != 0:
-        print("filters:", filters)
         tempCache = []
         for e in cacheSubSet:
             for orb in filters:
