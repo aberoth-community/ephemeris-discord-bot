@@ -1,5 +1,5 @@
-
 import json
+from pathlib import Path
 import numpy as np
 import bisect
 
@@ -11,7 +11,8 @@ class Ephemeris:
         self.glowThresh = 0.5
         self.darkThresh = 1
         self.increment = 60 * 1000
-        self.variablesFile = "src\\ephemeris\\variables.json"
+        self.variablesFile = Path("src/Ephemeris/variables.json")
+        self.cacheFile = Path("src/Ephemeris/cache.json")
         self.v = self.getVariables(self.variablesFile)
         self.periods = self.getPeriods()
         self.radii = self.getRadii()
@@ -26,7 +27,7 @@ class Ephemeris:
         self.lastAlignmentStates = np.full(9, False)
         self.eventsCache = []
         self.eventsCache = self.createEventRange(start, end)
-        self.saveCache("src\\ephemeris\\cache.json")
+        self.saveCache(self.cacheFile)
         
     def createEventRange(self, startTime, stopTime, saveToCache=False):
         currentTime = startTime

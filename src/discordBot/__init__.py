@@ -1,5 +1,6 @@
 import time
 import json
+from pathlib import Path
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -9,20 +10,15 @@ guildSettings = {}
 guildWhiteList = {}
 userWhiteList = {}
 
-GSWindowsPath = 'src\\discordBot\\guildSettings.json'
-GSLinuxPath = 'src/discordBot/guildSettings.json'
+GSPath = Path('src/discordBot/guildSettings.json')
+GWLPath = Path('src/discordBot/guildWhiteList.json')
+UWLPath = Path('src/discordBot/userWhiteList.json')
 
-GWLWindowsPath = 'src\\discordBot\\guildWhiteList.json'
-GWLLinuxPath = 'src/discordBot/guildWhiteList.json'
-
-UWLWindowsPath = 'src\\discordBot\\userWhiteList.json'
-UWLLinuxPath = 'src/discordBot/userWhiteList.json'
-
-with open(GSWindowsPath) as f:
+with open(GSPath) as f:
     guildSettings = json.load(f)
-with open(GWLWindowsPath) as f:
+with open(GWLPath) as f:
     guildWhiteList = json.load(f)
-with open(UWLWindowsPath) as f:
+with open(UWLPath) as f:
     userWhiteList = json.load(f)
     
 emojis = {
@@ -433,12 +429,12 @@ def splitMsg(msg):
     msgArr.append(msg)
     return msgArr
 
-def updateGuildSettings(settings, guildSettingsFile=GSWindowsPath):
+def updateGuildSettings(settings, guildSettingsFile=GSPath):
         json_object = json.dumps(settings, indent=4)
         with open(guildSettingsFile, "w") as outfile:
             outfile.write(json_object)
             
-def getGuildSettings(guildSettingsFile=GSWindowsPath):
+def getGuildSettings(guildSettingsFile=GSPath):
     settings={}
     with open(guildSettingsFile, 'r') as json_file:
             settings = json.load(json_file)
