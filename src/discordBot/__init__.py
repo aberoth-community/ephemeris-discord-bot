@@ -149,8 +149,9 @@ class GuildDaySelMenu(discord.ui.Select):
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
 
 class UserInstallSelDayMenu(discord.ui.Select):
-    def __init__(self, ephemeralRes=True):
+    def __init__(self, ephemeralRes=True, filterList=None):
         self.ephemeralRes=ephemeralRes
+        self.filterList=filterList
         options = [discord.SelectOption(label=x) for x in range(2,15)]
         super().__init__(placeholder='Select how many days from today', options=options)
     
@@ -167,7 +168,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
             await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
         value = self.values[0]
-        msgArr = splitMsg(getDayList(ephemeris, value))
+        msgArr = splitMsg(getDayList(ephemeris, value, filters=self.filterList))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
             for msg in msgArr[1:]:
@@ -183,11 +184,51 @@ class UserInstallSelDayView(discord.ui.View):
         super().__init__()
         self.add_item(UserInstallSelDayMenu())
         
+class UserInstallFilterMenu(discord.ui.Select):
+    def __init__(self, filterOptions, initiationTime, timeout=300):
+        self.timeout=timeout
+        self.filterOptions = filterOptions
+        self.initiationTime = initiationTime
+        options = [
+               discord.SelectOption(label="White", value='White', emoji=emojis['White'], default=filterOptions['White']),
+               discord.SelectOption(label="Black", value='Black', emoji=emojis['Black'], default=filterOptions['Black']),
+               discord.SelectOption(label="Green", value='Green', emoji=emojis['Green'], default=filterOptions['Green']),
+               discord.SelectOption(label="Red", value='Red', emoji=emojis['Red'], default=filterOptions['Red']),
+               discord.SelectOption(label="Purple", value='Purple', emoji=emojis['Purple'], default=filterOptions['Purple']),
+               discord.SelectOption(label="Yellow", value='Yellow', emoji=emojis['Yellow'], default=filterOptions['Yellow']),
+               discord.SelectOption(label="Cyan", value='Cyan', emoji=emojis['Cyan'], default=filterOptions['Cyan']),
+               discord.SelectOption(label="Blue", value='Blue', emoji=emojis['Blue'], default=filterOptions['Blue'])]
+        super().__init__(placeholder='Scroll events to display (Default All)', options=options, min_values=0, max_values=8)
+    
+    async def callback(self, interaction: discord.Interaction):
+        # This is done so all users will see the same selected options
+        filterOptions={"White": False, "Black": False, "Green": False, "Red": False,
+                           "Purple": False, "Yellow": False, "Cyan": False, "Blue": False}
+        filterList = []
+        for orb in self.values:
+            filterOptions[orb] = True
+            filterList.append(orb)
+        # change select menu options
+        newTimeoutTime = self.timeout - (time.time()-self.initiationTime)
+        if newTimeoutTime < 1: newTimeoutTime = 0
+        await interaction.response.edit_message(view=UserInstallMenu(timeout=newTimeoutTime, filterOptions=filterOptions, filterList=filterList))
+        
+class UserInstallFilterView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(UserInstallFilterMenu())
+
 class UserInstallMenu(discord.ui.View):
-    def __init__(self, ephemeralRes=False, timeout=300):
+    def __init__(self, ephemeralRes=False, timeout=300, filterList=None,
+                 filterOptions={"White": False, "Black": False, "Green": False, "Red": False,
+                           "Purple": False, "Yellow": False, "Cyan": False, "Blue": False}):
         super().__init__(timeout=timeout)
+        self.initiationTime=time.time()
+        self.filterOptions=filterOptions
         self.ephemeralRes=ephemeralRes
-        self.add_item(UserInstallSelDayMenu(ephemeralRes))
+        self.filterList=filterList
+        self.add_item(UserInstallSelDayMenu(ephemeralRes, filterList))
+        self.add_item(UserInstallFilterMenu(self.filterOptions, initiationTime=self.initiationTime,timeout=timeout))
                 
     @discord.ui.button(label="Yesterday", style=discord.ButtonStyle.red)
     async def yesterday(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -203,7 +244,7 @@ class UserInstallMenu(discord.ui.View):
             await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
         
-        msgArr = splitMsg(getDayList(ephemeris, -1))
+        msgArr = splitMsg(getDayList(ephemeris, -1, filters=self.filterList))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
             for msg in msgArr[1:]:
@@ -223,7 +264,7 @@ class UserInstallMenu(discord.ui.View):
             await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
         
-        msgArr = splitMsg(getDayList(ephemeris, 0))
+        msgArr = splitMsg(getDayList(ephemeris, 0, filters=self.filterList))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
             for msg in msgArr[1:]:
@@ -243,18 +284,19 @@ class UserInstallMenu(discord.ui.View):
             await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
         
-        msgArr = splitMsg(getDayList(ephemeris, 1))
+        msgArr = splitMsg(getDayList(ephemeris, 1, filters=self.filterList))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
             for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
-    
 
-# Create seperate menu that wont persist
+
+# Create seperate menu that will persist
 class GuildMenu(discord.ui.View):
     def __init__(self, ephemeralRes=True, timeout=None):
         super().__init__(timeout=timeout)
         self.ephemeralRes=ephemeralRes
+        self.filterValues = []
         self.add_item(GuildDaySelMenu(ephemeralRes))
                 
     @discord.ui.button(label="Yesterday", style=discord.ButtonStyle.red, custom_id='yesterday')
@@ -288,11 +330,9 @@ class GuildMenu(discord.ui.View):
         if not whiteListed:
             await interaction.response.send_message(content='Server or user does not have permission to use this command', ephemeral=True)
             return
-        
         useEmojis = False
         if str(interaction.guild_id) in guildSettings and guildSettings[str(interaction.guild_id)]['useEmojis'] == 1:
             useEmojis = True
-        
         msgArr = splitMsg(getDayList(ephemeris, 0, useEmojis))
         await interaction.response.send_message(content=msgArr[0], ephemeral=self.ephemeralRes)
         if len(msgArr) > 1:
@@ -320,15 +360,31 @@ class GuildMenu(discord.ui.View):
         if len(msgArr) > 1:
             for msg in msgArr[1:]:
                 await interaction.followup.send(content=msg, ephemeral=self.ephemeralRes)
-    
+        
 #######################
 #  Helper Functions
 #######################
-def getDayList(ephemeris, day: int, useEmojis = False):
+def getDayList(ephemeris, day: int, useEmojis = False, filters=None):
     currentTime = round((time.time()*1000))
     start = currentTime-round(0.25*oneDay ) if day == 0 else currentTime+int(day)*int(oneDay)
     end = currentTime+oneDay if day == 0 else start+oneDay
     cacheSubSet = ephemeris.getEventsInRange(start, end)
+    
+    # filter out specific orb events
+    if filters != None and len(filters) != 0:
+        print("filters:", filters)
+        tempCache = []
+        for e in cacheSubSet:
+            for orb in filters:
+                if orb in e["newGlows"] or orb in e["newDarks"] or orb in e["returnedToNormal"]:
+                    tempCache.append(e)
+                    break
+        cacheSubSet=tempCache
+    
+    if len(cacheSubSet) == 0:
+        if filters != None:
+            return "> **There are no events within the selected range that match the applied filters.**"
+        else: return "> **There are no events within the selected range.**"
     startState = cacheSubSet[0]
     eventMsg = createEventMsgLine(startState, useEmojis, True)
     if len(cacheSubSet) > 1:
@@ -365,8 +421,6 @@ def createEventMsgLine(event, useEmojis=True, firstEvent=False):
         elif index == 2: tempMsg += 'returned to **normal.**'
         
         msg += tempMsg
-        print(msg)
-    
     return msg
     
 def splitMsg(msg):
