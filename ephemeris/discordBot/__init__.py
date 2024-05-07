@@ -14,11 +14,15 @@ GSPath = Path("ephemeris/discordBot/guildSettings.json").absolute()
 GWLPath = Path("ephemeris/discordBot/guildWhiteList.json").absolute()
 UWLPath = Path("ephemeris/discordBot/userWhiteList.json").absolute()
 
-with open(GSPath) as f:
+if not GSPath.exists():
+    GSPath.write_text(json.dumps({}))
+    print(f"File created: {GSPath}")
+
+with GSPath.open('r') as f:
     guildSettings = json.load(f)
-with open(GWLPath) as f:
+with GWLPath.open('r') as f:
     guildWhiteList = json.load(f)
-with open(UWLPath) as f:
+with UWLPath.open('r') as f:
     userWhiteList = json.load(f)
 
 emojis = {

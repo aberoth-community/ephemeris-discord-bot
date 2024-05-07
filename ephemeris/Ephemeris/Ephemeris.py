@@ -259,12 +259,12 @@ class Ephemeris:
 
     def updateVariables(self, variablesFile):
         json_object = json.dumps(self.v, indent=4)
-        with open(variablesFile, "w") as outfile:
+        with variablesFile.open("w") as outfile:
             outfile.write(json_object)
 
     def getVariables(self, variablesFile):
         variables = {}
-        with open(variablesFile, "r") as json_file:
+        with variablesFile.open("r") as json_file:
             variables = json.load(json_file)
         return variables
 
