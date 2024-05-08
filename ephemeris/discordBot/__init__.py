@@ -117,11 +117,11 @@ async def userInstallMenu(interaction: discord.Interaction, use_emojis: discord.
     )
     embed.add_field(
         name="**__Options:__**",
-        value="​\n**``Yesterday:``**\n```Returns all scroll events between now and 24 hours ago.```"
-        "\n**``Today:    ``**\n```Returns all scroll events between 6 hours ago and 24 hours from now.```"
-        "\n**``Tomorrow: ``**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
-        "\n**``Later:    ``**\n```Use the drop down menu to select what day from now you'd like the scroll events for.```"
-        "\n***Note:** Due to autumatic calibrations, predictions may improve in accuracy when requested closer to the date that they occur on.*",
+        value="​\n**`Yesterday:`**\n```Returns all scroll events between now and 24 hours ago.```"
+        "\n**`Today:    `**\n```Returns all scroll events between 6 hours ago and 24 hours from now.```"
+        "\n**`Tomorrow: `**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
+        "\n**`Later:    `**\n```Use the drop down menu to select what day from now you'd like the scroll events for.```"
+        "\n***Note:** Due to automatic calibrations, predictions may improve in accuracy when requested closer to the date that they occur on.*",
         inline=False,
     )
     embed.set_thumbnail(url=thumbnailURL)
@@ -130,7 +130,6 @@ async def userInstallMenu(interaction: discord.Interaction, use_emojis: discord.
         embed=embed, view=UserInstallMenu(useEmojis = True if use_emojis.value == 1 else False, 
                                         emojis=None if use_emojis.value == 0 else userSettings[str(interaction.user.id)]['emojis']),
                                         ephemeral=False)
-
 
 @bot.tree.command(
     name="create_persistent_menu",
@@ -177,10 +176,10 @@ async def guildMenu(
     )
     embed.add_field(
         name="**__Details:__**",
-        value="​\n**``Yesterday:``**\n```Returns all scroll events between now and 24 hours ago.```"
-        "\n**``Today:    ``**\n```Returns all scroll events between 6 hours ago and 24 hours from now.```"
-        "\n**``Tomorrow: ``**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
-        "\n**``Later:    ``**\n```Use the drop down menu to select a range of days relative to now you'd like the scroll events for."
+        value="​\n**`Yesterday:`**\n```Returns all scroll events between now and 24 hours ago.```"
+        "\n**`Today:    `**\n```Returns all scroll events between 6 hours ago and 24 hours from now.```"
+        "\n**`Tomorrow: `**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
+        "\n**`Later:    `**\n```Use the drop down menu to select a range of days relative to now you'd like the scroll events for."
         "\nIf only one day is selected events for that day will be given```"
         "\n***Note:** Due to daily auto calibration, predictions may improve in accuracy when requested closer to the date that they occur on.*",
         inline=False,
@@ -303,11 +302,13 @@ class GuildDaySelMenu(discord.ui.Select):
         self.setUp=setUp
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(2, 15)]
+        options = [discord.SelectOption(label=x) for x in range(-1, 15)]
         super().__init__(
             placeholder="Select how many days from today",
             options=options,
             custom_id="selectDay",
+            min_values=1,
+            max_values=2
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -323,7 +324,6 @@ class GuildDaySelMenu(discord.ui.Select):
                 ephemeral=True,
             )
             return
-
         useEmojis = False
         emojis=None
         if (str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]):
@@ -335,8 +335,9 @@ class GuildDaySelMenu(discord.ui.Select):
                 self.setUp = True
                 self.filterList = guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["filters"]
 
-        value = self.values[0]
-        msgArr = splitMsg(getDayList(ephemeris, startDay=value, useEmojis=useEmojis, filters=self.filterList, emojis=emojis))
+        start = min(self.values)
+        end = max(self.values)
+        msgArr = splitMsg(getDayList(ephemeris, startDay=start, useEmojis=useEmojis, filters=self.filterList, emojis=emojis, endDay=end))
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -352,8 +353,11 @@ class UserInstallSelDayMenu(discord.ui.Select):
         self.useEmojis = useEmojis
         self.emojis = emojis
         self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(2, 15)]
-        super().__init__(placeholder="Select how many days from today", options=options)
+        options = [discord.SelectOption(label=x) for x in range(-1, 15)]
+        super().__init__(placeholder="Select how many days from today",
+                        options=options,
+                        min_values=1,
+                        max_values=2)
     async def callback(self, interaction: discord.Interaction):
         whiteListed = False
         if 0 in interaction._integration_owners:
@@ -369,8 +373,9 @@ class UserInstallSelDayMenu(discord.ui.Select):
                 ephemeral=True,
             )
             return
-        value = self.values[0]
-        msgArr = splitMsg(getDayList(ephemeris, startDay=value, filters=self.filterList, useEmojis=self.useEmojis, emojis=self.emojis))
+        start = min(self.values)
+        end = max(self.values)
+        msgArr = splitMsg(getDayList(ephemeris, startDay=start, endDay=end, filters=self.filterList, useEmojis=self.useEmojis, emojis=self.emojis))
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -823,14 +828,17 @@ class GuildMenu(discord.ui.View):
 #######################
 #  Helper Functions
 #######################
-def getDayList(ephemeris, startDay: int, useEmojis=False, filters=None, emojis=None):
+def getDayList(ephemeris, startDay: int, useEmojis=False, filters=None, emojis=None, endDay: int = None):
     currentTime = round((time.time() * 1000))
     start = (
         currentTime - round(0.25 * oneDay)
         if startDay == 0
         else currentTime + int(startDay) * int(oneDay)
     )
-    end = currentTime + oneDay if startDay == 0 else start + oneDay
+    if endDay == None:
+        end = currentTime + oneDay if startDay == 0 else start + oneDay
+    else:
+        end = currentTime + int(oneDay) * int(endDay) + oneDay
     cacheSubSet = ephemeris.getEventsInRange(start, end)
 
     # filter out specific orb events
