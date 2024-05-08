@@ -25,15 +25,15 @@ if not USPath.exists():
     USPath.write_text(json.dumps({}))
     print(f"File created: {USPath}")
 
-with GSPath.open('r') as f:
+with GSPath.open("r") as f:
     guildSettings = json.load(f)
-with USPath.open('r') as f:
+with USPath.open("r") as f:
     userSettings = json.load(f)
-with GWLPath.open('r') as f:
+with GWLPath.open("r") as f:
     guildWhiteList = json.load(f)
-with UWLPath.open('r') as f:
+with UWLPath.open("r") as f:
     userWhiteList = json.load(f)
-    
+
 filterMenuEmojis = {
     "White": "<:WhiteOrb:998472151965376602>",
     "Black": "<:BlackOrb:998472215295164418>",
@@ -42,7 +42,7 @@ filterMenuEmojis = {
     "Purple": "<:PurpleOrb:998472375400149112>",
     "Yellow": "<:YellowOrb:998472388406689812>",
     "Cyan": "<:CyanOrb:998472398707888229>",
-    "Blue": "<:BlueOrb:998472411861233694>"
+    "Blue": "<:BlueOrb:998472411861233694>",
 }
 
 thumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
@@ -59,6 +59,7 @@ class PersistentViewBot(commands.Bot):
 
     async def setup_hook(self) -> None:
         self.add_view(GuildMenu(allow_filters=1, setUp=False))
+
 
 bot = PersistentViewBot()
 
@@ -98,16 +99,22 @@ async def hello(interaction: discord.Interaction):
         discord.app_commands.Choice(name="No", value=0),
     ]
 )
-async def userInstallMenu(interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int]):
+async def userInstallMenu(
+    interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int]
+):
     ephRes = False
     if str(interaction.user.id) not in userWhiteList:
         await interaction.response.send_message(
             content="You do not have permission to use this command", ephemeral=True
         )
         return
-    if use_emojis.value == 1 and (str(interaction.user.id) not in userSettings or 'emojis' not in userSettings[str(interaction.user.id)]):
+    if use_emojis.value == 1 and (
+        str(interaction.user.id) not in userSettings
+        or "emojis" not in userSettings[str(interaction.user.id)]
+    ):
         await interaction.response.send_message(
-        content="**Please configure your personal emoji settings (/set_personal_emojis) to use this command __with emojis.__**", ephemeral=True
+            content="**Please configure your personal emoji settings (/set_personal_emojis) to use this command __with emojis.__**",
+            ephemeral=True,
         )
         return
     embed = discord.Embed(
@@ -127,9 +134,16 @@ async def userInstallMenu(interaction: discord.Interaction, use_emojis: discord.
     embed.set_thumbnail(url=thumbnailURL)
     embed.set_footer(text="⏱️ Menu expires in five minutes")
     await interaction.response.send_message(
-        embed=embed, view=UserInstallMenu(useEmojis = True if use_emojis.value == 1 else False, 
-                                        emojis=None if use_emojis.value == 0 else userSettings[str(interaction.user.id)]['emojis']),
-                                        ephemeral=False)
+        embed=embed,
+        view=UserInstallMenu(
+            useEmojis=True if use_emojis.value == 1 else False,
+            emojis=None
+            if use_emojis.value == 0
+            else userSettings[str(interaction.user.id)]["emojis"],
+        ),
+        ephemeral=False,
+    )
+
 
 @bot.tree.command(
     name="create_persistent_menu",
@@ -138,7 +152,10 @@ async def userInstallMenu(interaction: discord.Interaction, use_emojis: discord.
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
 @app_commands.default_permissions()
-@app_commands.describe(use_emojis="Whether or not responses use emojis for orb names", allow_filters="Enables Filtering by orb. Filter settings are shared between all users")
+@app_commands.describe(
+    use_emojis="Whether or not responses use emojis for orb names",
+    allow_filters="Enables Filtering by orb. Filter settings are shared between all users",
+)
 @app_commands.choices(
     use_emojis=[
         discord.app_commands.Choice(name="Yes", value=1),
@@ -147,10 +164,12 @@ async def userInstallMenu(interaction: discord.Interaction, use_emojis: discord.
     allow_filters=[
         discord.app_commands.Choice(name="Yes", value=1),
         discord.app_commands.Choice(name="No", value=0),
-    ]
+    ],
 )
 async def guildMenu(
-    interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int], allow_filters: discord.app_commands.Choice[int]
+    interaction: discord.Interaction,
+    use_emojis: discord.app_commands.Choice[int],
+    allow_filters: discord.app_commands.Choice[int],
 ):
     ephRes = True
     if str(interaction.guild_id) not in guildWhiteList:
@@ -160,13 +179,25 @@ async def guildMenu(
         )
         return
     if str(interaction.guild_id) in guildSettings:
-        guildSettings[str(interaction.guild_id)][str(interaction.channel_id)] = {"useEmojis": use_emojis.value, "allow_filters": allow_filters.value}
+        guildSettings[str(interaction.guild_id)][str(interaction.channel_id)] = {
+            "useEmojis": use_emojis.value,
+            "allow_filters": allow_filters.value,
+        }
     else:
-        guildSettings[str(interaction.guild_id)] = {str(interaction.channel_id):  {"useEmojis": use_emojis.value, "allow_filters": allow_filters.value}}
+        guildSettings[str(interaction.guild_id)] = {
+            str(interaction.channel_id): {
+                "useEmojis": use_emojis.value,
+                "allow_filters": allow_filters.value,
+            }
+        }
     updateSettings(settings=guildSettings)
-    if use_emojis.value == 1 and "emojis" not in guildSettings[str(interaction.guild_id)]:
+    if (
+        use_emojis.value == 1
+        and "emojis" not in guildSettings[str(interaction.guild_id)]
+    ):
         await interaction.response.send_message(
-        content="**Please configure the server emoji settings (/set_server_emojis) to use this command __with emojis.__**", ephemeral=True
+            content="**Please configure the server emoji settings (/set_server_emojis) to use this command __with emojis.__**",
+            ephemeral=True,
         )
         return
     embed = discord.Embed(
@@ -188,23 +219,36 @@ async def guildMenu(
     await interaction.response.send_message(
         embed=embed, view=GuildMenu(allow_filters=allow_filters.value), ephemeral=False
     )
-    
+
+
 @bot.tree.command(
     name="set_server_emojis",
     description="Configures the emojis used for ephemerides requested from prediction menus used within the server.",
 )
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-async def setServerEmojis(interaction: discord.Interaction, white: str, black: str, green: str,
-                          red: str, purple: str, yellow: str, cyan: str, blue: str):
+async def setServerEmojis(
+    interaction: discord.Interaction,
+    white: str,
+    black: str,
+    green: str,
+    red: str,
+    purple: str,
+    yellow: str,
+    cyan: str,
+    blue: str,
+):
     invalidEmojis = []
-    for emoji in white,black,green,red,purple,yellow,cyan,blue:
+    for emoji in white, black, green, red, purple, yellow, cyan, blue:
         emoji = emoji.strip()
         if not isEmoji(emoji):
             invalidEmojis.append(emoji)
     if len(invalidEmojis) != 0:
-        await interaction.response.send_message(content=f"**The following emojis are invalid: {invalidEmojis}**, please try again.", ephemeral=True)
-    else: 
+        await interaction.response.send_message(
+            content=f"**The following emojis are invalid: {invalidEmojis}**, please try again.",
+            ephemeral=True,
+        )
+    else:
         if str(interaction.guild_id) in guildSettings:
             guildSettings[str(interaction.guild_id)]["emojis"] = {
                 "White": white,
@@ -214,10 +258,11 @@ async def setServerEmojis(interaction: discord.Interaction, white: str, black: s
                 "Purple": purple,
                 "Yellow": yellow,
                 "Cyan": cyan,
-                "Blue": blue
+                "Blue": blue,
             }
         else:
-            guildSettings[str(interaction.guild_id)] = { "emojis": {
+            guildSettings[str(interaction.guild_id)] = {
+                "emojis": {
                     "White": white,
                     "Black": black,
                     "Green": green,
@@ -225,21 +270,24 @@ async def setServerEmojis(interaction: discord.Interaction, white: str, black: s
                     "Purple": purple,
                     "Yellow": yellow,
                     "Cyan": cyan,
-                    "Blue": blue
+                    "Blue": blue,
                 }
             }
-        emojis = guildSettings[str(interaction.guild_id)]["emojis"] 
+        emojis = guildSettings[str(interaction.guild_id)]["emojis"]
         updateSettings(settings=guildSettings)
-        await interaction.response.send_message(content="**Successfully set server emojis!**"
-                                                f"\n> `White ` {emojis['White']}"
-                                                f"\n> `Black ` {emojis['Black']}"
-                                                f"\n> `Green ` {emojis['Green']}"
-                                                f"\n> `Red   ` {emojis['Red']}"
-                                                f"\n> `Purple` {emojis['Purple']}"
-                                                f"\n> `Yellow` {emojis['Yellow']}"
-                                                f"\n> `Cyan  ` {emojis['Cyan']}"
-                                                f"\n> `Blue  ` {emojis['Blue']}",
-                                                ephemeral=True)
+        await interaction.response.send_message(
+            content="**Successfully set server emojis!**"
+            f"\n> `White ` {emojis['White']}"
+            f"\n> `Black ` {emojis['Black']}"
+            f"\n> `Green ` {emojis['Green']}"
+            f"\n> `Red   ` {emojis['Red']}"
+            f"\n> `Purple` {emojis['Purple']}"
+            f"\n> `Yellow` {emojis['Yellow']}"
+            f"\n> `Cyan  ` {emojis['Cyan']}"
+            f"\n> `Blue  ` {emojis['Blue']}",
+            ephemeral=True,
+        )
+
 
 @bot.tree.command(
     name="set_personal_emojis",
@@ -248,16 +296,28 @@ async def setServerEmojis(interaction: discord.Interaction, white: str, black: s
 @app_commands.allowed_installs(guilds=False, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
 @app_commands.describe()
-async def setPersonalEmojis(interaction: discord.Interaction, white: str, black: str, green: str,
-                          red: str, purple: str, yellow: str, cyan: str, blue: str):
+async def setPersonalEmojis(
+    interaction: discord.Interaction,
+    white: str,
+    black: str,
+    green: str,
+    red: str,
+    purple: str,
+    yellow: str,
+    cyan: str,
+    blue: str,
+):
     invalidEmojis = []
-    for emoji in white,black,green,red,purple,yellow,cyan,blue:
+    for emoji in white, black, green, red, purple, yellow, cyan, blue:
         emoji = emoji.strip()
         if not isEmoji(emoji):
             invalidEmojis.append(emoji)
     if len(invalidEmojis) != 0:
-        await interaction.response.send_message(content=f"**The following emojis are invalid: {invalidEmojis}**, please try again.", ephemeral=True)
-    else: 
+        await interaction.response.send_message(
+            content=f"**The following emojis are invalid: {invalidEmojis}**, please try again.",
+            ephemeral=True,
+        )
+    else:
         if str(interaction.user.id) in userSettings:
             userSettings[str(interaction.user.id)]["emojis"] = {
                 "White": white,
@@ -267,10 +327,11 @@ async def setPersonalEmojis(interaction: discord.Interaction, white: str, black:
                 "Purple": purple,
                 "Yellow": yellow,
                 "Cyan": cyan,
-                "Blue": blue
+                "Blue": blue,
             }
         else:
-            userSettings[str(interaction.user.id)] = { "emojis": {
+            userSettings[str(interaction.user.id)] = {
+                "emojis": {
                     "White": white,
                     "Black": black,
                     "Green": green,
@@ -278,28 +339,31 @@ async def setPersonalEmojis(interaction: discord.Interaction, white: str, black:
                     "Purple": purple,
                     "Yellow": yellow,
                     "Cyan": cyan,
-                    "Blue": blue
+                    "Blue": blue,
                 }
             }
-        emojis = userSettings[str(interaction.user.id)]["emojis"] 
+        emojis = userSettings[str(interaction.user.id)]["emojis"]
         updateSettings(settings=userSettings, settingsFile=USPath)
-        await interaction.response.send_message(content="**Successfully set personal emojis!**"
-                                                f"\n> `White ` {emojis['White']}"
-                                                f"\n> `Black ` {emojis['Black']}"
-                                                f"\n> `Green ` {emojis['Green']}"
-                                                f"\n> `Red   ` {emojis['Red']}"
-                                                f"\n> `Purple` {emojis['Purple']}"
-                                                f"\n> `Yellow` {emojis['Yellow']}"
-                                                f"\n> `Cyan  ` {emojis['Cyan']}"
-                                                f"\n> `Blue  ` {emojis['Blue']}",
-                                                ephemeral=True)
-        
+        await interaction.response.send_message(
+            content="**Successfully set personal emojis!**"
+            f"\n> `White ` {emojis['White']}"
+            f"\n> `Black ` {emojis['Black']}"
+            f"\n> `Green ` {emojis['Green']}"
+            f"\n> `Red   ` {emojis['Red']}"
+            f"\n> `Purple` {emojis['Purple']}"
+            f"\n> `Yellow` {emojis['Yellow']}"
+            f"\n> `Cyan  ` {emojis['Cyan']}"
+            f"\n> `Blue  ` {emojis['Blue']}",
+            ephemeral=True,
+        )
+
+
 ####################
 #      Menus
 ####################
 class GuildDaySelMenu(discord.ui.Select):
     def __init__(self, ephemeralRes=True, filterList=None, setUp=False):
-        self.setUp=setUp
+        self.setUp = setUp
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
         options = [discord.SelectOption(label=x) for x in range(-1, 15)]
@@ -308,7 +372,7 @@ class GuildDaySelMenu(discord.ui.Select):
             options=options,
             custom_id="selectDay",
             min_values=1,
-            max_values=2
+            max_values=2,
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -325,19 +389,35 @@ class GuildDaySelMenu(discord.ui.Select):
             )
             return
         useEmojis = False
-        emojis=None
-        if (str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]):
-            if guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["useEmojis"] == 1:
+        emojis = None
+        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "useEmojis"
+                ]
+                == 1
+            ):
                 useEmojis = True
-                emojis =  guildSettings[str(interaction.guild_id)]['emojis']
+                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
             if self.setUp == False:
                 # Asignmenu state on interaction when bot is restarted
                 self.setUp = True
-                self.filterList = guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["filters"]
+                self.filterList = guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)
+                ]["filters"]
 
         start = min(self.values)
         end = max(self.values)
-        msgArr = splitMsg(getDayList(ephemeris, startDay=start, useEmojis=useEmojis, filters=self.filterList, emojis=emojis, endDay=end))
+        msgArr = splitMsg(
+            getDayList(
+                ephemeris,
+                startDay=start,
+                useEmojis=useEmojis,
+                filters=self.filterList,
+                emojis=emojis,
+                endDay=end,
+            )
+        )
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -347,17 +427,23 @@ class GuildDaySelMenu(discord.ui.Select):
                     content=msg, ephemeral=self.ephemeralRes
                 )
 
+
 class UserInstallSelDayMenu(discord.ui.Select):
-    def __init__(self, ephemeralRes=True, filterList=None, useEmojis = False, emojis=None):
+    def __init__(
+        self, ephemeralRes=True, filterList=None, useEmojis=False, emojis=None
+    ):
         self.ephemeralRes = ephemeralRes
         self.useEmojis = useEmojis
         self.emojis = emojis
         self.filterList = filterList
         options = [discord.SelectOption(label=x) for x in range(-1, 15)]
-        super().__init__(placeholder="Select how many days from today",
-                        options=options,
-                        min_values=1,
-                        max_values=2)
+        super().__init__(
+            placeholder="Select how many days from today",
+            options=options,
+            min_values=1,
+            max_values=2,
+        )
+
     async def callback(self, interaction: discord.Interaction):
         whiteListed = False
         if 0 in interaction._integration_owners:
@@ -375,7 +461,16 @@ class UserInstallSelDayMenu(discord.ui.Select):
             return
         start = min(self.values)
         end = max(self.values)
-        msgArr = splitMsg(getDayList(ephemeris, startDay=start, endDay=end, filters=self.filterList, useEmojis=self.useEmojis, emojis=self.emojis))
+        msgArr = splitMsg(
+            getDayList(
+                ephemeris,
+                startDay=start,
+                endDay=end,
+                filters=self.filterList,
+                useEmojis=self.useEmojis,
+                emojis=self.emojis,
+            )
+        )
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -385,8 +480,11 @@ class UserInstallSelDayMenu(discord.ui.Select):
                     content=msg, ephemeral=self.ephemeralRes
                 )
 
+
 class UserInstallFilterMenu(discord.ui.Select):
-    def __init__(self, filterOptions, initiationTime, timeout=300, useEmojis=False, emojis=None):
+    def __init__(
+        self, filterOptions, initiationTime, timeout=300, useEmojis=False, emojis=None
+    ):
         self.timeout = timeout
         self.filterOptions = filterOptions
         self.initiationTime = initiationTime
@@ -448,6 +546,7 @@ class UserInstallFilterMenu(discord.ui.Select):
             min_values=0,
             max_values=8,
         )
+
     async def callback(self, interaction: discord.Interaction):
         # This is done so all users will see the same selected options
         filterOptions = {
@@ -474,24 +573,25 @@ class UserInstallFilterMenu(discord.ui.Select):
                 filterOptions=filterOptions,
                 filterList=filterList,
                 useEmojis=self.useEmojis,
-                emojis = self.emojis
+                emojis=self.emojis,
             )
         )
+
 
 class GuildFilterMenu(discord.ui.Select):
     def __init__(self, filterOptions=None, timeout=None):
         self.timeout = timeout
         if filterOptions == None:
             filterOptions = {
-            "White": False,
-            "Black": False,
-            "Green": False,
-            "Red": False,
-            "Purple": False,
-            "Yellow": False,
-            "Cyan": False,
-            "Blue": False,
-        }
+                "White": False,
+                "Black": False,
+                "Green": False,
+                "Red": False,
+                "Purple": False,
+                "Yellow": False,
+                "Cyan": False,
+                "Blue": False,
+            }
         options = [
             discord.SelectOption(
                 label="White",
@@ -566,7 +666,9 @@ class GuildFilterMenu(discord.ui.Select):
         for orb in self.values:
             filterOptions[orb] = True
             filterList.append(orb)
-        guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["filters"] = filterList
+        guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+            "filters"
+        ] = filterList
         updateSettings(settings=guildSettings)
         # change select menu options
         await interaction.response.edit_message(
@@ -578,12 +680,13 @@ class GuildFilterMenu(discord.ui.Select):
             )
         )
 
+
 class UserInstallMenu(discord.ui.View):
     def __init__(
         self,
         ephemeralRes=False,
         timeout=300,
-        useEmojis = False,
+        useEmojis=False,
         emojis=None,
         filterList=None,
         filterOptions={
@@ -595,7 +698,7 @@ class UserInstallMenu(discord.ui.View):
             "Yellow": False,
             "Cyan": False,
             "Blue": False,
-        }
+        },
     ):
         super().__init__(timeout=timeout)
         self.initiationTime = time.time()
@@ -604,10 +707,18 @@ class UserInstallMenu(discord.ui.View):
         self.useEmojis = useEmojis
         self.emojis = emojis
         self.filterList = filterList
-        self.add_item(UserInstallSelDayMenu(ephemeralRes, filterList, useEmojis=useEmojis, emojis=emojis))
+        self.add_item(
+            UserInstallSelDayMenu(
+                ephemeralRes, filterList, useEmojis=useEmojis, emojis=emojis
+            )
+        )
         self.add_item(
             UserInstallFilterMenu(
-                self.filterOptions, initiationTime=self.initiationTime, timeout=timeout, useEmojis=useEmojis, emojis=emojis
+                self.filterOptions,
+                initiationTime=self.initiationTime,
+                timeout=timeout,
+                useEmojis=useEmojis,
+                emojis=emojis,
             )
         )
 
@@ -630,7 +741,15 @@ class UserInstallMenu(discord.ui.View):
             )
             return
 
-        msgArr = splitMsg(getDayList(ephemeris, -1, filters=self.filterList, useEmojis=self.useEmojis, emojis=self.emojis))
+        msgArr = splitMsg(
+            getDayList(
+                ephemeris,
+                -1,
+                filters=self.filterList,
+                useEmojis=self.useEmojis,
+                emojis=self.emojis,
+            )
+        )
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -657,7 +776,15 @@ class UserInstallMenu(discord.ui.View):
             )
             return
 
-        msgArr = splitMsg(getDayList(ephemeris, 0, filters=self.filterList, useEmojis=self.useEmojis, emojis=self.emojis))
+        msgArr = splitMsg(
+            getDayList(
+                ephemeris,
+                0,
+                filters=self.filterList,
+                useEmojis=self.useEmojis,
+                emojis=self.emojis,
+            )
+        )
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -686,7 +813,15 @@ class UserInstallMenu(discord.ui.View):
             )
             return
 
-        msgArr = splitMsg(getDayList(ephemeris, 1, filters=self.filterList, useEmojis=self.useEmojis, emojis=self.emojis))
+        msgArr = splitMsg(
+            getDayList(
+                ephemeris,
+                1,
+                filters=self.filterList,
+                useEmojis=self.useEmojis,
+                emojis=self.emojis,
+            )
+        )
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -696,17 +831,26 @@ class UserInstallMenu(discord.ui.View):
                     content=msg, ephemeral=self.ephemeralRes
                 )
 
+
 # Create seperate menu that will persist
 class GuildMenu(discord.ui.View):
-    def __init__(self, ephemeralRes=True, timeout=None, allow_filters=None, filterOptions=None, filterList=None, setUp=True):
+    def __init__(
+        self,
+        ephemeralRes=True,
+        timeout=None,
+        allow_filters=None,
+        filterOptions=None,
+        filterList=None,
+        setUp=True,
+    ):
         super().__init__(timeout=timeout)
         self.setUp = setUp
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
-        self.allow_filters=allow_filters
+        self.allow_filters = allow_filters
         self.add_item(GuildDaySelMenu(ephemeralRes, self.setUp))
         if self.allow_filters == 1:
-           self.add_item(GuildFilterMenu(filterOptions))
+            self.add_item(GuildFilterMenu(filterOptions))
 
     @discord.ui.button(
         label="Yesterday", style=discord.ButtonStyle.red, custom_id="yesterday"
@@ -727,17 +871,32 @@ class GuildMenu(discord.ui.View):
             )
             return
         useEmojis = False
-        emojis=None
-        if (str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]):
-            if guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["useEmojis"] == 1:
+        emojis = None
+        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "useEmojis"
+                ]
+                == 1
+            ):
                 useEmojis = True
-                emojis =  guildSettings[str(interaction.guild_id)]['emojis']
+                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
             if self.setUp == False:
                 # Asignmenu state on interaction when bot is restarted
                 self.setUp = True
-                self.filterList = guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["filters"]
+                self.filterList = guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)
+                ]["filters"]
 
-        msgArr = splitMsg(getDayList(ephemeris, startDay=-1, useEmojis=useEmojis, filters=self.filterList, emojis=emojis))
+        msgArr = splitMsg(
+            getDayList(
+                ephemeris,
+                startDay=-1,
+                useEmojis=useEmojis,
+                filters=self.filterList,
+                emojis=emojis,
+            )
+        )
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -764,17 +923,32 @@ class GuildMenu(discord.ui.View):
             )
             return
         useEmojis = False
-        emojis=None
-        if (str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]):
-            if guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["useEmojis"] == 1:
+        emojis = None
+        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "useEmojis"
+                ]
+                == 1
+            ):
                 useEmojis = True
-                emojis =  guildSettings[str(interaction.guild_id)]['emojis']
+                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
             if self.setUp == False:
                 # Asignmenu state on interaction when bot is restarted
                 self.setUp = True
-                self.filterList = guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["filters"]
+                self.filterList = guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)
+                ]["filters"]
 
-        msgArr = splitMsg(getDayList(ephemeris, startDay=0, useEmojis=useEmojis, filters=self.filterList, emojis=emojis))
+        msgArr = splitMsg(
+            getDayList(
+                ephemeris,
+                startDay=0,
+                useEmojis=useEmojis,
+                filters=self.filterList,
+                emojis=emojis,
+            )
+        )
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -804,17 +978,32 @@ class GuildMenu(discord.ui.View):
             return
 
         useEmojis = False
-        emojis=None
-        if (str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]):
-            if guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["useEmojis"] == 1:
+        emojis = None
+        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "useEmojis"
+                ]
+                == 1
+            ):
                 useEmojis = True
-                emojis =  guildSettings[str(interaction.guild_id)]['emojis']
+                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
             if self.setUp == False:
                 # Asignmenu state on interaction when bot is restarted
                 self.setUp = True
-                self.filterList = guildSettings[str(interaction.guild_id)][str(interaction.channel_id)]["filters"]
+                self.filterList = guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)
+                ]["filters"]
 
-        msgArr = splitMsg(getDayList(ephemeris, startDay=1, useEmojis=useEmojis, filters=self.filterList, emojis=emojis))
+        msgArr = splitMsg(
+            getDayList(
+                ephemeris,
+                startDay=1,
+                useEmojis=useEmojis,
+                filters=self.filterList,
+                emojis=emojis,
+            )
+        )
         await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
@@ -828,7 +1017,14 @@ class GuildMenu(discord.ui.View):
 #######################
 #  Helper Functions
 #######################
-def getDayList(ephemeris, startDay: int, useEmojis=False, filters=None, emojis=None, endDay: int = None):
+def getDayList(
+    ephemeris,
+    startDay: int,
+    useEmojis=False,
+    filters=None,
+    emojis=None,
+    endDay: int = None,
+):
     currentTime = round((time.time() * 1000))
     start = (
         currentTime - round(0.25 * oneDay)
@@ -866,6 +1062,7 @@ def getDayList(ephemeris, startDay: int, useEmojis=False, filters=None, emojis=N
         for event in cacheSubSet[1:]:
             eventMsg += "\n" + createEventMsgLine(event, useEmojis, emojis=emojis)
     return eventMsg
+
 
 def createEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=None):
     glows = event["newGlows"]
@@ -925,11 +1122,13 @@ def updateSettings(settings, settingsFile=GSPath):
     with open(settingsFile, "w") as outfile:
         outfile.write(json_object)
 
+
 def getSettings(settingsFile=GSPath):
     settings = {}
     with open(settingsFile, "r") as json_file:
         settings = json.load(json_file)
     return settings
+
 
 def isEmoji(str):
     """Checks if the argument is an emoji
@@ -940,10 +1139,11 @@ def isEmoji(str):
     Returns:
         Boolean: True if string is an emoji, False if string is not an emoji
     """
-    if bool(match(r'\p{Emoji}', str)):
+    if bool(match(r"\p{Emoji}", str)):
         return True
-    if len(str) < 5: 
+    if len(str) < 5:
         return False
-    if str[:2]+str[-1] == '<:>' or str[0]+str[-1] == '::':
+    if str[:2] + str[-1] == "<:>" or str[0] + str[-1] == "::":
         return True
-    else: return False
+    else:
+        return False
