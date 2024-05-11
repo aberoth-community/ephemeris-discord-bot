@@ -8,7 +8,6 @@ load_dotenv()
 
 app = Flask(__name__)
 key = os.getenv("UPDATE_KEY")
-print(key)
 ephemeris = None
 varFilePath = Path('newRefTimes.json')
 

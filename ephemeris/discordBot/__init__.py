@@ -936,9 +936,17 @@ class GuildMenu(discord.ui.View):
             if self.setUp == False:
                 # Asignmenu state on interaction when bot is restarted
                 self.setUp = True
-                self.filterList = guildSettings[str(interaction.guild_id)][
+                if 'filters' in guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)
+                ]:
+                    self.filterList = guildSettings[str(interaction.guild_id)][
                     str(interaction.channel_id)
                 ]["filters"]
+                else:
+                    self.filterList = {}
+                    guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)
+                    ]["filters"] = {}
 
         msgArr = splitMsg(
             getDayList(

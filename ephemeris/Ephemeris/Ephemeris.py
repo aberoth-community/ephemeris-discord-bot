@@ -181,7 +181,7 @@ class Ephemeris:
         self.v["cyan"]["refPos"] = posList[5]
         self.v["blue"]["refPos"] = posList[6]
 
-        self.updateVariables(self.variablesFile)
+        self.updateVariables()
 
     def getPeriods(self):
         return np.array(
@@ -258,9 +258,9 @@ class Ephemeris:
         with open(fileLoc, "w") as outfile:
             outfile.write(json_object)
 
-    def updateVariables(self, variablesFile):
+    def updateVariables(self):
         json_object = json.dumps(self.v, indent=4)
-        with variablesFile.open("w") as outfile:
+        with self.variablesFile.open("w") as outfile:
             outfile.write(json_object)
 
     def getVariables(self, variablesFile):
@@ -277,13 +277,14 @@ class Ephemeris:
             refreshRate (int): The frequency in seconds to refresh the cache
         """
         while True:
-            time.sleep(refreshRate)
+            #time.sleep(refreshRate)
             self.updateRefTimes()
             self.createEventRange(
-                start=(time.time() * 1000) - 2 * 86400000,
-                end=(time.time() * 1000) + 30 * 86400000,
+                startTime=(time.time() * 1000) - 2 * 86400000,
+                stopTime=(time.time() * 1000) + 30 * 86400000,
                 saveToCache=True,
             )
+            time.sleep(refreshRate)
 
     def updateRefTimes(self):
         newVars = {}
@@ -291,12 +292,14 @@ class Ephemeris:
             newVars = json.load(f)
         
         for orb in newVars:
+            compOrb = orb if orb != 'white' else 'candle'
+            print(compOrb)
             # Check if current ref time is most recent refTime and check that it's within an expected alignment time range
-            if (self.v[orb]['refTime'] != newVars[orb][0]+newVars[orb][1]-500) and self.checkValidRefTime(orb, newVars[orb]):
+            if (self.v[compOrb]['refTime'] != newVars[orb][0]+newVars[orb][1]-500) and self.checkValidRefTime(orb, newVars[orb]):
                 # average two times then subtract the total average time the events are off by
                 eventTime = round(newVars[orb][0]+newVars[orb][1]-500)
                 posistions = self.posRelWhite(eventTime)
-                if orb == 'white': orb == 'candle'
+                if orb == 'white': orb = 'candle'
                 indicies = {"candle": 0, "black": 1, "green": 2, "red": 3, "purple": 4, "yellow": 5, "cyan": 6, "blue": 7}
                 orbPos = posistions[indicies[orb]]
                 candlePos = posistions[indicies[0]]
@@ -314,17 +317,31 @@ class Ephemeris:
         self.setRefPositions()
         self.refPositions = self.getRefPositions()
         # Update the variables file to match the new refTimes
-        with self.variablesFile.open("w") as outfile:
-            outfile.write(self.v)
+        self.updateVariables()
         
     def checkValidRefTime(self, orb, refTimes):
         startRange = self.getEventsInRange(startTime=refTimes[0]-15000, endTime=refTimes[0]+15000)
         endRange = self.getEventsInRange(startTime=refTimes[1]-15000, endTime=refTimes[1]+15000)
+        if len(startRange) == 0 or len(endRange) == 0:
+            return False
         # white orb position is determined from darks rather than glows
+        validStart = False
+        validEnd = False
         if orb == 'white':
-            return (orb in startRange["newDarks"] and orb in endRange["returnedToNormal"])
-        
-        return (orb in startRange["newGlows"] and orb in endRange["returnedToNormal"])
+            for event in startRange:
+                print('event:', event)
+                if orb in event["newDarks"]:
+                    validStart == True
+        else:
+            for event in startRange:
+                if orb in event["newGlows"]:
+                    validStart == True
+        if validStart == True:
+            for event in endRange:
+                if orb in event["returnedToNormal"]:
+                    validEnd == True
+        print("Orb:", orb, (validStart and validEnd))
+        return (validStart and validEnd)
         
 
 if __name__ == "__main__":
