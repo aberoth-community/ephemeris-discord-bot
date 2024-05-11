@@ -295,20 +295,21 @@ class Ephemeris:
             compOrb = orb if orb != 'white' else 'candle'
             print(compOrb)
             # Check if current ref time is most recent refTime and check that it's within an expected alignment time range
-            if (self.v[compOrb]['refTime'] != newVars[orb][0]+newVars[orb][1]-500) and self.checkValidRefTime(orb, newVars[orb]):
+            if (self.v[compOrb]['refTime'] != (newVars[orb][0]+newVars[orb][1]-500)/2) and self.checkValidRefTime(orb, newVars[orb]):
                 # average two times then subtract the total average time the events are off by
-                eventTime = round(newVars[orb][0]+newVars[orb][1]-500)
+                eventTime = round((newVars[orb][0]+newVars[orb][1]-500)/2)
                 posistions = self.posRelWhite(eventTime)
                 if orb == 'white': orb = 'candle'
                 indicies = {"candle": 0, "black": 1, "green": 2, "red": 3, "purple": 4, "yellow": 5, "cyan": 6, "blue": 7}
                 orbPos = posistions[indicies[orb]]
-                candlePos = posistions[indicies[0]]
+                candlePos = posistions[indicies["candle"]]
                 # check if orb and candle are on same or opposite sides
                 refOffset = min([0, 180, 360], key=lambda x: abs(x - (orbPos - candlePos)))
+                print("offset", refOffset)
                 if refOffset == 360: refOffset = 0
                 # update variables
                 self.v[orb]['refTime'] = eventTime
-                self.v[orb]['refOffset'] = eventTime
+                self.v[orb]['refOffset'] = refOffset
         # reset arrays used to calculate events
         self.periods = self.getPeriods()
         self.radii = self.getRadii()
@@ -324,22 +325,22 @@ class Ephemeris:
         endRange = self.getEventsInRange(startTime=refTimes[1]-15000, endTime=refTimes[1]+15000)
         if len(startRange) == 0 or len(endRange) == 0:
             return False
+        orb = orb.capitalize()
         # white orb position is determined from darks rather than glows
         validStart = False
         validEnd = False
-        if orb == 'white':
+        if orb == 'White':
             for event in startRange:
-                print('event:', event)
                 if orb in event["newDarks"]:
-                    validStart == True
+                    validStart = True
         else:
             for event in startRange:
                 if orb in event["newGlows"]:
-                    validStart == True
+                    validStart = True
         if validStart == True:
             for event in endRange:
                 if orb in event["returnedToNormal"]:
-                    validEnd == True
+                    validEnd = True
         print("Orb:", orb, (validStart and validEnd))
         return (validStart and validEnd)
         
