@@ -13,6 +13,7 @@ tmux send-keys -t 0 'python -m ephemeris' C-m
 
 # Split the window horizontally and navigate to the webserver directory
 tmux split-window -h -t 0
+tmux send-keys -t 0.1 'source .venv/bin/activate' C-m
 tmux send-keys -t 0.1 'cd ephemeris/UpdateWebServer' C-m
 tmux send-keys -t 0.1 'echo "Starting http server with Waitress..."' C-m
 tmux send-keys -t 0.1 'waitress-serve --listen=0.0.0.0:5000 --threads=1 varUpdateWS:app' C-m
