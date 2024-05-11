@@ -293,7 +293,6 @@ class Ephemeris:
         
         for orb in newVars:
             compOrb = orb if orb != 'white' else 'candle'
-            print(compOrb)
             # Check if current ref time is most recent refTime and check that it's within an expected alignment time range
             if (self.v[compOrb]['refTime'] != (newVars[orb][0]+newVars[orb][1]-500)/2) and self.checkValidRefTime(orb, newVars[orb]):
                 # average two times then subtract the total average time the events are off by
@@ -305,7 +304,6 @@ class Ephemeris:
                 candlePos = posistions[indicies["candle"]]
                 # check if orb and candle are on same or opposite sides
                 refOffset = min([0, 180, 360], key=lambda x: abs(x - (orbPos - candlePos)))
-                print("offset", refOffset)
                 if refOffset == 360: refOffset = 0
                 # update variables
                 self.v[orb]['refTime'] = eventTime
