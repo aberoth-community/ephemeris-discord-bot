@@ -48,7 +48,7 @@ filterMenuEmojis = {
 thumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
 oneDay = 86400000
 ephemeris = Ephemeris.Ephemeris(
-    start=(time.time() * 1000) - 2 * 86400000, end=(time.time() * 1000) + 16 * 86400000
+    start=(time.time() * 1000) - 6 * 86400000, end=(time.time() * 1000) + 16 * 86400000
 )
 
 
@@ -212,7 +212,7 @@ async def guildMenu(
         "\n**`Tomorrow: `**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
         "\n**`Later:    `**\n```Use the drop down menu to select a range of days relative to now you'd like the scroll events for."
         "\nIf only one day is selected events for that day will be given```"
-        "\n***Note:** Due to daily auto calibration, predictions may improve in accuracy when requested closer to the date that they occur on.*",
+        "\n***Note:** Due to daily auto-calibration, predictions may improve in accuracy when requested closer to the date that they occur on.*",
         inline=False,
     )
     embed.set_thumbnail(url=thumbnailURL)
@@ -366,7 +366,7 @@ class GuildDaySelMenu(discord.ui.Select):
         self.setUp = setUp
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(-1, 15)]
+        options = [discord.SelectOption(label=x) for x in range(-2, 15)]
         super().__init__(
             placeholder="Select how many days from today",
             options=options,
@@ -436,7 +436,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
         self.useEmojis = useEmojis
         self.emojis = emojis
         self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(-1, 15)]
+        options = [discord.SelectOption(label=x) for x in range(-5, 15)]
         super().__init__(
             placeholder="Select how many days from today",
             options=options,

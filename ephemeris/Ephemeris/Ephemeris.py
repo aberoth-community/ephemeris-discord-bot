@@ -13,6 +13,7 @@ class Ephemeris:
         self.increment = 60 * 1000
         self.variablesFile = Path("ephemeris/Ephemeris/variables.json")
         self.cacheFile = Path("ephemeris/Ephemeris/cache.json")
+        self.newRefTimeFile = Path("ephemeris/UpdateWebServer/newRefTimes.json")
         self.v = self.getVariables(self.variablesFile)
         self.periods = self.getPeriods()
         self.radii = self.getRadii()
@@ -268,19 +269,63 @@ class Ephemeris:
             variables = json.load(json_file)
         return variables
 
-    def autoRefreshCache(self, refreshRate=60 * 60 * 24):
-        """Automatically regenerates the cache. Should Be used with an asnychronous wrapper
+    def autoRefreshCache(self, refreshRate=60 * 60 * 12):
+        """Updates variables with any more recent and reference times received then automatically regenerates the cache. 
+        Should Be used with an asnychronous wrapper.
+    
         Args:
             refreshRate (int): The frequency in seconds to refresh the cache
         """
         while True:
             time.sleep(refreshRate)
+            self.updateRefTimes()
             self.createEventRange(
                 start=(time.time() * 1000) - 2 * 86400000,
                 end=(time.time() * 1000) + 30 * 86400000,
                 saveToCache=True,
             )
 
+    def updateRefTimes(self):
+        newVars = {}
+        with self.newRefTimeFile.open("r") as f:
+            newVars = json.load(f)
+        
+        for orb in newVars:
+            # Check if current ref time is most recent refTime and check that it's within an expected alignment time range
+            if (self.v[orb]['refTime'] != newVars[orb][0]+newVars[orb][1]-500) and self.checkValidRefTime(orb, newVars[orb]):
+                # average two times then subtract the total average time the events are off by
+                eventTime = round(newVars[orb][0]+newVars[orb][1]-500)
+                posistions = self.posRelWhite(eventTime)
+                if orb == 'white': orb == 'candle'
+                indicies = {"candle": 0, "black": 1, "green": 2, "red": 3, "purple": 4, "yellow": 5, "cyan": 6, "blue": 7}
+                orbPos = posistions[indicies[orb]]
+                candlePos = posistions[indicies[0]]
+                # check if orb and candle are on same or opposite sides
+                refOffset = min([0, 180, 360], key=lambda x: abs(x - (orbPos - candlePos)))
+                if refOffset == 360: refOffset = 0
+                # update variables
+                self.v[orb]['refTime'] = eventTime
+                self.v[orb]['refOffset'] = eventTime
+        # reset arrays used to calculate events
+        self.periods = self.getPeriods()
+        self.radii = self.getRadii()
+        self.refTimes = self.getRefTimes()
+        self.refOffsets = self.getRefOffsets()
+        self.setRefPositions()
+        self.refPositions = self.getRefPositions()
+        # Update the variables file to match the new refTimes
+        with self.variablesFile.open("w") as outfile:
+            outfile.write(self.v)
+        
+    def checkValidRefTime(self, orb, refTimes):
+        startRange = self.getEventsInRange(startTime=refTimes[0]-15000, endTime=refTimes[0]+15000)
+        endRange = self.getEventsInRange(startTime=refTimes[1]-15000, endTime=refTimes[1]+15000)
+        # white orb position is determined from darks rather than glows
+        if orb == 'white':
+            return (orb in startRange["newDarks"] and orb in endRange["returnedToNormal"])
+        
+        return (orb in startRange["newGlows"] and orb in endRange["returnedToNormal"])
+        
 
 if __name__ == "__main__":
     ephermis = Ephemeris(

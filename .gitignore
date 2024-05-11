@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 
 test.py
+testPage.html
 cache.json
 guildSettings.json
 userSettings.json
