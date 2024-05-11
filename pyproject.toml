@@ -11,7 +11,10 @@ dependencies = [
     "discord.py@git+https://github.com/Rapptz/discord.py.git#egg=feature/user_apps",
     "numpy==1.26.4",
     "python-dotenv==1.0.1",
-    "regex==2024.4.28"
+    "regex==2024.4.28",
+    "Flask==3.0.3",
+    "Flask-Cors==4.0.1",
+    "waitress==3.0.0"
 ]
 
 [project.optional-dependencies]
