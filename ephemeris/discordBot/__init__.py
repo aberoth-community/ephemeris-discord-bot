@@ -48,7 +48,7 @@ filterMenuEmojis = {
 thumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
 oneDay = 86400000
 ephemeris = Ephemeris.Ephemeris(
-    start=(time.time() * 1000) - 6 * 86400000, end=(time.time() * 1000) + 16 * 86400000
+    start=(time.time() * 1000) - 2 * 86400000, end=(time.time() * 1000) + 16 * 86400000
 )
 
 
@@ -366,7 +366,7 @@ class GuildDaySelMenu(discord.ui.Select):
         self.setUp = setUp
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(-2, 15)]
+        options = [discord.SelectOption(label=x) for x in range(-1, 15)]
         super().__init__(
             placeholder="Select how many days from today",
             options=options,
@@ -402,6 +402,12 @@ class GuildDaySelMenu(discord.ui.Select):
             if self.setUp == False:
                 # Asignmenu state on interaction when bot is restarted
                 self.setUp = True
+                if "filters" not in guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)]:
+                    guildSettings[str(interaction.guild_id)][
+                        str(interaction.channel_id)
+                    ]["filters"] = {}
+
                 self.filterList = guildSettings[str(interaction.guild_id)][
                     str(interaction.channel_id)
                 ]["filters"]
@@ -436,7 +442,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
         self.useEmojis = useEmojis
         self.emojis = emojis
         self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(-5, 15)]
+        options = [discord.SelectOption(label=x) for x in range(-1, 15)]
         super().__init__(
             placeholder="Select how many days from today",
             options=options,
