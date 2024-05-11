@@ -886,7 +886,7 @@ class GuildMenu(discord.ui.View):
                 == 1
             ):
                 useEmojis = True
-                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
+                "emojis"
             if self.setUp == False:
                 # Asignmenu state on interaction when bot is restarted
                 self.setUp = True
@@ -1052,7 +1052,7 @@ def getDayList(
     cacheSubSet = ephemeris.getEventsInRange(start, end)
 
     # filter out specific orb events
-    if filters != None and len(filters) != 0:
+    if filters != None and len(filters) != 0 and bool(filters) != False:
         tempCache = []
         for e in cacheSubSet:
             for orb in filters:
