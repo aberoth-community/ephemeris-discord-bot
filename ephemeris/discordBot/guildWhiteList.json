@@ -1,5 +1,14 @@
 {
-    "Guild ID": "Guild Name",
-    "1116975978242134026": "Code Test Server",
-    "370780258141601792": "Ephemeris Server"
+    "Guild ID": {
+        "guild": "Guild Name",
+        "expiration": "Integer epoch time in seconds, -1 indicates no expiration"
+    },
+    "1116975978242134026": {
+        "guild": "Code Test Server",
+        "expiration": -1
+    },
+    "370780258141601792": {
+        "guild": "Ephemeris Server",
+        "expiration": -1
+    }
 }

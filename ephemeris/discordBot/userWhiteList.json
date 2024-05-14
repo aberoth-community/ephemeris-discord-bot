@@ -1,5 +1,14 @@
 {
-    "User ID": "User Tag",
-    "109931759260430336": "figureskate",
-    "440192160256491521": "bigdrew"
+    "User ID": {
+        "username": "User Tag",
+        "expiration": "Integer epoch time in seconds, -1 indicates no expiration"
+    },
+    "109931759260430336": {
+        "username": "figureskate",
+        "expiration": -1
+    },
+    "440192160256491521": {
+        "username": "bigdrew",
+        "expiration": -1
+    }
 }
