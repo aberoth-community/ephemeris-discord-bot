@@ -771,78 +771,20 @@ class UserInstallMenu(discord.ui.View):
     async def yesterday(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
-        whiteListed = False
-        if 0 in interaction._integration_owners:
-            whiteListed = str(interaction.guild_id) in guildWhiteList
-        elif 1 in interaction._integration_owners:
-            whiteListed = str(interaction.user.id) in userWhiteList
-            # Overridden as true so that users can use temporary menues made by users with permissions
-            whiteListed = True
-
-        if not whiteListed:
-            await interaction.response.send_message(
-                content="Server or user does not have permission to use this command",
-                ephemeral=True,
-            )
-            return
-
-        msgArr = splitMsg(
-            getDayList(
-                ephemeris,
-                -1,
-                filters=self.filterList,
-                useEmojis=self.useEmojis,
-                emojis=self.emojis,
-            )
-        )
-        await interaction.response.send_message(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
-        if len(msgArr) > 1:
-            for msg in msgArr[1:]:
-                await interaction.followup.send(
-                    content=msg, ephemeral=self.ephemeralRes
-                )
-
+        await self.userMenuBtnPress(interaction=interaction, button=button)
+        
     @discord.ui.button(label="Today", style=discord.ButtonStyle.green)
     async def today(self, interaction: discord.Interaction, button: discord.ui.Button):
-        whiteListed = False
-        if 0 in interaction._integration_owners:
-            whiteListed = str(interaction.guild_id) in guildWhiteList
-        elif 1 in interaction._integration_owners:
-            whiteListed = str(interaction.user.id) in userWhiteList
-            # Overridden as true so that users can use temporary menues made by users with permissions
-            whiteListed = True
-
-        if not whiteListed:
-            await interaction.response.send_message(
-                content="Server or user does not have permission to use this command",
-                ephemeral=True,
-            )
-            return
-
-        msgArr = splitMsg(
-            getDayList(
-                ephemeris,
-                0,
-                filters=self.filterList,
-                useEmojis=self.useEmojis,
-                emojis=self.emojis,
-            )
-        )
-        await interaction.response.send_message(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
-        if len(msgArr) > 1:
-            for msg in msgArr[1:]:
-                await interaction.followup.send(
-                    content=msg, ephemeral=self.ephemeralRes
-                )
-
+        await self.userMenuBtnPress(interaction=interaction, button=button)
+        
     @discord.ui.button(label="Tomorrow", style=discord.ButtonStyle.blurple)
     async def tomorrow(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        await self.userMenuBtnPress(interaction=interaction, button=button)
+    
+    
+    async def userMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
         whiteListed = False
         if 0 in interaction._integration_owners:
             whiteListed = str(interaction.guild_id) in guildWhiteList
@@ -858,10 +800,11 @@ class UserInstallMenu(discord.ui.View):
             )
             return
 
+        startDays = {"Yesterday": -1, "Today": 0, "Tomorrow": 1}
         msgArr = splitMsg(
             getDayList(
                 ephemeris,
-                1,
+                startDay=startDays[button.label],
                 filters=self.filterList,
                 useEmojis=self.useEmojis,
                 emojis=self.emojis,
@@ -903,121 +846,23 @@ class GuildMenu(discord.ui.View):
     async def yesterday(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
-        whiteListed = False
-        if 0 in interaction._integration_owners:
-            if str(interaction.guild_id) in guildWhiteList:
-                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp > time.time()
-        elif 1 in interaction._integration_owners:
-            if str(interaction.user.id) in userWhiteList:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp < time.time()
-
-        if not whiteListed:
-            await interaction.response.send_message(
-                content="Server or user does not have permission to use this command",
-                ephemeral=True,
-            )
-            return
-        useEmojis = False
-        emojis = None
-        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "useEmojis"
-                ]
-                == 1
-            ):
-                useEmojis = True
-                "emojis"
-            if self.setUp == False:
-                # Asignmenu state on interaction when bot is restarted
-                self.setUp = True
-                self.filterList = guildSettings[str(interaction.guild_id)][
-                    str(interaction.channel_id)
-                ].get("filters")
-
-        msgArr = splitMsg(
-            getDayList(
-                ephemeris,
-                startDay=-1,
-                useEmojis=useEmojis,
-                filters=self.filterList,
-                emojis=emojis,
-            )
-        )
-        await interaction.response.send_message(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
-        if len(msgArr) > 1:
-            for msg in msgArr[1:]:
-                await interaction.followup.send(
-                    content=msg, ephemeral=self.ephemeralRes
-                )
+        await self.guildMenuBtnPress(interaction=interaction, button=button)
 
     @discord.ui.button(
         label="Today", style=discord.ButtonStyle.green, custom_id="today"
     )
     async def today(self, interaction: discord.Interaction, button: discord.ui.Button):
-        whiteListed = False
-        if 0 in interaction._integration_owners:
-            if str(interaction.guild_id) in guildWhiteList:
-                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp > time.time()
-        elif 1 in interaction._integration_owners:
-            if str(interaction.user.id) in userWhiteList:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp < time.time()
-
-        if not whiteListed:
-            await interaction.response.send_message(
-                content="Server or user does not have permission to use this command",
-                ephemeral=True,
-            )
-            return
-        useEmojis = False
-        emojis = None
-        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "useEmojis"
-                ]
-                == 1
-            ):
-                useEmojis = True
-                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
-            if self.setUp == False:
-                # Asignmenu state on interaction when bot is restarted
-                self.setUp = True
-                self.filterList = guildSettings[str(interaction.guild_id)][
-                    str(interaction.channel_id)
-                ].get("filters")
-
-        msgArr = splitMsg(
-            getDayList(
-                ephemeris,
-                startDay=0,
-                useEmojis=useEmojis,
-                filters=self.filterList,
-                emojis=emojis,
-            )
-        )
-        await interaction.response.send_message(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
-        if len(msgArr) > 1:
-            for msg in msgArr[1:]:
-                await interaction.followup.send(
-                    content=msg, ephemeral=self.ephemeralRes
-                )
-
+        await self.guildMenuBtnPress(interaction=interaction, button=button)
+        
     @discord.ui.button(
         label="Tomorrow", style=discord.ButtonStyle.blurple, custom_id="tomorrow"
     )
-    async def tomorrow(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
+    async def tomorrow(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.guildMenuBtnPress(interaction=interaction, button=button)
+    
+    async def guildMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
         whiteListed = False
+        print(button)
         if 0 in interaction._integration_owners:
             if str(interaction.guild_id) in guildWhiteList:
                 exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
@@ -1033,7 +878,6 @@ class GuildMenu(discord.ui.View):
                 ephemeral=True,
             )
             return
-
         useEmojis = False
         emojis = None
         if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
@@ -1051,11 +895,11 @@ class GuildMenu(discord.ui.View):
                 self.filterList = guildSettings[str(interaction.guild_id)][
                     str(interaction.channel_id)
                 ].get("filters")
-
+        startDays = {"Yesterday": -1, "Today": 0, "Tomorrow": 1}
         msgArr = splitMsg(
             getDayList(
                 ephemeris,
-                startDay=1,
+                startDay=startDays[button.label],
                 useEmojis=useEmojis,
                 filters=self.filterList,
                 emojis=emojis,
@@ -1069,7 +913,6 @@ class GuildMenu(discord.ui.View):
                 await interaction.followup.send(
                     content=msg, ephemeral=self.ephemeralRes
                 )
-
 
 #######################
 #  Helper Functions
