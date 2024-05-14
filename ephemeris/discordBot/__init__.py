@@ -53,7 +53,7 @@ ephemeris = Ephemeris.Ephemeris(
 
 
 class PersistentViewBot(commands.Bot):
-    def __init__(self):
+    def __init__(self): 
         intents = discord.Intents().all()
         super().__init__(command_prefix="~", intents=intents)
 
@@ -206,7 +206,6 @@ async def guildMenu(
     exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
     if (exp != None and exp < time.time() and exp != -1):
         noPermission = True
-        print('expired')
     if noPermission:
         await interaction.response.send_message(
             content="**Server does not have permission to use this command.**\nType `/permsissions` for more information.",
@@ -862,7 +861,6 @@ class GuildMenu(discord.ui.View):
     
     async def guildMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
         whiteListed = False
-        print(button)
         if 0 in interaction._integration_owners:
             if str(interaction.guild_id) in guildWhiteList:
                 exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
