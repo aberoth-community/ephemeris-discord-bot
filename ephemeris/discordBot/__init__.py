@@ -55,7 +55,7 @@ ephemeris = Ephemeris.Ephemeris(
 class PersistentViewBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents().all()
-        super().__init__(command_prefix="", intents=intents)
+        super().__init__(command_prefix="~", intents=intents)
 
     async def setup_hook(self) -> None:
         self.add_view(GuildMenu(allow_filters=1, setUp=False))
