@@ -54,6 +54,7 @@ class Ephemeris:
             currentTime += self.increment
         if saveToCache:
             self.eventsCache = tempCache
+            self.saveCache(self.cacheFile)
         return tempCache
 
     def getEventsInRange(self, startTime, endTime):
@@ -282,7 +283,7 @@ class Ephemeris:
             self.createEventRange(
                 startTime=(time.time() * 1000) - 2 * 86400000,
                 stopTime=(time.time() * 1000) + 30 * 86400000,
-                saveToCache=True,
+                saveToCache=True
             )
             time.sleep(refreshRate)
 
