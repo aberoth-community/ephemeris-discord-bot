@@ -46,9 +46,15 @@ filterMenuEmojis = {
 }
 
 thumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
+
+cacheStartDay = -2
+cacheEndDay = 21
+selectStartDay = -1
+selectEndDay = 14
 oneDay = 86400000
+
 ephemeris = Ephemeris.Ephemeris(
-    start=(time.time() * 1000) - 2 * 86400000, end=(time.time() * 1000) + 1 * 86400000
+    start=(time.time() * 1000) + cacheStartDay * 86400000, end=(time.time() * 1000) + cacheEndDay * oneDay
 )
     
 class PersistentViewBot(commands.Bot):
@@ -399,7 +405,7 @@ class GuildDaySelMenu(discord.ui.Select):
         self.setUp = setUp
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(-1, 15)]
+        options = [discord.SelectOption(label=x) for x in range(selectStartDay, selectEndDay+1)]
         super().__init__(
             placeholder="Select how many days from today",
             options=options,
@@ -410,6 +416,7 @@ class GuildDaySelMenu(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         whiteListed = False
+        messageDefered = False
         if 0 in interaction._integration_owners:
             if str(interaction.guild_id) in guildWhiteList:
                 exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
@@ -451,17 +458,33 @@ class GuildDaySelMenu(discord.ui.Select):
 
         start = min(self.values)
         end = max(self.values)
-        msgArr = splitMsg(
-            getDayList(
+        dayList = getDayList(
                 ephemeris,
                 startDay=start,
-                useEmojis=useEmojis,
-                filters=self.filterList,
-                emojis=emojis,
                 endDay=end,
+                filters=self.filterList,
+                useEmojis=useEmojis,
+                emojis=emojis,
             )
+        if dayList[0] == "Out of Range":
+            await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
+            messageDefered = True
+            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * 86400000, stop=(time.time() * 1000) + cacheEndDay * 86400000)
+            dayList = dayList = getDayList(
+                ephemeris,
+                startDay=start,
+                endDay=end,
+                filters=self.filterList,
+                useEmojis=useEmojis,
+                emojis=emojis,
+            )
+        msgArr = splitMsg(dayList)
+        if messageDefered:
+            await interaction.followup.send(
+            content=msgArr[0], ephemeral=self.ephemeralRes
         )
-        await interaction.response.send_message(
+        else:
+            await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
         if len(msgArr) > 1:
@@ -479,7 +502,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
         self.useEmojis = useEmojis
         self.emojis = emojis
         self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(-1, 15)]
+        options = [discord.SelectOption(label=x) for x in range(selectStartDay, selectEndDay+1)]
         super().__init__(
             placeholder="Select how many days from today",
             options=options,
@@ -489,6 +512,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         whiteListed = False
+        messageDefered = False
         if 0 in interaction._integration_owners:
             whiteListed = str(interaction.guild_id) in guildWhiteList
         elif 1 in interaction._integration_owners:
@@ -504,8 +528,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
             return
         start = min(self.values)
         end = max(self.values)
-        msgArr = splitMsg(
-            getDayList(
+        dayList = getDayList(
                 ephemeris,
                 startDay=start,
                 endDay=end,
@@ -513,8 +536,25 @@ class UserInstallSelDayMenu(discord.ui.Select):
                 useEmojis=self.useEmojis,
                 emojis=self.emojis,
             )
+        if dayList[0] == "Out of Range":
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            messageDefered = True
+            ephemeris.updateCache(start=(time.time() * 1000) - 2 * 86400000, stop=(time.time() * 1000) + 21 * 86400000)
+            dayList = getDayList(
+                ephemeris,
+                startDay=start,
+                endDay=end,
+                filters=self.filterList,
+                useEmojis=self.useEmojis,
+                emojis=self.emojis,
+            )
+        msgArr = splitMsg(dayList)
+        if messageDefered:
+            await interaction.followup.send(
+            content=msgArr[0], ephemeral=self.ephemeralRes
         )
-        await interaction.response.send_message(
+        else:
+            await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
         if len(msgArr) > 1:
@@ -877,6 +917,7 @@ class GuildMenu(discord.ui.View):
     
     async def guildMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
         whiteListed = False
+        messageDefered = False
         if 0 in interaction._integration_owners:
             if str(interaction.guild_id) in guildWhiteList:
                 exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
@@ -910,16 +951,32 @@ class GuildMenu(discord.ui.View):
                     str(interaction.channel_id)
                 ].get("filters")
         startDays = {"Yesterday": -1, "Today": 0, "Tomorrow": 1}
-        msgArr = splitMsg(
-            getDayList(
+        dayList = getDayList(
                 ephemeris,
                 startDay=startDays[button.label],
-                useEmojis=useEmojis,
                 filters=self.filterList,
+                useEmojis=useEmojis,
                 emojis=emojis,
             )
+        if dayList[0] == "Out of Range":
+            await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
+            messageDefered = True
+            ephemeris.updateCache(start=(time.time() * 1000) - 2 * 86400000, stop=(time.time() * 1000) + 21 * 86400000)
+            dayList = getDayList(
+                ephemeris,
+                startDay=startDays[button.label],
+                filters=self.filterList,
+                useEmojis=useEmojis,
+                emojis=emojis,
+            )
+        
+        msgArr = splitMsg(dayList)
+        if messageDefered:
+            await interaction.followup.send(
+            content=msgArr[0], ephemeral=self.ephemeralRes
         )
-        await interaction.response.send_message(
+        else:
+            await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
         if len(msgArr) > 1:
