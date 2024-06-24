@@ -55,6 +55,7 @@ class Ephemeris:
         if saveToCache:
             self.eventsCache = tempCache
             self.saveCache(self.cacheFile)
+        print('TempCache Last Item:', tempCache[-1])
         return tempCache
 
     def getEventsInRange(self, startTime, endTime):
@@ -258,6 +259,7 @@ class Ephemeris:
         json_object = json.dumps(self.eventsCache, indent=4)
         with open(fileLoc, "w") as outfile:
             outfile.write(json_object)
+        # print(f"[{time.time():.0f}] Saved Event Range to Cache File")
 
     def updateVariables(self):
         json_object = json.dumps(self.v, indent=4)
@@ -282,10 +284,20 @@ class Ephemeris:
             self.updateRefTimes()
             self.createEventRange(
                 startTime=(time.time() * 1000) - 2 * 86400000,
-                stopTime=(time.time() * 1000) + 30 * 86400000,
+                stopTime=(time.time() * 1000) + 12 * 86400000,
                 saveToCache=True
             )
-            time.sleep(refreshRate)
+            print("New Cache Last Item:", self.eventsCache[-1])
+            time.sleep(60*3)
+            
+    def updateCache(self, start, stop):
+        self.updateRefTimes()
+        self.createEventRange(
+            startTime=start,
+            stopTime=stop,
+            saveToCache=True
+        )
+        # print("New Cache Last Item:", self.eventsCache[-1])
 
     def updateRefTimes(self):
         newVars = {}
@@ -340,7 +352,7 @@ class Ephemeris:
             for event in endRange:
                 if orb in event["returnedToNormal"]:
                     validEnd = True
-        print("Orb:", orb, (validStart and validEnd))
+        # print("Orb:", orb, (validStart and validEnd))
         return (validStart and validEnd)
         
 

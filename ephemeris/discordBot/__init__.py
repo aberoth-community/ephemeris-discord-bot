@@ -48,10 +48,9 @@ filterMenuEmojis = {
 thumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
 oneDay = 86400000
 ephemeris = Ephemeris.Ephemeris(
-    start=(time.time() * 1000) - 2 * 86400000, end=(time.time() * 1000) + 16 * 86400000
+    start=(time.time() * 1000) - 2 * 86400000, end=(time.time() * 1000) + 1 * 86400000
 )
-
-
+    
 class PersistentViewBot(commands.Bot):
     def __init__(self): 
         intents = discord.Intents().all()
@@ -785,6 +784,7 @@ class UserInstallMenu(discord.ui.View):
     
     async def userMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
         whiteListed = False
+        messageDefered = False
         if 0 in interaction._integration_owners:
             whiteListed = str(interaction.guild_id) in guildWhiteList
         elif 1 in interaction._integration_owners:
@@ -800,16 +800,32 @@ class UserInstallMenu(discord.ui.View):
             return
 
         startDays = {"Yesterday": -1, "Today": 0, "Tomorrow": 1}
-        msgArr = splitMsg(
-            getDayList(
+        dayList = getDayList(
                 ephemeris,
                 startDay=startDays[button.label],
                 filters=self.filterList,
                 useEmojis=self.useEmojis,
                 emojis=self.emojis,
             )
+        if dayList[0] == "Out of Range":
+            await interaction.response.defer(ephemeral=False, thinking=True)
+            messageDefered = True
+            ephemeris.updateCache(start=(time.time() * 1000) - 2 * 86400000, stop=(time.time() * 1000) + 21 * 86400000)
+            dayList = getDayList(
+                ephemeris,
+                startDay=startDays[button.label],
+                filters=self.filterList,
+                useEmojis=self.useEmojis,
+                emojis=self.emojis,
+            )
+        
+        msgArr = splitMsg(dayList)
+        if messageDefered:
+            await interaction.followup.send(
+            content=msgArr[0], ephemeral=self.ephemeralRes
         )
-        await interaction.response.send_message(
+        else:
+            await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
         if len(msgArr) > 1:
@@ -933,6 +949,10 @@ def getDayList(
         end = currentTime + oneDay if startDay == 0 else start + oneDay
     else:
         end = currentTime + int(oneDay) * int(endDay) + oneDay
+    # print(f"End: {end}\nEnd: {ephemeris.eventsCache[-1][0]}")
+    if end >= ephemeris.eventsCache[-1][0]:
+        # print("end out of range")
+        return ['Out of Range']
     cacheSubSet = ephemeris.getEventsInRange(start, end)
 
     # filter out specific orb events
