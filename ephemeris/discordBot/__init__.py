@@ -118,15 +118,19 @@ async def checkPermissions(interaction: discord.Interaction):
 )
 @app_commands.allowed_installs(guilds=False, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.describe(use_emojis="Whether or not responses use emojis for orb names")
+@app_commands.describe(use_emojis="Whether or not responses use emojis for orb names", whitelist_only="Setting to \"Yes\" will only allow users who've been whitelisted to interact with the menu")
 @app_commands.choices(
     use_emojis=[
+        discord.app_commands.Choice(name="Yes", value=1),
+        discord.app_commands.Choice(name="No", value=0),
+    ],
+    whitelist_only=[
         discord.app_commands.Choice(name="Yes", value=1),
         discord.app_commands.Choice(name="No", value=0),
     ]
 )
 async def userInstallMenu(
-    interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int]
+    interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int],  whitelist_only: discord.app_commands.Choice[int]
 ):
     ephRes = False
     noPermission = False
@@ -170,6 +174,7 @@ async def userInstallMenu(
         embed=embed,
         view=UserInstallMenu(
             useEmojis=True if use_emojis.value == 1 else False,
+            whiteListOnly=True if whitelist_only.value == 1 else False,
             emojis=None
             if use_emojis.value == 0
             else userSettings[str(interaction.user.id)]["emojis"],
@@ -496,11 +501,12 @@ class GuildDaySelMenu(discord.ui.Select):
 
 class UserInstallSelDayMenu(discord.ui.Select):
     def __init__(
-        self, ephemeralRes=True, filterList=None, useEmojis=False, emojis=None
+        self, ephemeralRes=True, filterList=None, useEmojis=False, emojis=None, whiteListOnly=False
     ):
         self.ephemeralRes = ephemeralRes
         self.useEmojis = useEmojis
         self.emojis = emojis
+        self.whiteListOnly = whiteListOnly
         self.filterList = filterList
         options = [discord.SelectOption(label=x) for x in range(selectStartDay, selectEndDay+1)]
         super().__init__(
@@ -511,14 +517,10 @@ class UserInstallSelDayMenu(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        whiteListed = False
+        whiteListed = True
         messageDefered = False
-        if 0 in interaction._integration_owners:
-            whiteListed = str(interaction.guild_id) in guildWhiteList
-        elif 1 in interaction._integration_owners:
+        if self.whiteListOnly:
             whiteListed = str(interaction.user.id) in userWhiteList
-            # Overridden as true so that users can use temporary menues made by users with permissions
-            whiteListed = True
 
         if not whiteListed:
             await interaction.response.send_message(
@@ -771,6 +773,7 @@ class UserInstallMenu(discord.ui.View):
         timeout=300,
         useEmojis=False,
         emojis=None,
+        whiteListOnly=False,
         filterList=None,
         filterOptions={
             "White": False,
@@ -787,12 +790,13 @@ class UserInstallMenu(discord.ui.View):
         self.initiationTime = time.time()
         self.filterOptions = filterOptions
         self.ephemeralRes = ephemeralRes
-        self.useEmojis = useEmojis
+        self.useEmojis = useEmojis,
+        self.whiteListOnly = whiteListOnly
         self.emojis = emojis
         self.filterList = filterList
         self.add_item(
             UserInstallSelDayMenu(
-                ephemeralRes, filterList, useEmojis=useEmojis, emojis=emojis
+                ephemeralRes, filterList, useEmojis=useEmojis, emojis=emojis, whiteListOnly=whiteListOnly
             )
         )
         self.add_item(
@@ -823,15 +827,10 @@ class UserInstallMenu(discord.ui.View):
     
     
     async def userMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
-        whiteListed = False
+        whiteListed = True
         messageDefered = False
-        if 0 in interaction._integration_owners:
-            whiteListed = str(interaction.guild_id) in guildWhiteList
-        elif 1 in interaction._integration_owners:
+        if self.whiteListOnly:
             whiteListed = str(interaction.user.id) in userWhiteList
-            # Overridden as true so that users can use temporary menues made by users with permissions
-            whiteListed = True
-
         if not whiteListed:
             await interaction.response.send_message(
                 content="Server or user does not have permission to use this command",
