@@ -1,11 +1,15 @@
 import time
+from typing import Optional
 import json
+import discord.types
 from regex import match
 from pathlib import Path
 import discord
 from discord import app_commands
 from discord.ext import commands
 from ..Ephemeris import Ephemeris
+
+ownerID = 109931759260430336
 
 guildSettings = {}
 userSettings = {}
@@ -17,6 +21,7 @@ USPath = Path("ephemeris/discordBot/userSettings.json").absolute()
 GWLPath = Path("ephemeris/discordBot/guildWhiteList.json").absolute()
 UWLPath = Path("ephemeris/discordBot/userWhiteList.json").absolute()
 
+# Create Files If they don't already exist
 if not GSPath.exists():
     GSPath.write_text(json.dumps({}))
     print(f"File created: {GSPath}")
@@ -24,6 +29,14 @@ if not GSPath.exists():
 if not USPath.exists():
     USPath.write_text(json.dumps({}))
     print(f"File created: {USPath}")
+    
+if not GWLPath.exists():
+    GWLPath.write_text(json.dumps({}))
+    print(f"File created: {GWLPath}")
+
+if not UWLPath.exists():
+    UWLPath.write_text(json.dumps({}))
+    print(f"File created: {UWLPath}")
 
 with GSPath.open("r") as f:
     guildSettings = json.load(f)
@@ -78,6 +91,15 @@ async def on_ready():
     except Exception as e:
         print(e)
 
+def is_owner(interaction: discord.Interaction) -> bool:
+    return interaction.user.id == ownerID
+
+async def not_owner_error(interaction: discord.Interaction, error):
+    if isinstance(error, discord.app_commands.errors.CheckFailure):
+        await interaction.response.send_message(
+                    content=f"Only the bot owner (<@{ownerID}>) may use this command",
+                    ephemeral=True,
+                )
 
 ####################
 #    COMMANDS
@@ -90,6 +112,74 @@ async def hello(interaction: discord.Interaction):
         f"Hello {interaction.user.mention}!", ephemeral=True
     )
 
+@bot.tree.command(name="update_whitelist", description="Only the bot owner may use this command")
+@commands.is_owner()
+@app_commands.check(is_owner)
+@app_commands.default_permissions()
+@app_commands.allowed_installs(guilds=False, users=True)
+@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+@app_commands.describe(user_or_guild="ID of the user or guild you wish to update the settings for", id_type="Specifies if the ID provided is a user ID or guild ID", 
+                       expiration="The epoch time in second for which whitelisted status expires. A value of \"-1\" will never expire")
+@app_commands.choices(
+    id_type=[
+        discord.app_commands.Choice(name="User", value=1),
+        discord.app_commands.Choice(name="Guild", value=0),
+    ],
+)
+async def updateWhiteList(interaction: discord.Interaction, user_or_guild: str, id_type: discord.app_commands.Choice[int], expiration: int):
+    if id_type.name == "User":
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        userName = ""
+        try:
+            user = await bot.fetch_user(user_or_guild)
+            userName =  user.name
+        except discord.NotFound: 
+            await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"NotFound\"", ephemeral=True)
+            return
+        except discord.HTTPException:
+            await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)
+            return
+        userWhiteList[user_or_guild] = { "username": userName, "expiration": expiration}
+        try:
+            UWLPath.write_text(json.dumps(userWhiteList, indent=4))
+        except Exception as e:
+            await interaction.followup.send(f"Failed to write to userWhiteList file.", ephemeral=True)
+            
+        await interaction.followup.send(
+            f"Whitelist settings updated for <@{user_or_guild}>:\n**New Expiration:**  " + ("No Expiration" if expiration == -1 else f"<t:{expiration}>"), ephemeral=True
+            )
+        return
+    elif id_type.name == "Guild":
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        userName = ""
+        try:
+            guild = await bot.fetch_guild(user_or_guild)
+            guildName =  guild.name
+        except discord.NotFound: 
+            await interaction.followup.send(f"Error fetching guild name for ID {user_or_guild}:\n\"NotFound\"", ephemeral=True)
+            return
+        except discord.HTTPException:
+            await interaction.followup.send(f"Error fetching guild name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)
+            return
+        print(guildName)
+        guildWhiteList[user_or_guild] = { "guild": guildName, "expiration": expiration}
+        try:
+            GWLPath.write_text(json.dumps(guildWhiteList, indent=4))
+        except Exception as e:
+            await interaction.followup.send(f"Failed to write to guildWhiteList file.", ephemeral=True)
+            
+        await interaction.followup.send(
+            f"Whitelist settings updated for {guildName}:\n**New Expiration:**  " + ("No Expiration" if expiration == -1 else f"<t:{expiration}>"), ephemeral=True
+            )
+        return
+    
+    await interaction.response.send_message(f"Invalid command parameters, action aborted.", ephemeral=True)
+
+@updateWhiteList.error
+async def UpdateWLError(interaction: discord.Interaction, error):
+    await not_owner_error(interaction, error)
+
+
 @bot.tree.command(name="permissions", description='Tells the user when their and/or the server\'s access they used it on expires')
 @app_commands.allowed_installs(guilds=True, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
@@ -99,12 +189,12 @@ async def checkPermissions(interaction: discord.Interaction):
             expMsg = "**Guild:** "
             if str(interaction.guild_id) in guildWhiteList:
                 exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                expMsg += "No Expiration" if exp == None or exp == -1 else f"<t:{exp}>"
+                expMsg += "No Expiration" if exp == -1 else f"<t:{exp}>"
             else: expMsg += "Not White Listed."
     expMsg += "\n**User:** "
     if str(interaction.user.id) in userWhiteList:
         exp = userWhiteList[str(interaction.user.id)].get('expiration')
-        expMsg += "No Expiration" if exp == None or exp == -1 else exp > f"<t:{exp}>"
+        expMsg += "No Expiration" if exp == -1 else f"<t:{exp}>"
     else: expMsg += "Not White Listed."
     
     await interaction.response.send_message(
@@ -130,21 +220,23 @@ async def checkPermissions(interaction: discord.Interaction):
     ]
 )
 async def userInstallMenu(
-    interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int],  whitelist_only: discord.app_commands.Choice[int]
-):
+    interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int], 
+    whitelist_only: Optional[discord.app_commands.Choice[int]]):
+    
     ephRes = False
-    noPermission = False
-    if str(interaction.user.id) not in userWhiteList:
-        noPermission = True
-    exp = userWhiteList[str(interaction.user.id)].get('expiration')
-    if (exp != None and exp < time.time() and exp != -1):
-        noPermission = True
-    if noPermission:
+    whiteListed = False
+    if str(interaction.user.id) in userWhiteList:
+        whiteListed = False
+        exp = userWhiteList[str(interaction.user.id)].get('expiration')
+        whiteListed = True if exp == -1 else exp > time.time()
+
+    if not whiteListed:
         await interaction.response.send_message(
-            content="**User does not have permission to use this command.**\nType `/permsissions` for more information.",
+            content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
             ephemeral=True,
         )
         return
+    
     if use_emojis.value == 1 and (
         str(interaction.user.id) not in userSettings
         or "emojis" not in userSettings[str(interaction.user.id)]
@@ -170,11 +262,13 @@ async def userInstallMenu(
     )
     embed.set_thumbnail(url=thumbnailURL)
     embed.set_footer(text="⏱️ Menu expires in five minutes")
+    
+    whitelist_only = whitelist_only.value if whitelist_only else 0
     await interaction.response.send_message(
         embed=embed,
         view=UserInstallMenu(
             useEmojis=True if use_emojis.value == 1 else False,
-            whiteListOnly=True if whitelist_only.value == 1 else False,
+            whiteListOnly=True if whitelist_only == 1 else False,
             emojis=None
             if use_emojis.value == 0
             else userSettings[str(interaction.user.id)]["emojis"],
@@ -470,13 +564,13 @@ class GuildDaySelMenu(discord.ui.Select):
             if self.whiteListUsersOnly:
                 if str(interaction.user.id) in userWhiteList:
                     exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                    temp = True if exp == None or exp == -1 else exp < time.time()
+                    temp = True if exp == -1 else exp > time.time()
                 else: temp = False
                 whiteListed = whiteListed and temp
         elif 1 in interaction._integration_owners:
             if str(interaction.user.id) in userWhiteList:
                 exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp < time.time()
+                whiteListed = True if exp == -1 else exp > time.time()
 
         if not whiteListed:
             await interaction.response.send_message(
@@ -548,7 +642,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
                 whiteListed = False
             else:
                 exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp < time.time()
+                whiteListed = True if exp == -1 else exp > time.time()
 
         if not whiteListed:
             await interaction.response.send_message(
@@ -596,13 +690,14 @@ class UserInstallSelDayMenu(discord.ui.Select):
 
 class UserInstallFilterMenu(discord.ui.Select):
     def __init__(
-        self, filterOptions, initiationTime, timeout=300, useEmojis=False, emojis=None
+        self, filterOptions, initiationTime, timeout=300, useEmojis=False, emojis=None, whiteListOnly=False
     ):
         self.timeout = timeout
         self.filterOptions = filterOptions
         self.initiationTime = initiationTime
         self.useEmojis = useEmojis
         self.emojis = emojis
+        self.whiteListOnly = whiteListOnly
         options = [
             discord.SelectOption(
                 label="White",
@@ -687,6 +782,7 @@ class UserInstallFilterMenu(discord.ui.Select):
                 filterList=filterList,
                 useEmojis=self.useEmojis,
                 emojis=self.emojis,
+                whiteListOnly=self.whiteListOnly
             )
         )
 
@@ -834,6 +930,7 @@ class UserInstallMenu(discord.ui.View):
                 timeout=timeout,
                 useEmojis=useEmojis,
                 emojis=emojis,
+                whiteListOnly=self.whiteListOnly
             )
         )
 
@@ -862,7 +959,7 @@ class UserInstallMenu(discord.ui.View):
                 whiteListed = False
             else:
                 exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp < time.time()
+                whiteListed = True if exp == -1 else exp > time.time()
         if not whiteListed:
             await interaction.response.send_message(
                 content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
@@ -985,17 +1082,17 @@ class GuildMenu(discord.ui.View):
         if 0 in interaction._integration_owners:
             if str(interaction.guild_id) in guildWhiteList:
                 exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp > time.time()
+                whiteListed = True if exp == -1 else exp > time.time()
             if self.whiteListUsersOnly:
                 if str(interaction.user.id) in userWhiteList:
                     exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                    temp = True if exp == None or exp == -1 else exp < time.time()
+                    temp = True if exp == -1 else exp > time.time()
                 else: temp = False
                 whiteListed = whiteListed and temp
         elif 1 in interaction._integration_owners:
             if str(interaction.user.id) in userWhiteList:
                 exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp < time.time()
+                whiteListed = True if exp == -1 else exp > time.time()
 
         if not whiteListed:
             await interaction.response.send_message(
@@ -1150,7 +1247,6 @@ def updateSettings(settings, settingsFile=GSPath):
     json_object = json.dumps(settings, indent=4)
     with open(settingsFile, "w") as outfile:
         outfile.write(json_object)
-
 
 def getSettings(settingsFile=GSPath):
     settings = {}
