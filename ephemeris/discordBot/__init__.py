@@ -54,7 +54,7 @@ selectEndDay = 14
 oneDay = 86400000
 
 ephemeris = Ephemeris.Ephemeris(
-    start=(time.time() * 1000) + cacheStartDay * 86400000, end=(time.time() * 1000) + cacheEndDay * oneDay
+    start=(time.time() * 1000) + cacheStartDay * oneDay, end=(time.time() * 1000) + cacheEndDay * oneDay
 )
     
 class PersistentViewBot(commands.Bot):
@@ -203,11 +203,16 @@ async def userInstallMenu(
         discord.app_commands.Choice(name="Yes", value=1),
         discord.app_commands.Choice(name="No", value=0),
     ],
+    whitelisted_users_only=[
+        discord.app_commands.Choice(name="Yes", value=1),
+        discord.app_commands.Choice(name="No", value=0),
+    ],
 )
 async def guildMenu(
     interaction: discord.Interaction,
     use_emojis: discord.app_commands.Choice[int],
     allow_filters: discord.app_commands.Choice[int],
+    whitelisted_users_only: discord.app_commands.Choice[int]
 ):
     ephRes = True
     noPermission = False
@@ -226,12 +231,14 @@ async def guildMenu(
         guildSettings[str(interaction.guild_id)][str(interaction.channel_id)] = {
             "useEmojis": use_emojis.value,
             "allow_filters": allow_filters.value,
+            "whitelisted_users_only": whitelisted_users_only.value
         }
     else:
         guildSettings[str(interaction.guild_id)] = {
             str(interaction.channel_id): {
                 "useEmojis": use_emojis.value,
                 "allow_filters": allow_filters.value,
+                "whitelisted_users_only": whitelisted_users_only.value
             }
         }
     updateSettings(settings=guildSettings)
@@ -407,8 +414,9 @@ async def setPersonalEmojis(
 #      Menus
 ####################
 class GuildDaySelMenu(discord.ui.Select):
-    def __init__(self, ephemeralRes=True, filterList=None, setUp=False):
+    def __init__(self, ephemeralRes=True, filterList=None, setUp=False, whiteListUsersOnly=False):
         self.setUp = setUp
+        self.whiteListUsersOnly = False
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
         options = [discord.SelectOption(label=x) for x in range(selectStartDay, selectEndDay+1)]
@@ -423,21 +431,7 @@ class GuildDaySelMenu(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         whiteListed = False
         messageDefered = False
-        if 0 in interaction._integration_owners:
-            if str(interaction.guild_id) in guildWhiteList:
-                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp > time.time()
-        elif 1 in interaction._integration_owners:
-            if str(interaction.user.id) in userWhiteList:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp < time.time()
-
-        if not whiteListed:
-            await interaction.response.send_message(
-                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
-                ephemeral=True,
-            )
-            return
+        
         useEmojis = False
         emojis = None
         if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
@@ -449,6 +443,13 @@ class GuildDaySelMenu(discord.ui.Select):
             ):
                 useEmojis = True
                 emojis = guildSettings[str(interaction.guild_id)]["emojis"]
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "whitelisted_users_only"
+                ]
+                == 1
+            ):
+                self.whiteListUsersOnly = True
             if self.setUp == False:
                 # Asignmenu state on interaction when bot is restarted
                 self.setUp = True
@@ -461,6 +462,28 @@ class GuildDaySelMenu(discord.ui.Select):
                 self.filterList = guildSettings[str(interaction.guild_id)][
                     str(interaction.channel_id)
                 ].get("filters")
+        
+        if 0 in interaction._integration_owners:
+            if str(interaction.guild_id) in guildWhiteList:
+                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
+                whiteListed = True if exp == None or exp == -1 else exp > time.time()
+            if self.whiteListUsersOnly:
+                if str(interaction.user.id) in userWhiteList:
+                    exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                    temp = True if exp == None or exp == -1 else exp < time.time()
+                else: temp = False
+                whiteListed = whiteListed and temp
+        elif 1 in interaction._integration_owners:
+            if str(interaction.user.id) in userWhiteList:
+                exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                whiteListed = True if exp == None or exp == -1 else exp < time.time()
+
+        if not whiteListed:
+            await interaction.response.send_message(
+                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                ephemeral=True,
+            )
+            return
 
         start = min(self.values)
         end = max(self.values)
@@ -475,7 +498,7 @@ class GuildDaySelMenu(discord.ui.Select):
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
-            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * 86400000, stop=(time.time() * 1000) + cacheEndDay * 86400000)
+            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
             dayList = dayList = getDayList(
                 ephemeris,
                 startDay=start,
@@ -521,11 +544,15 @@ class UserInstallSelDayMenu(discord.ui.Select):
         whiteListed = True
         messageDefered = False
         if self.whiteListOnly:
-            whiteListed = str(interaction.user.id) in userWhiteList
+            if not str(interaction.user.id) in userWhiteList:
+                whiteListed = False
+            else:
+                exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                whiteListed = True if exp == None or exp == -1 else exp < time.time()
 
         if not whiteListed:
             await interaction.response.send_message(
-                content="Server or user does not have permission to use this command",
+                content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
                 ephemeral=True,
             )
             return
@@ -542,7 +569,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=False, thinking=True)
             messageDefered = True
-            ephemeris.updateCache(start=(time.time() * 1000) - 2 * 86400000, stop=(time.time() * 1000) + 21 * 86400000)
+            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
             dayList = getDayList(
                 ephemeris,
                 startDay=start,
@@ -831,10 +858,14 @@ class UserInstallMenu(discord.ui.View):
         whiteListed = True
         messageDefered = False
         if self.whiteListOnly:
-            whiteListed = str(interaction.user.id) in userWhiteList
+            if not str(interaction.user.id) in userWhiteList:
+                whiteListed = False
+            else:
+                exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                whiteListed = True if exp == None or exp == -1 else exp < time.time()
         if not whiteListed:
             await interaction.response.send_message(
-                content="Server or user does not have permission to use this command",
+                content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
                 ephemeral=True,
             )
             return
@@ -850,7 +881,7 @@ class UserInstallMenu(discord.ui.View):
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=False, thinking=True)
             messageDefered = True
-            ephemeris.updateCache(start=(time.time() * 1000) - 2 * 86400000, stop=(time.time() * 1000) + 21 * 86400000)
+            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
             dayList = getDayList(
                 ephemeris,
                 startDay=startDays[button.label],
@@ -891,6 +922,7 @@ class GuildMenu(discord.ui.View):
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
         self.allow_filters = allow_filters
+        self.whiteListUsersOnly = False
         self.add_item(GuildDaySelMenu(ephemeralRes, self.setUp))
         if self.allow_filters == 1:
             self.add_item(GuildFilterMenu(filterOptions))
@@ -918,21 +950,7 @@ class GuildMenu(discord.ui.View):
     async def guildMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
         whiteListed = False
         messageDefered = False
-        if 0 in interaction._integration_owners:
-            if str(interaction.guild_id) in guildWhiteList:
-                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp > time.time()
-        elif 1 in interaction._integration_owners:
-            if str(interaction.user.id) in userWhiteList:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp < time.time()
-
-        if not whiteListed:
-            await interaction.response.send_message(
-                content="Server or user does not have permission to use this command",
-                ephemeral=True,
-            )
-            return
+        
         useEmojis = False
         emojis = None
         if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
@@ -944,12 +962,48 @@ class GuildMenu(discord.ui.View):
             ):
                 useEmojis = True
                 emojis = guildSettings[str(interaction.guild_id)]["emojis"]
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "whitelisted_users_only"
+                ]
+                == 1
+            ):
+                self.whiteListUsersOnly = True
             if self.setUp == False:
                 # Asignmenu state on interaction when bot is restarted
                 self.setUp = True
+                if "filters" not in guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)]:
+                    guildSettings[str(interaction.guild_id)][
+                        str(interaction.channel_id)
+                    ]["filters"] = {}
+
                 self.filterList = guildSettings[str(interaction.guild_id)][
                     str(interaction.channel_id)
                 ].get("filters")
+                
+        if 0 in interaction._integration_owners:
+            if str(interaction.guild_id) in guildWhiteList:
+                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
+                whiteListed = True if exp == None or exp == -1 else exp > time.time()
+            if self.whiteListUsersOnly:
+                if str(interaction.user.id) in userWhiteList:
+                    exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                    temp = True if exp == None or exp == -1 else exp < time.time()
+                else: temp = False
+                whiteListed = whiteListed and temp
+        elif 1 in interaction._integration_owners:
+            if str(interaction.user.id) in userWhiteList:
+                exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                whiteListed = True if exp == None or exp == -1 else exp < time.time()
+
+        if not whiteListed:
+            await interaction.response.send_message(
+                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                ephemeral=True,
+            )
+            return
+
         startDays = {"Yesterday": -1, "Today": 0, "Tomorrow": 1}
         dayList = getDayList(
                 ephemeris,
@@ -961,7 +1015,7 @@ class GuildMenu(discord.ui.View):
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
-            ephemeris.updateCache(start=(time.time() * 1000) - 2 * 86400000, stop=(time.time() * 1000) + 21 * 86400000)
+            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
             dayList = getDayList(
                 ephemeris,
                 startDay=startDays[button.label],
