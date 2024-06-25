@@ -161,7 +161,6 @@ async def updateWhiteList(interaction: discord.Interaction, user_or_guild: str, 
         except discord.HTTPException:
             await interaction.followup.send(f"Error fetching guild name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)
             return
-        print(guildName)
         guildWhiteList[user_or_guild] = { "guild": guildName, "expiration": expiration}
         try:
             GWLPath.write_text(json.dumps(guildWhiteList, indent=4))

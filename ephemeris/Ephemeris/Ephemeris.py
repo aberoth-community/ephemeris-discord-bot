@@ -55,7 +55,6 @@ class Ephemeris:
         if saveToCache:
             self.eventsCache = tempCache
             self.saveCache(self.cacheFile)
-        print('TempCache Last Item:', tempCache[-1])
         return tempCache
 
     def getEventsInRange(self, startTime, endTime):
