@@ -271,6 +271,7 @@ async def guildMenu(
 )
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.default_permissions()
 async def setServerEmojis(
     interaction: discord.Interaction,
     white: str,
