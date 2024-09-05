@@ -4,10 +4,11 @@ import numpy as np
 import time
 from pathlib import Path
 
+DEBUG = False
 
 class Ephemeris:
     # add function to re calibrate and re calc cached events
-    def __init__(self, start=0, end=0) -> None:
+    def __init__(self, start:int=0, end:int=0) -> None:
         self.glowThresh = 0.5
         self.darkThresh = 1
         self.increment = 60 * 1000
@@ -22,7 +23,7 @@ class Ephemeris:
         self.setRefPositions()
         self.refPositions = self.getRefPositions()
 
-        # Boolean that indicates if orb is aligned
+        # Boolean that indicates if orb is aligned with another orb or the shadow orb
         # Ordered as ['shadow', 'white', 'black', 'green', 'red', 'purple', 'yellow', 'cyan', 'blue']
         self.alignmentStates = np.full(9, False)
         self.lastAlignmentStates = np.full(9, False)
@@ -30,7 +31,7 @@ class Ephemeris:
         self.eventsCache = self.createEventRange(start, end)
         self.saveCache(self.cacheFile)
 
-    def createEventRange(self, startTime, stopTime, saveToCache=False):
+    def createEventRange(self, startTime:int, stopTime:int, saveToCache:bool=False) -> list:
         currentTime = startTime
         tempCache = []
         # create event for the starting alignments
@@ -57,7 +58,7 @@ class Ephemeris:
             self.saveCache(self.cacheFile)
         return tempCache
 
-    def getEventsInRange(self, startTime, endTime):
+    def getEventsInRange(self, startTime, endTime) -> list:
         # bisect O(log(n)), total O(2log(n))
         startIndex = bisect.bisect_left(self.eventsCache, (startTime,))
         stopIndex = bisect.bisect_right(self.eventsCache, (endTime,))
@@ -95,21 +96,45 @@ class Ephemeris:
             elif v == True:
                 stillAligned.append(names[i])
 
+        # if anything is aligns with the shadow orb or aligns while something else is already aligned with the shadow orb  
         if len(aligned) > 0 and (
             aligned[0] == names[0]
             or (len(stillAligned) > 0 and stillAligned[0] == names[0])
         ):
+            # add all the newly aligned orbs to the new dark list
             darkList.extend(aligned)
+            # if there are orbs previously aligned
             if len(stillAligned) > 0 and not self.lastAlignmentStates[0]:
+                # add the previously aligned orbs to the dark list if there is a new dark
                 darkList.extend(stillAligned)
+        # if alignments with the shadow orb end
         elif len(returnedToNormal) > 0 and returnedToNormal[0] == names[0]:
             if len(aligned) > 0:
+                # add newly aligned orbs to glow list
                 glowList.extend(aligned)
+            # if there are orbs that are still aligned (were previously glowing)
             if len(stillAligned) > 0:
+                # add the still aligned orbs to the glow list
                 glowList.extend(stillAligned)
         else:
+            # if not a new dark or returning to normal, newly algined orbs should be glowing
             glowList.extend(aligned)
-
+        
+        if (DEBUG):
+            difs = self.calcAlignmentDifs(self.posRelCandle(timestamp))
+            eventStr = '\n'.join(f"{difs[0][i] }, {names[i+1]}" for i in range(0, 8))
+            print(eventStr)
+            print((
+                timestamp,
+                {
+                    "newGlows": glowList,
+                    "newDarks": darkList,
+                    "returnedToNormal": returnedToNormal,
+                    "discordTS": f"<t:{int(np.floor(timestamp/1000))}:D> <t:{int(np.floor(timestamp/1000))}:T>",
+                    # "discordRelTS": f'<t:{np.floor(timestamp/1000)}:R>'
+                },
+            ))
+        
         return (
             timestamp,
             {
@@ -133,9 +158,16 @@ class Ephemeris:
                 self.alignmentStates[i] = self.alignmentStates[i + j + 1] = True
 
     def calcAlignmentDifs(self, positions):
-        return [
-            abs((positions[i:9] % 180) - (positions[i - 1] % 180)) for i in range(1, 9)
-        ]
+        difs = []
+        # for each orb
+        for i in range(1, 9):
+            # calculate the difference between that orb and other orbs that haven't been compared yet
+            tempArr = abs((positions[i:9] % 180) - (positions[i - 1] % 180))
+            # if the dif is greater than 90, set the value to 180 minus value to check for opposite alignments
+            tempArr[tempArr > 90] = 180 - tempArr[tempArr > 90]
+            # add the alignment comparisons for the current orb to the dif list
+            difs.append(tempArr)
+        return difs
 
     def posRelCandle(self, time):
         rw = self.posRelWhite(time)
@@ -271,7 +303,7 @@ class Ephemeris:
             variables = json.load(json_file)
         return variables
 
-    def autoRefreshCache(self, refreshRate=60 * 60 * 12):
+    def autoRefreshCache(self, refreshRate:int=60 * 60 * 12):
         """Updates variables with any more recent and reference times received then automatically regenerates the cache. 
         Should Be used with an asnychronous wrapper.
     

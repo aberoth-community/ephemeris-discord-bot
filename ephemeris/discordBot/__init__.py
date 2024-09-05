@@ -11,6 +11,8 @@ from ..Ephemeris import Ephemeris
 
 ownerID = 109931759260430336
 
+DEBUGGING = False
+
 guildSettings = {}
 userSettings = {}
 guildWhiteList = {}
@@ -65,6 +67,12 @@ cacheEndDay = 21
 selectStartDay = -1
 selectEndDay = 14
 oneDay = 86400000
+
+if DEBUGGING:
+    cacheStartDay = -9
+    selectStartDay = -9
+    cacheEndDay = 2
+    selectEndDay = 2
 
 ephemeris = Ephemeris.Ephemeris(
     start=(time.time() * 1000) + cacheStartDay * oneDay, end=(time.time() * 1000) + cacheEndDay * oneDay
