@@ -17,6 +17,10 @@ dependencies = [
     "waitress==3.0.0"
 ]
 
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["aberoth", "solar system", "orbs", "ephemeris"]
+
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
 
