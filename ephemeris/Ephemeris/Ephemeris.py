@@ -15,7 +15,7 @@ class Ephemeris:
         self.variablesFile = Path("ephemeris/Ephemeris/variables.json")
         self.cacheFile = Path("ephemeris/Ephemeris/cache.json")
         self.newRefTimeFile = Path("ephemeris/UpdateWebServer/newRefTimes.json")
-        self.v = self.getVariables(self.variablesFile)
+        self.v:dict[str, dict] = self.getVariables(self.variablesFile)
         self.periods = self.getPeriods()
         self.radii = self.getRadii()
         self.refTimes = self.getRefTimes()
@@ -58,16 +58,16 @@ class Ephemeris:
             self.saveCache(self.cacheFile)
         return tempCache
 
-    def getEventsInRange(self, startTime, endTime) -> list:
+    def getEventsInRange(self, startTime:int, endTime:int) -> list:
         # bisect O(log(n)), total O(2log(n))
         startIndex = bisect.bisect_left(self.eventsCache, (startTime,))
         stopIndex = bisect.bisect_right(self.eventsCache, (endTime,))
         return [events for _, events in self.eventsCache[startIndex:stopIndex]]
 
-    def checkForAlignmentChange(self):
+    def checkForAlignmentChange(self) -> bool:
         return not np.array_equal(self.alignmentStates, self.lastAlignmentStates)
 
-    def createAlignmentEvent(self, timestamp):
+    def createAlignmentEvent(self, timestamp:int) -> tuple[int, dict[str, any]]:
         names = [
             "Shadow",
             "White",
@@ -146,7 +146,7 @@ class Ephemeris:
             },
         )
 
-    def setAlignmentStates(self, time):
+    def setAlignmentStates(self, time:int) -> None:
         self.alignmentStates = np.full(9, False)
         difs = self.calcAlignmentDifs(self.posRelCandle(time))
         for i, arr in enumerate(difs):
@@ -157,7 +157,7 @@ class Ephemeris:
             for j in np.where(alignmentPos)[0]:
                 self.alignmentStates[i] = self.alignmentStates[i + j + 1] = True
 
-    def calcAlignmentDifs(self, positions):
+    def calcAlignmentDifs(self, positions:np.ndarray[float]) -> list:
         difs = []
         # for each orb
         for i in range(1, 9):
@@ -169,7 +169,7 @@ class Ephemeris:
             difs.append(tempArr)
         return difs
 
-    def posRelCandle(self, time):
+    def posRelCandle(self, time:int) -> np.ndarray[float]:
         rw = self.posRelWhite(time)
         positions = np.array([self.shadowPos(time), (rw[0] + 180) % 360])
 
@@ -178,7 +178,7 @@ class Ephemeris:
         positions = np.append(positions, (np.degrees(np.arctan2(y, x))) % 360)
         return positions
 
-    def posRelWhite(self, time):
+    def posRelWhite(self, time:int) -> np.ndarray[float]:
         positions = (
             (360 / self.periods) * (time - self.refTimes) + self.refPositions
         ) % 360
@@ -186,13 +186,13 @@ class Ephemeris:
         positions[0] = (positions[0] + 180) % 360
         return positions
 
-    def shadowPos(self, time):
+    def shadowPos(self, time:int) -> float:
         return (
             (360 / self.v["shadow"]["period"]) * (time - self.v["shadow"]["refTime"])
             + self.v["shadow"]["refOffset"]
         ) % 360
 
-    def setRefPositions(self):
+    def setRefPositions(self) -> None:
         p = self.periods
         rt = self.refTimes
         ros = self.refOffsets
@@ -216,7 +216,7 @@ class Ephemeris:
 
         self.updateVariables()
 
-    def getPeriods(self):
+    def getPeriods(self) -> np.ndarray[int]:
         return np.array(
             [
                 self.v["candle"]["period"],
@@ -230,7 +230,7 @@ class Ephemeris:
             ]
         )
 
-    def getRadii(self):
+    def getRadii(self) -> np.ndarray[float]:
         return np.array(
             [
                 self.v["candle"]["radius"],
@@ -244,7 +244,7 @@ class Ephemeris:
             ]
         )
 
-    def getRefTimes(self):
+    def getRefTimes(self) -> np.ndarray[int]:
         return np.array(
             [
                 self.v["candle"]["refTime"],
@@ -258,7 +258,7 @@ class Ephemeris:
             ]
         )
 
-    def getRefPositions(self):
+    def getRefPositions(self) -> np.ndarray[float]:
         return np.array(
             [
                 self.v["candle"]["refPos"],
@@ -272,7 +272,7 @@ class Ephemeris:
             ]
         )
 
-    def getRefOffsets(self):
+    def getRefOffsets(self) -> np.ndarray[int]:
         return np.array(
             [
                 self.v["candle"]["refOffset"],
@@ -286,18 +286,18 @@ class Ephemeris:
             ]
         )
 
-    def saveCache(self, fileLoc):
+    def saveCache(self, fileLoc:Path) -> None:
         json_object = json.dumps(self.eventsCache, indent=4)
         with open(fileLoc, "w") as outfile:
             outfile.write(json_object)
         # print(f"[{time.time():.0f}] Saved Event Range to Cache File")
 
-    def updateVariables(self):
+    def updateVariables(self) -> None:
         json_object = json.dumps(self.v, indent=4)
         with self.variablesFile.open("w") as outfile:
             outfile.write(json_object)
 
-    def getVariables(self, variablesFile):
+    def getVariables(self, variablesFile:Path) -> dict[str, dict]:
         variables = {}
         with variablesFile.open("r") as json_file:
             variables = json.load(json_file)
@@ -321,7 +321,7 @@ class Ephemeris:
             print("New Cache Last Item:", self.eventsCache[-1])
             time.sleep(60*3)
             
-    def updateCache(self, start, stop):
+    def updateCache(self, start:int, stop:int) -> None:
         self.updateRefTimes()
         self.createEventRange(
             startTime=start,
@@ -330,8 +330,8 @@ class Ephemeris:
         )
         # print("New Cache Last Item:", self.eventsCache[-1])
 
-    def updateRefTimes(self):
-        newVars = {}
+    def updateRefTimes(self) -> None:
+        newVars:dict[str, list[int]] = {}
         with self.newRefTimeFile.open("r") as f:
             newVars = json.load(f)
         
@@ -362,7 +362,7 @@ class Ephemeris:
         # Update the variables file to match the new refTimes
         self.updateVariables()
         
-    def checkValidRefTime(self, orb, refTimes):
+    def checkValidRefTime(self, orb:str, refTimes:list[int]) -> bool:
         startRange = self.getEventsInRange(startTime=refTimes[0]-15000, endTime=refTimes[0]+15000)
         endRange = self.getEventsInRange(startTime=refTimes[1]-15000, endTime=refTimes[1]+15000)
         if len(startRange) == 0 or len(endRange) == 0:
