@@ -8,10 +8,12 @@ DEBUG = False
 
 class Ephemeris:
     # add function to re calibrate and re calc cached events
-    def __init__(self, start:int=0, end:int=0) -> None:
+    def __init__(self, start:int=0, end:int=0, numMoonCycles:int=10) -> None:
         self.glowThresh = 0.5
         self.darkThresh = 1
         self.increment = 60 * 1000
+        self.oneAberothDay = 8640000
+        self.noonRefTime = 1725903360554 # Night starts 42 minutes after
         self.variablesFile = Path("ephemeris/Ephemeris/variables.json")
         self.cacheFile = Path("ephemeris/Ephemeris/cache.json")
         self.newRefTimeFile = Path("ephemeris/UpdateWebServer/newRefTimes.json")
@@ -27,17 +29,19 @@ class Ephemeris:
         # Ordered as ['shadow', 'white', 'black', 'green', 'red', 'purple', 'yellow', 'cyan', 'blue']
         self.alignmentStates = np.full(9, False)
         self.lastAlignmentStates = np.full(9, False)
-        self.eventsCache = []
-        self.eventsCache = self.createEventRange(start, end)
+        self.scrollEventsCache = []
+        self.scrollEventsCache = self.createEventRange(start, end)
+        self.moonCyclesCache = self.createLunarCalendar(start, numMoonCycles)
         self.saveCache(self.cacheFile)
 
-    def createEventRange(self, startTime:int, stopTime:int, saveToCache:bool=False) -> list:
+    def createEventRange(self, startTime:int, stopTime:int, saveToCache:bool=False) -> list[tuple[int, dict[str, any]]]:
         currentTime = startTime
         tempCache = []
         # create event for the starting alignments
         self.lastAlignmentStates = np.full(9, False)
         self.setAlignmentStates(currentTime)
         tempCache.append(self.createAlignmentEvent(currentTime))
+        # colon is IMPORTANT, creates shallow copy of list instead of copy by ref
         self.lastAlignmentStates = self.alignmentStates[:]
         # iterate through time range and find events
         while currentTime < stopTime:
@@ -49,20 +53,53 @@ class Ephemeris:
                     self.setAlignmentStates(currentTime)
                     if self.checkForAlignmentChange():
                         tempCache.append(self.createAlignmentEvent(currentTime))
+                        # colon is IMPORTANT, creates shallow copy of list instead of copy by ref
                         self.lastAlignmentStates = self.alignmentStates[:]
                         break
                     currentTime += 1000
             currentTime += self.increment
         if saveToCache:
-            self.eventsCache = tempCache
+            self.scrollEventsCache = tempCache
             self.saveCache(self.cacheFile)
         return tempCache
+    
+    def createLunarCalendar(self, startTime:int, numMoonCycles:int) -> list[tuple[int, dict[str, any]]]: 
+        """_summary_
+
+        Args:
+            startTime (int): The epoch time in ms for which events after will recorded
+            numMoonCycles (int): The number of events for each phase that will be recorded
+
+        Returns:
+            list[tuple[int, dict[str, any]]]: A list of tuples containing the epoch time at which the moon change happens and\n
+            a dictionary containing the name of the new phase and a discord timestamp for the event.
+        """
+        # 8 phases in one moon cycle, add one for the current phase
+        numEvents = numMoonCycles * 8 + 1
+        currentTime = startTime
+        lastNoon = self.getLastNoonTime(startTime)
+        tempCache = []
+        
+        while tempCache.length < numEvents:
+            ...
+        
+    def getLastNoonTime(self, time:int) -> int:
+        """
+        Args:
+            time (int): The epoch time in ms for which the previous Aberoth noon will be found.
+
+        Returns:
+            int: The epoch time in ms of the last Aberoth noon before the passed in time.
+        """
+        return time - ((time - self.noonRefTime) % self.oneAberothDay)
+        
+
 
     def getEventsInRange(self, startTime:int, endTime:int) -> list:
         # bisect O(log(n)), total O(2log(n))
-        startIndex = bisect.bisect_left(self.eventsCache, (startTime,))
-        stopIndex = bisect.bisect_right(self.eventsCache, (endTime,))
-        return [events for _, events in self.eventsCache[startIndex:stopIndex]]
+        startIndex = bisect.bisect_left(self.scrollEventsCache, (startTime,))
+        stopIndex = bisect.bisect_right(self.scrollEventsCache, (endTime,))
+        return [events for _, events in self.scrollEventsCache[startIndex:stopIndex]]
 
     def checkForAlignmentChange(self) -> bool:
         return not np.array_equal(self.alignmentStates, self.lastAlignmentStates)
@@ -287,7 +324,7 @@ class Ephemeris:
         )
 
     def saveCache(self, fileLoc:Path) -> None:
-        json_object = json.dumps(self.eventsCache, indent=4)
+        json_object = json.dumps(self.scrollEventsCache, indent=4)
         with open(fileLoc, "w") as outfile:
             outfile.write(json_object)
         # print(f"[{time.time():.0f}] Saved Event Range to Cache File")
@@ -318,7 +355,7 @@ class Ephemeris:
                 stopTime=(time.time() * 1000) + 12 * 86400000,
                 saveToCache=True
             )
-            print("New Cache Last Item:", self.eventsCache[-1])
+            print("New Cache Last Item:", self.scrollEventsCache[-1])
             time.sleep(60*3)
             
     def updateCache(self, start:int, stop:int) -> None:

@@ -68,6 +68,9 @@ selectStartDay = -1
 selectEndDay = 14
 oneDay = 86400000
 
+# Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
+disableWhitelisting = False
+
 if DEBUGGING:
     cacheStartDay = -9
     selectStartDay = -9
@@ -237,7 +240,8 @@ async def userInstallMenu(
         exp = userWhiteList[str(interaction.user.id)].get('expiration')
         whiteListed = True if exp == -1 else exp > time.time()
 
-    if not whiteListed:
+
+    if not whiteListed and not disableWhitelisting:
         await interaction.response.send_message(
             content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
             ephemeral=True,
@@ -579,7 +583,7 @@ class GuildDaySelMenu(discord.ui.Select):
                 exp = userWhiteList[str(interaction.user.id)].get('expiration')
                 whiteListed = True if exp == -1 else exp > time.time()
 
-        if not whiteListed:
+        if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
                 content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
                 ephemeral=True,
@@ -651,7 +655,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
                 exp = userWhiteList[str(interaction.user.id)].get('expiration')
                 whiteListed = True if exp == -1 else exp > time.time()
 
-        if not whiteListed:
+        if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
                 content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
                 ephemeral=True,
@@ -967,7 +971,7 @@ class UserInstallMenu(discord.ui.View):
             else:
                 exp = userWhiteList[str(interaction.user.id)].get('expiration')
                 whiteListed = True if exp == -1 else exp > time.time()
-        if not whiteListed:
+        if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
                 content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
                 ephemeral=True,
@@ -1101,7 +1105,7 @@ class GuildMenu(discord.ui.View):
                 exp = userWhiteList[str(interaction.user.id)].get('expiration')
                 whiteListed = True if exp == -1 else exp > time.time()
 
-        if not whiteListed:
+        if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
                 content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
                 ephemeral=True,
