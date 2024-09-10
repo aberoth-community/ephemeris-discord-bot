@@ -80,7 +80,8 @@ class Ephemeris:
         lastNoon = self.getLastNoonTime(startTime)
         tempCache = []
         
-        while tempCache.length < numEvents:
+        while len(tempCache) < numEvents:
+            break
             ...
         
     def getLastNoonTime(self, time:int) -> int:

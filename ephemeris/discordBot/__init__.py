@@ -10,8 +10,9 @@ from discord.ext import commands
 from ..Ephemeris import Ephemeris
 
 ownerID = 109931759260430336
-
 DEBUGGING = False
+# Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
+disableWhitelisting = True
 
 guildSettings = {}
 userSettings = {}
@@ -67,9 +68,6 @@ cacheEndDay = 21
 selectStartDay = -1
 selectEndDay = 14
 oneDay = 86400000
-
-# Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
-disableWhitelisting = False
 
 if DEBUGGING:
     cacheStartDay = -9
@@ -1168,8 +1166,8 @@ def getDayList(
         end = currentTime + oneDay if startDay == 0 else start + oneDay
     else:
         end = currentTime + int(oneDay) * int(endDay) + oneDay
-    # print(f"End: {end}\nEnd: {ephemeris.eventsCache[-1][0]}")
-    if end >= ephemeris.eventsCache[-1][0]:
+    # print(f"End: {end}\nEnd: {ephemeris.scrollEventsCache[-1][0]}")
+    if end >= ephemeris.scrollEventsCache[-1][0]:
         # print("end out of range")
         return ['Out of Range']
     cacheSubSet = ephemeris.getEventsInRange(start, end)
