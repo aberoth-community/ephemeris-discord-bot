@@ -313,7 +313,7 @@ async def guildScrollMenu(
 
 @bot.tree.command(
     name="create_persistent_lunar_calendar",
-    description="Creates lunar calendar menu with no timeout. Requires admin. Usable by all users",
+    description="Creates lunar calendar menu with no timeout. Requires admin. Menu usable by all users",
 )
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -375,7 +375,6 @@ async def guildLunarMenu(
     embed = discord.Embed(
         title="**Lunar Calendar**",
         description="Night will start 42 minutes after the start of each moon phase",
-        #color=0xA21613,
         color=0xbcc7cf,
     )
     embed.add_field(
@@ -1341,7 +1340,6 @@ class GuildScrollMenu(discord.ui.View):
                     content=msg, ephemeral=self.ephemeralRes
                 )
 
-
 # Create seperate menu that will persist
 class GuildLunarMenu(discord.ui.View):
     def __init__(
@@ -1355,7 +1353,7 @@ class GuildLunarMenu(discord.ui.View):
         self.add_item(GuildPhaseSelMenu(ephemeralRes))
 
     @discord.ui.button(
-        label="All Moon Phases", style=discord.ButtonStyle.green, custom_id="all", emoji=defaultEmojis['lunation']
+        label=lunarLabels["all"], style=discord.ButtonStyle.green, custom_id="all", emoji=defaultEmojis['lunation']
     )
     async def allPhases(
         self, interaction: discord.Interaction, button: discord.ui.Button
@@ -1363,24 +1361,24 @@ class GuildLunarMenu(discord.ui.View):
         await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
 
     @discord.ui.button(
-        label="Next Full Moon", style=discord.ButtonStyle.primary, custom_id="full", emoji=defaultEmojis['full']
+        label=lunarLabels['next_full'], style=discord.ButtonStyle.primary, custom_id="full", emoji=defaultEmojis['full']
     )
     async def fullMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
+        await self.guildLunarMenuBtnPress(interaction=interaction, button=button, firstEventOnly=True)
         
     @discord.ui.button(
-        label="Next New Moon", style=discord.ButtonStyle.grey, custom_id="new", emoji=defaultEmojis['new']
+        label=lunarLabels['next_new'], style=discord.ButtonStyle.grey, custom_id="new", emoji=defaultEmojis['new']
     )
     async def newMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
+        await self.guildLunarMenuBtnPress(interaction=interaction, button=button, firstEventOnly=True)
         
     @discord.ui.button(
-        label="Current Phase", style=discord.ButtonStyle.grey, custom_id="current",  emoji='❔'
+        label=lunarLabels['current'], style=discord.ButtonStyle.grey, custom_id="current",  emoji='❔'
     )
     async def currentPhase(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
+        await self.guildLunarMenuBtnPress(interaction=interaction, button=button, firstEventOnly=True)
     
-    async def guildLunarMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def guildLunarMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button, firstEventOnly:bool = False):
         whiteListed = False
         messageDefered = False
         
@@ -1424,22 +1422,27 @@ class GuildLunarMenu(discord.ui.View):
                 ephemeral=True,
             )
             return
-
+        
         phaseList = getPhaseList(
                         ephemeris,
-                        filters = None,
+                        filters = [button.label],
                         useEmojis=useEmojis,
-                        emojis=emojis)
+                        emojis=emojis,
+                        firstEventOnly=firstEventOnly
+                        )
         
+        firstFilters = {lunarLabels['next_full']: 'full', lunarLabels['next_new']: "new"}
+        filterLabel = firstFilters[button.label] if button.label in firstFilters else button.label
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
             ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
-                filters=None,
+                filters=[button.label],
                 useEmojis=useEmojis,
                 emojis=emojis,
+                firstEventOnly=firstEventOnly
             )
         
         msgArr = splitMsg(phaseList)
@@ -1510,7 +1513,7 @@ def getDayList(
             eventMsg += "\n" + createScrollEventMsgLine(event, useEmojis, emojis=emojis)
     return eventMsg
 
-def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None, useEmojis:bool=False, emojis:dict=None):
+def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None, useEmojis:bool=False, emojis:dict=None, firstEventOnly:bool=False):
     start = startTime
     if start == None:
         currentTime = round((time.time() * 1000))
@@ -1518,27 +1521,59 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
     
     startIndex = next((i for i, (timestamp, _) in enumerate(ephemeris.moonCyclesCache) if timestamp > start), None)
     
+    # filterLabelsToEventName = {
+    #     lunarLabels["all"]: "all",
+    #     lunarLabels["current"]: "current",
+    #     lunarLabels["nextFull"]: "full",
+    #     lunarLabels["nextNew"]: "nextNew",
+    #     lunarLabels["new"]: ""
+    #     }
+    
+    firstFilters = {'next_full': 'full', 'next_new': "new"}
+    eventFilters = [firstFilters[phase] if phase in firstFilters else phase
+                    for (phase, label) in lunarLabels.items() if label in filters]
+    displayingCurrent = False
     subCache = []
     if startIndex:
-        subCache = ephemeris.moonCyclesCache[startIndex:]
-    if len(subCache) < numDisplayMoonCycles * 10:
-        print(subCache, '\n', numDisplayMoonCycles*10, len(subCache))
+        if filters != None and len(filters) != 0:
+            if 'all' in eventFilters:
+                 subCache = ephemeris.moonCyclesCache[startIndex:]
+                 if len(subCache) < numDisplayMoonCycles * 10:
+                    print(subCache, '\n', numDisplayMoonCycles*10, len(subCache))
+                    return ['Range too Small']
+            elif 'current' in eventFilters:
+                displayingCurrent = True
+                subCache = [ephemeris.moonCyclesCache[startIndex]]
+                if ephemeris.moonCyclesCache[startIndex][0] > currentTime:
+                    subCache[0][1]['phase'] = previousPhases[subCache[0][1]['phase']]
+            elif firstEventOnly:
+                subCache = [next((event for event in ephemeris.moonCyclesCache[startIndex:] if event[1]['phase'] in eventFilters), None)]
+            else:
+                subCache = [(event for event in ephemeris.moonCyclesCache[startIndex:] if event[1]['phase'] in eventFilters)]
+                if len(subCache) < numDisplayMoonCycles * len(filters):
+                    print(subCache, '\n', numDisplayMoonCycles*len(filters), len(subCache))
+                    return ['Range too Small']
+    if len(subCache) < 1:
+        print(subCache, '\n', numDisplayMoonCycles*len(filters), len(subCache))
         return ['Range too Small']
-    
-    if filters != None and len(filters) != 0:
-        subCache = [event for event in subCache if event[1].phase in filters]
-    
+     
     startPhase = subCache[0]
-    eventMsg = createLunarEventMsgLine(startPhase, useEmojis, emojis=emojis)
+    eventMsg = createLunarEventMsgLine(startPhase, useEmojis, emojis=emojis, displayingCurrent=displayingCurrent)
     if len(subCache) > 1:
         for event in subCache[1:]:
-            eventMsg += "\n" + createLunarEventMsgLine(event, useEmojis, emojis=emojis)
+            eventMsg += "\n" + createLunarEventMsgLine(event, useEmojis, emojis=emojis, displayingCurrent=displayingCurrent)
     return eventMsg
 
-def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=True, emojis:dict=None) -> str:
+
+def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=True, emojis:dict=None, displayingCurrent:bool=False) -> str:
     if useEmojis and emojis != None:
-        return f"> {emojis[event[1]['phase']]} {event[1]['discordTS']} the moon is {moonDisplayNames[event[1]['phase']]}."
-    else: return f"> {defaultEmojis[event[1]['phase']]} {event[1]['discordTS']} {moonDisplayNames[event[1]['phase']]}."
+        if displayingCurrent:
+            return f"> {emojis[event[1]['phase']]} the moon is {moonDisplayNames[event[1]['phase']]} until {event[1]['discordTS']}."
+        else: return f"> {emojis[event[1]['phase']]} {event[1]['discordTS']} the moon is {moonDisplayNames[event[1]['phase']]}."
+    else:
+        if displayingCurrent:
+            return f"> {defaultEmojis[event[1]['phase']]} the moon is {moonDisplayNames[event[1]['phase']]} until {event[1]['discordTS']}."
+        else: return f"> {defaultEmojis[event[1]['phase']]} {event[1]['discordTS']} {moonDisplayNames[event[1]['phase']]}."
     
 
 def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=None) -> str:
@@ -1582,6 +1617,7 @@ def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=Non
         msg += tempMsg
     return msg
 
+
 def splitMsg(msg):
     msgArr = []
     while len(msg) > 2000:
@@ -1591,6 +1627,7 @@ def splitMsg(msg):
         msg = msg[i:]
     msgArr.append(msg)
     return msgArr
+
 
 def updateSettings(settings, settingsFile:Path=GSPath):
     json_object = json.dumps(settings, indent=4)
@@ -1602,6 +1639,7 @@ def getSettings(settingsFile:Path=GSPath):
     with open(settingsFile, "r") as json_file:
         settings = json.load(json_file)
     return settings
+
 
 def isEmoji(emojiStr:str) -> bool:
     """Checks if the argument is an emoji

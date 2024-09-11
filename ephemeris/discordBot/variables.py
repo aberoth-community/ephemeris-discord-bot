@@ -96,9 +96,41 @@ moonDisplayNames = {
     "waning_crescent": "a **Waning Crescent**"
 }
 
+lunarLabels = {
+    # button labels for lunar menus
+    "all": "All Moon Phases",
+    "next_full": "Next Full Moon",
+    "next_new": "Next New Moon",
+    "current": "Current Phase",
+
+    # select menu labels for lunar menus
+    "new": "New Moons",
+    "waxing_crescent": "Waxing Crescents",
+    "first_quarter": "First Quarters",
+    "waxing_gibbous": "Waxing Gibbous'",
+    "full": "Full Moons",
+    "waning_gibbous": "Waning Gibbous'",
+    "third_quarter": "Third Quarters",
+    "waning_crescent": "Waning Crescents"
+}
+
+previousPhases = {
+    "new": "waning_crescent",
+    "waxing_crescent": "new",
+    "first_quarter": "waxing_crescent",
+    "waxing_gibbous": "first_quarter",
+    "full": "waxing_gibbous",
+    "waning_gibbous": "full",
+    "third_quarter": "waning_gibbous",
+    "waning_crescent": "third_quarter"
+}
+
+
+# embed thumbnail images
 scrollThumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
 moonThumbnailURL = "https://imgur.com/rzm8JUj.gif"
 
+# cache size and display range configuration
 cacheStartDay = -2
 cacheEndDay = 21
 selectStartDay = -1
