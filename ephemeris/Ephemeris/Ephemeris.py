@@ -8,7 +8,7 @@ DEBUG = False
 
 class Ephemeris:
     # add function to re calibrate and re calc cached events
-    def __init__(self, start:int=0, end:int=0, numMoonCycles:int=3) -> None:
+    def __init__(self, start:int=0, end:int=0, numMoonCycles:int=5) -> None:
         self.glowThresh = 0.5
         self.darkThresh = 1
         self.increment = 60 * 1000
@@ -472,7 +472,7 @@ class Ephemeris:
         elif firstPhase == "full": previousPhase = "waxing_gibbous"
         elif firstPhase == "third_quarter": previousPhase = "waning_gibbous"
         
-        tempCache.insert(0, previousPhase)
+        # tempCache.insert(0, previousPhase)
         #print(tempCache)
         return tempCache
         

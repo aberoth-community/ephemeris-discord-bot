@@ -6,10 +6,11 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from ..Ephemeris import Ephemeris
-from variables import *
+from .variables import *
 
 ephemeris = Ephemeris.Ephemeris(
-    start=(time.time() * 1000) + cacheStartDay * oneDay, end=(time.time() * 1000) + cacheEndDay * oneDay
+    start=(time.time() * 1000) + cacheStartDay * oneDay, end=(time.time() * 1000) + cacheEndDay * oneDay,
+    numMoonCycles=numMoonCycles
 )
     
 class PersistentViewBot(commands.Bot):
@@ -19,6 +20,7 @@ class PersistentViewBot(commands.Bot):
 
     async def setup_hook(self) -> None:
         self.add_view(GuildScrollMenu(allow_filters=1, setUp=False))
+        self.add_view(GuildLunarMenu())
 
 
 bot = PersistentViewBot()
@@ -309,7 +311,7 @@ async def guildScrollMenu(
 
 @bot.tree.command(
     name="create_persistent_lunar_calendar",
-    description="Creates lunar calendar menu with no timeout. Requires admin. All users will be able to use interface.",
+    description="Creates lunar calendar menu with no timeout. Requires admin. Usable by all users",
 )
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -375,11 +377,11 @@ async def guildLunarMenu(
     )
     embed.add_field(
         name="**__Details:__**",
-        value=f"​\n**`All Moons: `**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} syndonic aberoth months```"
-        "\n**`Next Full Moon:   `**\n```Provides the time at which the next full moon will start.```"
-        "\n**`Next New Moon:    `**\n````Provides the time at which the next new moon will start.```"
-        "\n**`Filter:           `**\n```Use the drop down menu to select one or more moon phases."
-        f"\nA list with the times at which the selected phases start for the next {numDisplayMoonCycles} syndonic aberoth months will be provided```",
+        value=f"​\n**`All Moons:      `**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} syndonic aberoth months```"
+                "\n**`Next Full Moon:`**\n```Provides the time at which the next full moon will start.```"
+                "\n**`Next New Moon: `**\n````Provides the time at which the next new moon will start.```"
+                "\n**`Filter:        `**\n```Use the drop down menu to select one or more moon phases."
+                f"\nA list with the times at which the selected phases start for the next {numDisplayMoonCycles} syndonic aberoth months will be provided```",
         inline=False,
     )
     embed.set_thumbnail(url=scrollThumbnailURL)
@@ -718,11 +720,11 @@ class GuildPhaseSelMenu(discord.ui.Select):
         self.filterList = filterList
         options = [discord.SelectOption(label=x) for x in range(selectStartDay, selectEndDay+1)]
         super().__init__(
-            placeholder="Select how many days from today",
+            placeholder="Select which phases",
             options=options,
-            custom_id="selectDay",
+            custom_id="phaseFilter",
             min_values=1,
-            max_values=2,
+            max_values=8,
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -1274,10 +1276,9 @@ class GuildLunarMenu(discord.ui.View):
     def __init__(
         self,
         ephemeralRes=True,
-        setUp=True,
+        timeout=None
     ):
-        super().__init__()
-        self.setUp = setUp
+        super().__init__(timeout=timeout)
         self.ephemeralRes = ephemeralRes
         self.whiteListUsersOnly = False
         self.add_item(GuildPhaseSelMenu(ephemeralRes))
@@ -1410,7 +1411,7 @@ def getDayList(
     if end >= ephemeris.scrollEventsCache[-1][0]:
         # print("end out of range")
         return ['Out of Range']
-    cacheSubSet = ephemeris.getEventsInRange(start, end)
+    cacheSubSet = ephemeris.getScrollEventsInRange(start, end)
 
     # filter out specific orb events
     if filters != None and len(filters) != 0:
@@ -1450,6 +1451,7 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
     if startIndex:
         subCache = ephemeris.moonCyclesCache[startIndex:]
     if len(subCache) < numDisplayMoonCycles * 10:
+        print(subCache, '\n', numDisplayMoonCycles*10, len(subCache))
         return ['Range too Small']
     
     if filters != None and len(filters) != 0:
@@ -1462,10 +1464,10 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
             eventMsg += "\n" + createLunarEventMsgLine(event, useEmojis, emojis=emojis)
     return eventMsg
 
-def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=True, emojis:bool=None) -> str:
+def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=True, emojis:dict=None) -> str:
     if useEmojis and emojis != None:
-        msg = f"> {emojis[event[1].phase]} {event['discordTS']}"
-    else: msg = f"> {defaultLunarEmojis[event[1].phase]} {event['discordTS']}"
+        return f"> {emojis[event[1]['phase']]} {event[1]['discordTS']} the moon is {moonDisplayNames[event[1]['phase']]}."
+    else: return f"> {defaultLunarEmojis[event[1]['phase']]} {event[1]['discordTS']} {moonDisplayNames[event[1]['phase']]}."
     
 
 def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=None) -> str:

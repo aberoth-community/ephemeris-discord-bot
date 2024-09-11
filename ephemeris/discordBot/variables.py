@@ -65,14 +65,26 @@ lunarFilterMenuEmojis = {
 }
 
 defaultLunarEmojis = {
-    "new": "🌑",
-    "waxing_crescent": "🌒",
-    "first_quarter": "🌓",
-    "waxing_gibbous": "🌔",
-    "full": "🌕",
-    "waning_gibbous": "🌖",
-    "third_quarter": "🌗",
-    "waning_crescent": "🌘"
+    "new": ":new_moon:",
+    "waxing_crescent": ":waxing_crescent_moon:",
+    "first_quarter": ":first_quarter_moon:",
+    "waxing_gibbous": ":waxing_gibbous_moon:",
+    "full": ":full_moon:",
+    "waning_gibbous": ":waning_gibbous_moon:",
+    "third_quarter": ":last_quarter_moon:",
+    "waning_crescent": ":waning_crescent_moon:"
+}
+
+
+moonDisplayNames = {
+    "new": "**New**",
+    "waxing_crescent": "a **Waxing Crescent**",
+    "first_quarter": "in its **First Quarter**",
+    "waxing_gibbous": "a **Waxing Crescent**",
+    "full": "**Full**",
+    "waning_gibbous": "a **Waning Gibbous**",
+    "third_quarter": "in its **Third Quarter**",
+    "waning_crescent": "a **Waning Crescent**"
 }
 
 scrollThumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
