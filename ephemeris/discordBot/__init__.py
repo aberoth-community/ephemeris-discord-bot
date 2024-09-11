@@ -672,8 +672,8 @@ class GuildDaySelMenu(discord.ui.Select):
             )
             return
 
-        start = min(self.values)
-        end = max(self.values)
+        start = min(map(int, self.values))
+        end = max(map(int, self.values))
         dayList = getDayList(
                 ephemeris,
                 startDay=start,
