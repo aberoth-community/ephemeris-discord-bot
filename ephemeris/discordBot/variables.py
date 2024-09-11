@@ -74,13 +74,14 @@ defaultEmojis = {
     "Cyan": "<:CyanOrb:998472398707888229>",
     "Blue": "<:BlueOrb:998472411861233694>",
     "new": "<:New:1092364396602327050>",
-    "waxing_crescent": "<:New:1092364396602327050>",
+    "waxing_crescent": "<:WaxingCrescent:1092364467712569395>",
     "first_quarter": "<:FirstQuarter:1092364360812347402>",
     "waxing_gibbous": "<:WaxingGibbous:1092364485337034792>",
     "full": "<:Full:1092364372652855397>",
-    "waning_gibbous": "<:WaxingGibbous:1092364485337034792>",
+    "waning_gibbous": "<:WaningGibbous:1092364454479548456>",
     "third_quarter": "<:ThirdQuarter:1092364421113851955>",
-    "waning_crescent": "<:WaningCrescent:1092364435986853928>"
+    "waning_crescent": "<:WaningCrescent:1092364435986853928>",
+    "lunation": "<a:moon:440289423750463488>"
 }
 
 
@@ -96,7 +97,7 @@ moonDisplayNames = {
 }
 
 scrollThumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
-moonThumbnailURL = ""
+moonThumbnailURL = "https://imgur.com/rzm8JUj.gif"
 
 cacheStartDay = -2
 cacheEndDay = 21

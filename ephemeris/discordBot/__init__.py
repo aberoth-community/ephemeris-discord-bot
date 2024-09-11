@@ -186,7 +186,8 @@ async def userInstallScrollMenu(
         or "emojis" not in userSettings[str(interaction.user.id)]
     ):
         await interaction.response.send_message(
-            content="**Please configure your personal emoji settings (/set_personal_emojis) to use this command __with emojis.__**",
+            content="**Please configure your personal emoji settings (/set_personal_emojis) to use this command __with emojis.__**"
+                    "\nNote: the default options for `/set_personal_emojis` require the user to have nitro and be in the server the emojis are from.",
             ephemeral=True,
         )
         return
@@ -373,20 +374,21 @@ async def guildLunarMenu(
         return
     embed = discord.Embed(
         title="**Lunar Calendar**",
-        description="*Night will start 42 minutes after the start of each moon phase*",
+        description="Night will start 42 minutes after the start of each moon phase",
         #color=0xA21613,
-        color=13546768,
+        color=0xbcc7cf,
     )
     embed.add_field(
         name="**__Details:__**",
-        value=f"​\n**`All Moons:      `**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} syndonic aberoth months```"
-                "\n**`Next Full Moon:`**\n```Provides the time at which the next full moon will start.```"
-                "\n**`Next New Moon: `**\n````Provides the time at which the next new moon will start.```"
-                "\n**`Filter:        `**\n```Use the drop down menu to select one or more moon phases."
-                f"\nA list with the times at which the selected phases start for the next {numDisplayMoonCycles} syndonic aberoth months will be provided```",
+        value=f"​\n{defaultEmojis['lunation']}  **All Moons:**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} syndonic aberoth months```"
+                f"\n{defaultEmojis['full']}  **Next Full Moon:**\n```Provides the time at which the next full moon will start.```"
+                f"\n{defaultEmojis['new']}  **Next New Moon:**\n```Provides the time at which the next new moon will start.```"
+                f"\n:grey_question:   **Current Phase:**\n```Provides the current phase.```"
+                "\n:mag:  **Filter:**\n```Use the drop down menu to select one or more moon phases."
+                f" Creates list with the times at which the selected phases start for the next {numDisplayMoonCycles} syndonic aberoth months will be provided```",
         inline=False,
     )
-    embed.set_thumbnail(url=scrollThumbnailURL)
+    embed.set_thumbnail(url=moonThumbnailURL)
     await interaction.response.send_message(
         embed=embed, view=GuildLunarMenu(), ephemeral=False
     )
@@ -475,22 +477,22 @@ async def setServerEmojis(
         updateSettings(settings=guildSettings)
         await interaction.response.send_message(
             content="**Successfully set server emojis!**"
-            f"\n> `White            ` {emojis['White']}"
-            f"\n> `Black            ` {emojis['Black']}"
-            f"\n> `Green            ` {emojis['Green']}"
-            f"\n> `Red              ` {emojis['Red']}"
-            f"\n> `Purple           ` {emojis['Purple']}"
-            f"\n> `Yellow           ` {emojis['Yellow']}"
-            f"\n> `Cyan             ` {emojis['Cyan']}"
-            f"\n> `Blue             ` {emojis['Blue']}"
-            f"\n> `New Moon         ` {emojis['new']}"
-            f"\n> `Waxing Crescent  ` {emojis['waxing_crescent']}"
-            f"\n> `First Quarter    ` {emojis['first_quarter']}"
-            f"\n> `Waxing Gibbous   ` {emojis['waxing_gibbous']}"
-            f"\n> `Full Moon        ` {emojis['full']}"
-            f"\n> `Waning Gibbous   ` {emojis['waning_gibbous']}"
-            f"\n> `Third Quarter    ` {emojis['third_quarter']}"
-            f"\n> `Waning Crescent  ` {emojis['waning_crescent']}",
+            f"\n> `White           ` {emojis['White']}"
+            f"\n> `Black           ` {emojis['Black']}"
+            f"\n> `Green           ` {emojis['Green']}"
+            f"\n> `Red             ` {emojis['Red']}"
+            f"\n> `Purple          ` {emojis['Purple']}"
+            f"\n> `Yellow          ` {emojis['Yellow']}"
+            f"\n> `Cyan            ` {emojis['Cyan']}"
+            f"\n> `Blue            ` {emojis['Blue']}"
+            f"\n> `New Moon        ` {emojis['new']}"
+            f"\n> `Waxing Crescent ` {emojis['waxing_crescent']}"
+            f"\n> `First Quarter   ` {emojis['first_quarter']}"
+            f"\n> `Waxing Gibbous  ` {emojis['waxing_gibbous']}"
+            f"\n> `Full Moon       ` {emojis['full']}"
+            f"\n> `Waning Gibbous  ` {emojis['waning_gibbous']}"
+            f"\n> `Third Quarter   ` {emojis['third_quarter']}"
+            f"\n> `Waning Crescent ` {emojis['waning_crescent']}",
             ephemeral=True,
         )
 
@@ -577,22 +579,22 @@ async def setPersonalEmojis(
         updateSettings(settings=userSettings, settingsFile=USPath)
         await interaction.response.send_message(
             content="**Successfully set personal emojis!**"
-            f"\n> `White            ` {emojis['White']}"
-            f"\n> `Black            ` {emojis['Black']}"
-            f"\n> `Green            ` {emojis['Green']}"
-            f"\n> `Red              ` {emojis['Red']}"
-            f"\n> `Purple           ` {emojis['Purple']}"
-            f"\n> `Yellow           ` {emojis['Yellow']}"
-            f"\n> `Cyan             ` {emojis['Cyan']}"
-            f"\n> `Blue             ` {emojis['Blue']}"
-            f"\n> `New Moon         ` {emojis['new']}"
-            f"\n> `Waxing Crescent  ` {emojis['waxing_crescent']}"
-            f"\n> `First Quarter    ` {emojis['first_quarter']}"
-            f"\n> `Waxing Gibbous   ` {emojis['waxing_gibbous']}"
-            f"\n> `Full Moon        ` {emojis['full']}"
-            f"\n> `Waning Gibbous   ` {emojis['waning_gibbous']}"
-            f"\n> `Third Quarter    ` {emojis['third_quarter']}"
-            f"\n> `Waning Crescent  ` {emojis['waning_crescent']}",
+            f"\n> `White           ` {emojis['White']}"
+            f"\n> `Black           ` {emojis['Black']}"
+            f"\n> `Green           ` {emojis['Green']}"
+            f"\n> `Red             ` {emojis['Red']}"
+            f"\n> `Purple          ` {emojis['Purple']}"
+            f"\n> `Yellow          ` {emojis['Yellow']}"
+            f"\n> `Cyan            ` {emojis['Cyan']}"
+            f"\n> `Blue            ` {emojis['Blue']}"
+            f"\n> `New Moon        ` {emojis['new']}"
+            f"\n> `Waxing Crescent ` {emojis['waxing_crescent']}"
+            f"\n> `First Quarter   ` {emojis['first_quarter']}"
+            f"\n> `Waxing Gibbous  ` {emojis['waxing_gibbous']}"
+            f"\n> `Full Moon       ` {emojis['full']}"
+            f"\n> `Waning Gibbous  ` {emojis['waning_gibbous']}"
+            f"\n> `Third Quarter   ` {emojis['third_quarter']}"
+            f"\n> `Waning Crescent ` {emojis['waning_crescent']}",
             ephemeral=True,
         )
 
@@ -1353,7 +1355,7 @@ class GuildLunarMenu(discord.ui.View):
         self.add_item(GuildPhaseSelMenu(ephemeralRes))
 
     @discord.ui.button(
-        label="All Moon Phases", style=discord.ButtonStyle.red, custom_id="all"
+        label="All Moon Phases", style=discord.ButtonStyle.green, custom_id="all", emoji=defaultEmojis['lunation']
     )
     async def allPhases(
         self, interaction: discord.Interaction, button: discord.ui.Button
@@ -1361,21 +1363,21 @@ class GuildLunarMenu(discord.ui.View):
         await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
 
     @discord.ui.button(
-        label="Next Full Moon", style=discord.ButtonStyle.green, custom_id="full"
+        label="Next Full Moon", style=discord.ButtonStyle.primary, custom_id="full", emoji=defaultEmojis['full']
     )
     async def fullMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
         
     @discord.ui.button(
-        label="Next New Moon", style=discord.ButtonStyle.blurple, custom_id="new"
+        label="Next New Moon", style=discord.ButtonStyle.grey, custom_id="new", emoji=defaultEmojis['new']
     )
     async def newMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
         
     @discord.ui.button(
-        label="Current Phase", style=discord.ButtonStyle.blurple, custom_id="current"
+        label="Current Phase", style=discord.ButtonStyle.grey, custom_id="current",  emoji='❔'
     )
-    async def newMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def currentPhase(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
     
     async def guildLunarMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):

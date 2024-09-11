@@ -445,7 +445,6 @@ class Ephemeris:
                         # "discordRelTS": f'<t:{np.floor(currentTime/1000)}:R>'
                     }
                 ))
-                print(tempCache[-1], lunarCycleStartPos, lunarCycleEndPos)
                 tempCache.append((
                     nextNoonTime,
                     {
@@ -454,7 +453,6 @@ class Ephemeris:
                         # "discordRelTS": f'<t:{np.floor(nextNoonTime/1000)}:R>'
                     }
                 ))
-                print(tempCache[-1])
                 # every phase except the exclictly checked ones last 5 to 6 days
                 currentTime = currentTime + 5 * self.oneAberothDay
                 
