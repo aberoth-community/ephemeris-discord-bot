@@ -399,17 +399,27 @@ async def guildLunarMenu(
 @app_commands.default_permissions()
 async def setServerEmojis(
     interaction: discord.Interaction,
-    white: str,
-    black: str,
-    green: str,
-    red: str,
-    purple: str,
-    yellow: str,
-    cyan: str,
-    blue: str,
+    white: str = "<:WhiteOrb:998472151965376602>",
+    black: str = "<:BlackOrb:998472215295164418>",
+    green: str = "<:GreenOrb:998472231640379452>",
+    red: str = "<:RedOrb:998472356303478874>",
+    purple: str = "<:PurpleOrb:998472375400149112>",
+    yellow: str = "<:YellowOrb:998472388406689812>",
+    cyan: str = "<:CyanOrb:998472398707888229>",
+    blue: str = "<:BlueOrb:998472411861233694>",
+    new: Optional[str] = ":new_moon:",
+    waxing_crescent: Optional[str] = ":waxing_crescent_moon:",
+    first_quarter: Optional[str] = ":first_quarter_moon:",
+    waxing_gibbous: Optional[str] = ":waxing_gibbous_moon:",
+    full: Optional[str] = ":full_moon:",
+    waning_gibbous: Optional[str] = ":waning_gibbous_moon:",
+    third_quarter: Optional[str] = ":last_quarter_moon:",
+    waning_crescent: Optional[str] = ":waning_crescent_moon:",
+    
 ):
     invalidEmojis = []
-    for emoji in white, black, green, red, purple, yellow, cyan, blue:
+    for emoji in (white, black, green, red, purple, yellow, cyan, blue, new, waxing_crescent,
+                first_quarter, waxing_gibbous, full, waning_gibbous, third_quarter, waning_crescent):
         emoji = emoji.strip()
         if not isEmoji(emoji):
             invalidEmojis.append(emoji)
@@ -429,6 +439,14 @@ async def setServerEmojis(
                 "Yellow": yellow,
                 "Cyan": cyan,
                 "Blue": blue,
+                "new": new,
+                "waxing_crescent": waxing_crescent,
+                "first_quarter": first_quarter,
+                "waxing_gibbous": waxing_gibbous,
+                "full": full,
+                "waning_gibbous": waning_gibbous,
+                "third_quarter": third_quarter,
+                "waning_crescent": waning_crescent
             }
         else:
             guildSettings[str(interaction.guild_id)] = {
@@ -441,20 +459,36 @@ async def setServerEmojis(
                     "Yellow": yellow,
                     "Cyan": cyan,
                     "Blue": blue,
+                    "new": new,
+                    "waxing_crescent": waxing_crescent,
+                    "first_quarter": first_quarter,
+                    "waxing_gibbous": waxing_gibbous,
+                    "full": full,
+                    "waning_gibbous": waning_gibbous,
+                    "third_quarter": third_quarter,
+                    "waning_crescent": waning_crescent
                 }
             }
         emojis = guildSettings[str(interaction.guild_id)]["emojis"]
         updateSettings(settings=guildSettings)
         await interaction.response.send_message(
             content="**Successfully set server emojis!**"
-            f"\n> `White ` {emojis['White']}"
-            f"\n> `Black ` {emojis['Black']}"
-            f"\n> `Green ` {emojis['Green']}"
-            f"\n> `Red   ` {emojis['Red']}"
-            f"\n> `Purple` {emojis['Purple']}"
-            f"\n> `Yellow` {emojis['Yellow']}"
-            f"\n> `Cyan  ` {emojis['Cyan']}"
-            f"\n> `Blue  ` {emojis['Blue']}",
+            f"\n> `White            ` {emojis['White']}"
+            f"\n> `Black            ` {emojis['Black']}"
+            f"\n> `Green            ` {emojis['Green']}"
+            f"\n> `Red              ` {emojis['Red']}"
+            f"\n> `Purple           ` {emojis['Purple']}"
+            f"\n> `Yellow           ` {emojis['Yellow']}"
+            f"\n> `Cyan             ` {emojis['Cyan']}"
+            f"\n> `Blue             ` {emojis['Blue']}"
+            f"\n> `New Moon         ` {emojis['new']}"
+            f"\n> `Waxing Crescent  ` {emojis['waxing_crescent']}"
+            f"\n> `First Quarter    ` {emojis['first_quarter']}"
+            f"\n> `Waxing Gibbous   ` {emojis['waxing_gibbous']}"
+            f"\n> `Full Moon        ` {emojis['full']}"
+            f"\n> `Waning Gibbous   ` {emojis['waning_gibbous']}"
+            f"\n> `Third Quarter    ` {emojis['third_quarter']}"
+            f"\n> `Waning Crescent  ` {emojis['waning_crescent']}",
             ephemeral=True,
         )
 

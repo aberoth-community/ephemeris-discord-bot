@@ -4,7 +4,7 @@ from pathlib import Path
 ownerID = 109931759260430336
 DEBUGGING = False
 # Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
-disableWhitelisting = False
+disableWhitelisting = True
 
 guildSettings = {}
 userSettings = {}
