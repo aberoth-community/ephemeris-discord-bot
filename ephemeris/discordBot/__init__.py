@@ -254,9 +254,10 @@ async def guildScrollMenu(
 ):
     ephRes = True
     noPermission = False
+    exp = 0
     if str(interaction.guild_id) not in guildWhiteList:
         noPermission = True
-    exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
+    else: exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
     if (exp != None and exp < time.time() and exp != -1):
         noPermission = True
     if noPermission and not disableWhitelisting:
@@ -317,10 +318,10 @@ async def guildScrollMenu(
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
 @app_commands.default_permissions()
 @app_commands.describe(
-    use_emojis="Whether or not responses use emojis for moon phase names",
+    user_set_emojis="Whether or not responses use default or user set emojis for moon phase icons",
 )
 @app_commands.choices(
-    use_emojis=[
+    user_set_emojis=[
         discord.app_commands.Choice(name="Yes", value=1),
         discord.app_commands.Choice(name="No", value=0),
     ],
@@ -331,14 +332,15 @@ async def guildScrollMenu(
 )
 async def guildLunarMenu(
     interaction: discord.Interaction,
-    use_emojis: discord.app_commands.Choice[int],
+    user_set_emojis: discord.app_commands.Choice[int],
     whitelisted_users_only: discord.app_commands.Choice[int]
 ):
     ephRes = True
     noPermission = False
+    exp = 0
     if str(interaction.guild_id) not in guildWhiteList:
         noPermission = True
-    exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
+    else: exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
     if (exp != None and exp < time.time() and exp != -1):
         noPermission = True
     if noPermission and not disableWhitelisting:
@@ -349,19 +351,19 @@ async def guildLunarMenu(
         return
     if str(interaction.guild_id) in guildSettings:
         guildSettings[str(interaction.guild_id)][str(interaction.channel_id)] = {
-            "useEmojis": use_emojis.value,
+            "useEmojis": user_set_emojis.value,
             "whitelisted_users_only": whitelisted_users_only.value
         }
     else:
         guildSettings[str(interaction.guild_id)] = {
             str(interaction.channel_id): {
-                "useEmojis": use_emojis.value,
+                "useEmojis": user_set_emojis.value,
                 "whitelisted_users_only": whitelisted_users_only.value
             }
         }
     updateSettings(settings=guildSettings)
     if (
-        use_emojis.value == 1
+        user_set_emojis.value == 1
         and "emojis" not in guildSettings[str(interaction.guild_id)]
     ):
         await interaction.response.send_message(
@@ -392,29 +394,29 @@ async def guildLunarMenu(
 
 @bot.tree.command(
     name="set_server_emojis",
-    description="Configures the emojis used for ephemerides requested from prediction menus used within the server.",
+    description="Configures the emojis used for ephemerides requested from prediction menus used within this server.",
 )
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
 @app_commands.default_permissions()
 async def setServerEmojis(
     interaction: discord.Interaction,
-    white: str = "<:WhiteOrb:998472151965376602>",
-    black: str = "<:BlackOrb:998472215295164418>",
-    green: str = "<:GreenOrb:998472231640379452>",
-    red: str = "<:RedOrb:998472356303478874>",
-    purple: str = "<:PurpleOrb:998472375400149112>",
-    yellow: str = "<:YellowOrb:998472388406689812>",
-    cyan: str = "<:CyanOrb:998472398707888229>",
-    blue: str = "<:BlueOrb:998472411861233694>",
-    new: Optional[str] = ":new_moon:",
-    waxing_crescent: Optional[str] = ":waxing_crescent_moon:",
-    first_quarter: Optional[str] = ":first_quarter_moon:",
-    waxing_gibbous: Optional[str] = ":waxing_gibbous_moon:",
-    full: Optional[str] = ":full_moon:",
-    waning_gibbous: Optional[str] = ":waning_gibbous_moon:",
-    third_quarter: Optional[str] = ":last_quarter_moon:",
-    waning_crescent: Optional[str] = ":waning_crescent_moon:",
+    white: str = defaultEmojis['White'],
+    black: str = defaultEmojis['Black'],
+    green: str = defaultEmojis['Green'],
+    red: str = defaultEmojis['Red'],
+    purple: str = defaultEmojis['Purple'],
+    yellow: str = defaultEmojis['Yellow'],
+    cyan: str = defaultEmojis['Cyan'],
+    blue: str = defaultEmojis['Blue'],
+    new: Optional[str] = defaultEmojis['new'],
+    waxing_crescent: Optional[str] = defaultEmojis['waxing_crescent'],
+    first_quarter: Optional[str] = defaultEmojis['first_quarter'],
+    waxing_gibbous: Optional[str] = defaultEmojis['waxing_gibbous'],
+    full: Optional[str] = defaultEmojis['full'],
+    waning_gibbous: Optional[str] = defaultEmojis['waning_gibbous'],
+    third_quarter: Optional[str] = defaultEmojis['third_quarter'],
+    waning_crescent: Optional[str] = defaultEmojis['waning_crescent'],
     
 ):
     invalidEmojis = []
@@ -495,24 +497,33 @@ async def setServerEmojis(
 
 @bot.tree.command(
     name="set_personal_emojis",
-    description="Configures the emojis used for ephemerides requested from user installable prediction menus",
+    description="Configures the emojis used for ephemerides requested from user installable prediction menus.",
 )
 @app_commands.allowed_installs(guilds=False, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
 @app_commands.describe()
 async def setPersonalEmojis(
     interaction: discord.Interaction,
-    white: str,
-    black: str,
-    green: str,
-    red: str,
-    purple: str,
-    yellow: str,
-    cyan: str,
-    blue: str,
+    white: str = defaultEmojis['White'],
+    black: str = defaultEmojis['Black'],
+    green: str = defaultEmojis['Green'],
+    red: str = defaultEmojis['Red'],
+    purple: str = defaultEmojis['Purple'],
+    yellow: str = defaultEmojis['Yellow'],
+    cyan: str = defaultEmojis['Cyan'],
+    blue: str = defaultEmojis['Blue'],
+    new: Optional[str] = defaultEmojis['new'],
+    waxing_crescent: Optional[str] = defaultEmojis['waxing_crescent'],
+    first_quarter: Optional[str] = defaultEmojis['first_quarter'],
+    waxing_gibbous: Optional[str] = defaultEmojis['waxing_gibbous'],
+    full: Optional[str] = defaultEmojis['full'],
+    waning_gibbous: Optional[str] = defaultEmojis['waning_gibbous'],
+    third_quarter: Optional[str] = defaultEmojis['third_quarter'],
+    waning_crescent: Optional[str] = defaultEmojis['waning_crescent'],
 ):
     invalidEmojis = []
-    for emoji in white, black, green, red, purple, yellow, cyan, blue:
+    for emoji in (white, black, green, red, purple, yellow, cyan, blue, new, waxing_crescent,
+                first_quarter, waxing_gibbous, full, waning_gibbous, third_quarter, waning_crescent):
         emoji = emoji.strip()
         if not isEmoji(emoji):
             invalidEmojis.append(emoji)
@@ -532,6 +543,14 @@ async def setPersonalEmojis(
                 "Yellow": yellow,
                 "Cyan": cyan,
                 "Blue": blue,
+                "new": new,
+                "waxing_crescent": waxing_crescent,
+                "first_quarter": first_quarter,
+                "waxing_gibbous": waxing_gibbous,
+                "full": full,
+                "waning_gibbous": waning_gibbous,
+                "third_quarter": third_quarter,
+                "waning_crescent": waning_crescent
             }
         else:
             userSettings[str(interaction.user.id)] = {
@@ -544,20 +563,36 @@ async def setPersonalEmojis(
                     "Yellow": yellow,
                     "Cyan": cyan,
                     "Blue": blue,
+                    "new": new,
+                    "waxing_crescent": waxing_crescent,
+                    "first_quarter": first_quarter,
+                    "waxing_gibbous": waxing_gibbous,
+                    "full": full,
+                    "waning_gibbous": waning_gibbous,
+                    "third_quarter": third_quarter,
+                    "waning_crescent": waning_crescent
                 }
             }
         emojis = userSettings[str(interaction.user.id)]["emojis"]
         updateSettings(settings=userSettings, settingsFile=USPath)
         await interaction.response.send_message(
             content="**Successfully set personal emojis!**"
-            f"\n> `White ` {emojis['White']}"
-            f"\n> `Black ` {emojis['Black']}"
-            f"\n> `Green ` {emojis['Green']}"
-            f"\n> `Red   ` {emojis['Red']}"
-            f"\n> `Purple` {emojis['Purple']}"
-            f"\n> `Yellow` {emojis['Yellow']}"
-            f"\n> `Cyan  ` {emojis['Cyan']}"
-            f"\n> `Blue  ` {emojis['Blue']}",
+            f"\n> `White            ` {emojis['White']}"
+            f"\n> `Black            ` {emojis['Black']}"
+            f"\n> `Green            ` {emojis['Green']}"
+            f"\n> `Red              ` {emojis['Red']}"
+            f"\n> `Purple           ` {emojis['Purple']}"
+            f"\n> `Yellow           ` {emojis['Yellow']}"
+            f"\n> `Cyan             ` {emojis['Cyan']}"
+            f"\n> `Blue             ` {emojis['Blue']}"
+            f"\n> `New Moon         ` {emojis['new']}"
+            f"\n> `Waxing Crescent  ` {emojis['waxing_crescent']}"
+            f"\n> `First Quarter    ` {emojis['first_quarter']}"
+            f"\n> `Waxing Gibbous   ` {emojis['waxing_gibbous']}"
+            f"\n> `Full Moon        ` {emojis['full']}"
+            f"\n> `Waning Gibbous   ` {emojis['waning_gibbous']}"
+            f"\n> `Third Quarter    ` {emojis['third_quarter']}"
+            f"\n> `Waning Crescent  ` {emojis['waning_crescent']}",
             ephemeral=True,
         )
 
@@ -870,49 +905,49 @@ class UserInstallFilterMenu(discord.ui.Select):
             discord.SelectOption(
                 label="White",
                 value="White",
-                emoji=scrollFilterMenuEmojis["White"],
+                emoji=defaultEmojis["White"],
                 default=filterOptions["White"],
             ),
             discord.SelectOption(
                 label="Black",
                 value="Black",
-                emoji=scrollFilterMenuEmojis["Black"],
+                emoji=defaultEmojis["Black"],
                 default=filterOptions["Black"],
             ),
             discord.SelectOption(
                 label="Green",
                 value="Green",
-                emoji=scrollFilterMenuEmojis["Green"],
+                emoji=defaultEmojis["Green"],
                 default=filterOptions["Green"],
             ),
             discord.SelectOption(
                 label="Red",
                 value="Red",
-                emoji=scrollFilterMenuEmojis["Red"],
+                emoji=defaultEmojis["Red"],
                 default=filterOptions["Red"],
             ),
             discord.SelectOption(
                 label="Purple",
                 value="Purple",
-                emoji=scrollFilterMenuEmojis["Purple"],
+                emoji=defaultEmojis["Purple"],
                 default=filterOptions["Purple"],
             ),
             discord.SelectOption(
                 label="Yellow",
                 value="Yellow",
-                emoji=scrollFilterMenuEmojis["Yellow"],
+                emoji=defaultEmojis["Yellow"],
                 default=filterOptions["Yellow"],
             ),
             discord.SelectOption(
                 label="Cyan",
                 value="Cyan",
-                emoji=scrollFilterMenuEmojis["Cyan"],
+                emoji=defaultEmojis["Cyan"],
                 default=filterOptions["Cyan"],
             ),
             discord.SelectOption(
                 label="Blue",
                 value="Blue",
-                emoji=scrollFilterMenuEmojis["Blue"],
+                emoji=defaultEmojis["Blue"],
                 default=filterOptions["Blue"],
             ),
         ]
@@ -973,49 +1008,49 @@ class GuildFilterMenu(discord.ui.Select):
             discord.SelectOption(
                 label="White",
                 value="White",
-                emoji=scrollFilterMenuEmojis["White"],
+                emoji=defaultEmojis["White"],
                 default=filterOptions["White"],
             ),
             discord.SelectOption(
                 label="Black",
                 value="Black",
-                emoji=scrollFilterMenuEmojis["Black"],
+                emoji=defaultEmojis["Black"],
                 default=filterOptions["Black"],
             ),
             discord.SelectOption(
                 label="Green",
                 value="Green",
-                emoji=scrollFilterMenuEmojis["Green"],
+                emoji=defaultEmojis["Green"],
                 default=filterOptions["Green"],
             ),
             discord.SelectOption(
                 label="Red",
                 value="Red",
-                emoji=scrollFilterMenuEmojis["Red"],
+                emoji=defaultEmojis["Red"],
                 default=filterOptions["Red"],
             ),
             discord.SelectOption(
                 label="Purple",
                 value="Purple",
-                emoji=scrollFilterMenuEmojis["Purple"],
+                emoji=defaultEmojis["Purple"],
                 default=filterOptions["Purple"],
             ),
             discord.SelectOption(
                 label="Yellow",
                 value="Yellow",
-                emoji=scrollFilterMenuEmojis["Yellow"],
+                emoji=defaultEmojis["Yellow"],
                 default=filterOptions["Yellow"],
             ),
             discord.SelectOption(
                 label="Cyan",
                 value="Cyan",
-                emoji=scrollFilterMenuEmojis["Cyan"],
+                emoji=defaultEmojis["Cyan"],
                 default=filterOptions["Cyan"],
             ),
             discord.SelectOption(
                 label="Blue",
                 value="Blue",
-                emoji=scrollFilterMenuEmojis["Blue"],
+                emoji=defaultEmojis["Blue"],
                 default=filterOptions["Blue"],
             ),
         ]
@@ -1501,7 +1536,7 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
 def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=True, emojis:dict=None) -> str:
     if useEmojis and emojis != None:
         return f"> {emojis[event[1]['phase']]} {event[1]['discordTS']} the moon is {moonDisplayNames[event[1]['phase']]}."
-    else: return f"> {defaultLunarEmojis[event[1]['phase']]} {event[1]['discordTS']} {moonDisplayNames[event[1]['phase']]}."
+    else: return f"> {defaultEmojis[event[1]['phase']]} {event[1]['discordTS']} {moonDisplayNames[event[1]['phase']]}."
     
 
 def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=None) -> str:

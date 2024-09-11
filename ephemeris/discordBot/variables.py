@@ -64,15 +64,23 @@ lunarFilterMenuEmojis = {
     "waning_crescent": "<:WaningCrescent:1092364435986853928>"
 }
 
-defaultLunarEmojis = {
-    "new": ":new_moon:",
-    "waxing_crescent": ":waxing_crescent_moon:",
-    "first_quarter": ":first_quarter_moon:",
-    "waxing_gibbous": ":waxing_gibbous_moon:",
-    "full": ":full_moon:",
-    "waning_gibbous": ":waning_gibbous_moon:",
-    "third_quarter": ":last_quarter_moon:",
-    "waning_crescent": ":waning_crescent_moon:"
+defaultEmojis = {
+    "White": "<:WhiteOrb:998472151965376602>",
+    "Black": "<:BlackOrb:998472215295164418>",
+    "Green": "<:GreenOrb:998472231640379452>",
+    "Red": "<:RedOrb:998472356303478874>",
+    "Purple": "<:PurpleOrb:998472375400149112>",
+    "Yellow": "<:YellowOrb:998472388406689812>",
+    "Cyan": "<:CyanOrb:998472398707888229>",
+    "Blue": "<:BlueOrb:998472411861233694>",
+    "new": "<:New:1092364396602327050>",
+    "waxing_crescent": "<:New:1092364396602327050>",
+    "first_quarter": "<:FirstQuarter:1092364360812347402>",
+    "waxing_gibbous": "<:WaxingGibbous:1092364485337034792>",
+    "full": "<:Full:1092364372652855397>",
+    "waning_gibbous": "<:WaxingGibbous:1092364485337034792>",
+    "third_quarter": "<:ThirdQuarter:1092364421113851955>",
+    "waning_crescent": "<:WaningCrescent:1092364435986853928>"
 }
 
 
