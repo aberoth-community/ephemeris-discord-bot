@@ -8,7 +8,7 @@ DEBUG = False
 
 class Ephemeris:
     # add function to re calibrate and re calc cached events
-    def __init__(self, start:int=0, end:int=0, numMoonCycles:int=10) -> None:
+    def __init__(self, start:int=0, end:int=0, numMoonCycles:int=3) -> None:
         self.glowThresh = 0.5
         self.darkThresh = 1
         self.increment = 60 * 1000
@@ -62,39 +62,6 @@ class Ephemeris:
             self.scrollEventsCache = tempCache
             self.saveCache(self.cacheFile)
         return tempCache
-    
-    def createLunarCalendar(self, startTime:int, numMoonCycles:int) -> list[tuple[int, dict[str, any]]]: 
-        """_summary_
-
-        Args:
-            startTime (int): The epoch time in ms for which events after will recorded
-            numMoonCycles (int): The number of events for each phase that will be recorded
-
-        Returns:
-            list[tuple[int, dict[str, any]]]: A list of tuples containing the epoch time at which the moon change happens and\n
-            a dictionary containing the name of the new phase and a discord timestamp for the event.
-        """
-        # 8 phases in one moon cycle, add one for the current phase
-        numEvents = numMoonCycles * 8 + 1
-        currentTime = startTime
-        lastNoon = self.getLastNoonTime(startTime)
-        tempCache = []
-        
-        while len(tempCache) < numEvents:
-            break
-            ...
-        
-    def getLastNoonTime(self, time:int) -> int:
-        """
-        Args:
-            time (int): The epoch time in ms for which the previous Aberoth noon will be found.
-
-        Returns:
-            int: The epoch time in ms of the last Aberoth noon before the passed in time.
-        """
-        return time - ((time - self.noonRefTime) % self.oneAberothDay)
-        
-
 
     def getEventsInRange(self, startTime:int, endTime:int) -> list:
         # bisect O(log(n)), total O(2log(n))
@@ -209,7 +176,7 @@ class Ephemeris:
 
     def posRelCandle(self, time:int) -> np.ndarray[float]:
         rw = self.posRelWhite(time)
-        positions = np.array([self.shadowPos(time), (rw[0] + 180) % 360])
+        positions = np.array([self.getShadowPos(time), (rw[0] + 180) % 360])
 
         x = self.radii[1:8] * np.cos(np.radians(rw[1:8])) - np.cos(np.radians(rw[0]))
         y = self.radii[1:8] * np.sin(np.radians(rw[1:8])) - np.sin(np.radians(rw[0]))
@@ -224,7 +191,7 @@ class Ephemeris:
         positions[0] = (positions[0] + 180) % 360
         return positions
 
-    def shadowPos(self, time:int) -> float:
+    def getShadowPos(self, time:int) -> float:
         return (
             (360 / self.v["shadow"]["period"]) * (time - self.v["shadow"]["refTime"])
             + self.v["shadow"]["refOffset"]
@@ -424,9 +391,105 @@ class Ephemeris:
         # print("Orb:", orb, (validStart and validEnd))
         return (validStart and validEnd)
         
+    def createLunarCalendar(self, startTime:int, numMoonCycles:int) -> list[tuple[int, dict[str, any]]]: 
+        """_summary_
 
+        Args:
+            startTime (int): The epoch time in ms for which events after will recorded
+            numMoonCycles (int): The number of events for each phase that will be recorded
+
+        Returns:
+            list[tuple[int, dict[str, any]]]: A list of tuples containing the epoch time at which the moon change happens and\n
+            a dictionary containing the name of the new phase and a discord timestamp for the event.
+        """
+        # 8 phases in one moon cycle plus almost full and almost new
+        numEvents = numMoonCycles * 10
+        currentTime = self.getLastNoonTime(startTime)
+        tempCache = []
+        
+        dayStartWPos = self.getWhitePos(currentTime)
+        dayStartSPos = self.getShadowPos(currentTime)
+        while len(tempCache) < numEvents:
+            phase = ''
+            nextPhase = ''
+            nextNoonTime = currentTime + self.oneAberothDay
+            dayEndWPos = self.getWhitePos(nextNoonTime)
+            dayEndSPos = self.getShadowPos(nextNoonTime)
+            
+            lunarCycleStartPos = (dayStartSPos - dayStartWPos + 360) % 360
+            lunarCycleEndPos = (dayEndSPos - dayEndWPos + 360) % 360
+            
+            if lunarCycleStartPos < 360 and lunarCycleStartPos > 347.5 and (lunarCycleEndPos > 360 or lunarCycleEndPos < 12.5):
+                phase = "new"
+                nextPhase = "waxing_crescent"
+            elif lunarCycleStartPos < 90 and lunarCycleEndPos > 90:
+                phase = "first_quarter"
+                nextPhase = "waxing_gibbous"
+            elif lunarCycleStartPos < 180 and lunarCycleEndPos > 180:
+                phase = "full"
+                nextPhase = "waning_gibbous"
+            elif lunarCycleStartPos < 270 and lunarCycleEndPos > 270:
+                phase = "third_quarter"
+                nextPhase = "waning_crescent"
+              
+            if phase != '':
+                tempCache.append((
+                    currentTime,
+                    {
+                        "phase": phase,
+                        "discordTS": f"<t:{int(np.floor(currentTime/1000))}:D> <t:{int(np.floor(currentTime/1000))}:T>"
+                        # "discordRelTS": f'<t:{np.floor(currentTime/1000)}:R>'
+                    }
+                ))
+                print(tempCache[-1], lunarCycleStartPos, lunarCycleEndPos)
+                tempCache.append((
+                    nextNoonTime,
+                    {
+                        "phase": nextPhase,
+                        "discordTS": f"<t:{int(np.floor(nextNoonTime/1000))}:D> <t:{int(np.floor(nextNoonTime/1000))}:T>"
+                        # "discordRelTS": f'<t:{np.floor(nextNoonTime/1000)}:R>'
+                    }
+                ))
+                print(tempCache[-1])
+                # every phase except the exclictly checked ones last 5 to 6 days
+                currentTime = currentTime + 5 * self.oneAberothDay
+                
+                dayStartWPos = self.getWhitePos(currentTime)
+                dayStartSPos = self.getShadowPos(currentTime)
+            else:
+                dayStartWPos = dayEndWPos
+                dayStartSPos = dayEndSPos
+                currentTime = nextNoonTime
+        # print(tempCache)
+        firstPhase = tempCache[0][1]["phase"]
+        previousPhase = ''
+        if firstPhase == "new": previousPhase = "waning_crescent"
+        elif firstPhase == "first_quarter": previousPhase = "waxing_crescent"
+        elif firstPhase == "full": previousPhase = "waxing_gibbous"
+        elif firstPhase == "third_quarter": previousPhase = "waning_gibbous"
+        
+        tempCache.insert(0, previousPhase)
+        #print(tempCache)
+        return tempCache
+        
+    def getLastNoonTime(self, time:int) -> int:
+        """
+        Args:
+            time (int): The epoch time in ms for which the previous Aberoth noon will be found.
+
+        Returns:
+            int: The epoch time in ms of the last Aberoth noon before the passed in time.
+        """
+        return time - ((time - self.noonRefTime) % self.oneAberothDay)
+        
+    def getWhitePos(self, time:int) -> float:
+        position = (
+        (360 / self.periods[0]) * (time - self.refTimes[0]) + self.refPositions[0]) % 360
+        # positions[0] is white pos rel candle
+        return position
+    
 if __name__ == "__main__":
     ephermis = Ephemeris(
-        start=round((time.time() * 1000) - 2 * 86400000),
+        start=round((time.time() * 1000) - 10 * 86400000),
         end=round((time.time() * 1000) + 16 * 86400000),
     )

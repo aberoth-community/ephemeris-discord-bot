@@ -12,7 +12,7 @@ from ..Ephemeris import Ephemeris
 ownerID = 109931759260430336
 DEBUGGING = False
 # Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
-disableWhitelisting = True
+disableWhitelisting = False
 
 guildSettings = {}
 userSettings = {}
@@ -324,7 +324,7 @@ async def guildMenu(
     exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
     if (exp != None and exp < time.time() and exp != -1):
         noPermission = True
-    if noPermission:
+    if noPermission and not disableWhitelisting:
         await interaction.response.send_message(
             content="**Server does not have permission to use this command.**\nType `/permsissions` for more information.",
             ephemeral=True,
