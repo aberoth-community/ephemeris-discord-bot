@@ -1,79 +1,12 @@
 import time
 from typing import Optional
-import json
 import discord.types
 from regex import match
-from pathlib import Path
 import discord
 from discord import app_commands
 from discord.ext import commands
 from ..Ephemeris import Ephemeris
-
-ownerID = 109931759260430336
-DEBUGGING = False
-# Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
-disableWhitelisting = False
-
-guildSettings = {}
-userSettings = {}
-guildWhiteList = {}
-userWhiteList = {}
-
-GSPath = Path("ephemeris/discordBot/guildSettings.json").absolute()
-USPath = Path("ephemeris/discordBot/userSettings.json").absolute()
-GWLPath = Path("ephemeris/discordBot/guildWhiteList.json").absolute()
-UWLPath = Path("ephemeris/discordBot/userWhiteList.json").absolute()
-
-# Create Files If they don't already exist
-if not GSPath.exists():
-    GSPath.write_text(json.dumps({}))
-    print(f"File created: {GSPath}")
-
-if not USPath.exists():
-    USPath.write_text(json.dumps({}))
-    print(f"File created: {USPath}")
-    
-if not GWLPath.exists():
-    GWLPath.write_text(json.dumps({}))
-    print(f"File created: {GWLPath}")
-
-if not UWLPath.exists():
-    UWLPath.write_text(json.dumps({}))
-    print(f"File created: {UWLPath}")
-
-with GSPath.open("r") as f:
-    guildSettings = json.load(f)
-with USPath.open("r") as f:
-    userSettings = json.load(f)
-with GWLPath.open("r") as f:
-    guildWhiteList = json.load(f)
-with UWLPath.open("r") as f:
-    userWhiteList = json.load(f)
-
-filterMenuEmojis = {
-    "White": "<:WhiteOrb:998472151965376602>",
-    "Black": "<:BlackOrb:998472215295164418>",
-    "Green": "<:GreenOrb:998472231640379452>",
-    "Red": "<:RedOrb:998472356303478874>",
-    "Purple": "<:PurpleOrb:998472375400149112>",
-    "Yellow": "<:YellowOrb:998472388406689812>",
-    "Cyan": "<:CyanOrb:998472398707888229>",
-    "Blue": "<:BlueOrb:998472411861233694>",
-}
-
-thumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
-
-cacheStartDay = -2
-cacheEndDay = 21
-selectStartDay = -1
-selectEndDay = 14
-oneDay = 86400000
-
-if DEBUGGING:
-    cacheStartDay = -9
-    selectStartDay = -9
-    cacheEndDay = 2
-    selectEndDay = 2
+from variables import *
 
 ephemeris = Ephemeris.Ephemeris(
     start=(time.time() * 1000) + cacheStartDay * oneDay, end=(time.time() * 1000) + cacheEndDay * oneDay
@@ -85,7 +18,7 @@ class PersistentViewBot(commands.Bot):
         super().__init__(command_prefix="~", intents=intents)
 
     async def setup_hook(self) -> None:
-        self.add_view(GuildMenu(allow_filters=1, setUp=False))
+        self.add_view(GuildScrollMenu(allow_filters=1, setUp=False))
 
 
 bot = PersistentViewBot()
@@ -227,7 +160,7 @@ async def checkPermissions(interaction: discord.Interaction):
         discord.app_commands.Choice(name="No", value=0),
     ]
 )
-async def userInstallMenu(
+async def userInstallScrollMenu(
     interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int], 
     whitelist_only: Optional[discord.app_commands.Choice[int]]):
     
@@ -269,13 +202,13 @@ async def userInstallMenu(
         "\n***Note:** Due to automatic calibrations, predictions may improve in accuracy when requested closer to the date that they occur on.*",
         inline=False,
     )
-    embed.set_thumbnail(url=thumbnailURL)
+    embed.set_thumbnail(url=scrollThumbnailURL)
     embed.set_footer(text="⏱️ Menu expires in five minutes")
     
     whitelist_only = whitelist_only.value if whitelist_only else 0
     await interaction.response.send_message(
         embed=embed,
-        view=UserInstallMenu(
+        view=UserInstallScrollMenu(
             useEmojis=True if use_emojis.value == 1 else False,
             whiteListOnly=True if whitelist_only == 1 else False,
             emojis=None
@@ -287,7 +220,7 @@ async def userInstallMenu(
 
 
 @bot.tree.command(
-    name="create_persistent_menu",
+    name="create_persistent_scroll_menu",
     description="Creates prediction menu with no timeout. Requires admin. All users will be able to use interface.",
 )
 @app_commands.allowed_installs(guilds=True, users=False)
@@ -311,7 +244,7 @@ async def userInstallMenu(
         discord.app_commands.Choice(name="No", value=0),
     ],
 )
-async def guildMenu(
+async def guildScrollMenu(
     interaction: discord.Interaction,
     use_emojis: discord.app_commands.Choice[int],
     allow_filters: discord.app_commands.Choice[int],
@@ -369,9 +302,89 @@ async def guildMenu(
         "\n***Note:** Due to daily auto-calibration, predictions may improve in accuracy when requested closer to the date that they occur on.*",
         inline=False,
     )
-    embed.set_thumbnail(url=thumbnailURL)
+    embed.set_thumbnail(url=scrollThumbnailURL)
     await interaction.response.send_message(
-        embed=embed, view=GuildMenu(allow_filters=allow_filters.value), ephemeral=False
+        embed=embed, view=GuildScrollMenu(allow_filters=allow_filters.value), ephemeral=False
+    )
+
+@bot.tree.command(
+    name="create_persistent_lunar_calendar",
+    description="Creates lunar calendar menu with no timeout. Requires admin. All users will be able to use interface.",
+)
+@app_commands.allowed_installs(guilds=True, users=False)
+@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.default_permissions()
+@app_commands.describe(
+    use_emojis="Whether or not responses use emojis for moon phase names",
+)
+@app_commands.choices(
+    use_emojis=[
+        discord.app_commands.Choice(name="Yes", value=1),
+        discord.app_commands.Choice(name="No", value=0),
+    ],
+    whitelisted_users_only=[
+        discord.app_commands.Choice(name="Yes", value=1),
+        discord.app_commands.Choice(name="No", value=0),
+    ],
+)
+async def guildLunarMenu(
+    interaction: discord.Interaction,
+    use_emojis: discord.app_commands.Choice[int],
+    whitelisted_users_only: discord.app_commands.Choice[int]
+):
+    ephRes = True
+    noPermission = False
+    if str(interaction.guild_id) not in guildWhiteList:
+        noPermission = True
+    exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
+    if (exp != None and exp < time.time() and exp != -1):
+        noPermission = True
+    if noPermission and not disableWhitelisting:
+        await interaction.response.send_message(
+            content="**Server does not have permission to use this command.**\nType `/permsissions` for more information.",
+            ephemeral=True,
+        )
+        return
+    if str(interaction.guild_id) in guildSettings:
+        guildSettings[str(interaction.guild_id)][str(interaction.channel_id)] = {
+            "useEmojis": use_emojis.value,
+            "whitelisted_users_only": whitelisted_users_only.value
+        }
+    else:
+        guildSettings[str(interaction.guild_id)] = {
+            str(interaction.channel_id): {
+                "useEmojis": use_emojis.value,
+                "whitelisted_users_only": whitelisted_users_only.value
+            }
+        }
+    updateSettings(settings=guildSettings)
+    if (
+        use_emojis.value == 1
+        and "emojis" not in guildSettings[str(interaction.guild_id)]
+    ):
+        await interaction.response.send_message(
+            content="**Please configure the server emoji settings (/set_server_emojis) to use this command __with emojis.__**",
+            ephemeral=True,
+        )
+        return
+    embed = discord.Embed(
+        title="**Lunar Calendar**",
+        description="*Night will start 42 minutes after the start of each moon phase*",
+        #color=0xA21613,
+        color=13546768,
+    )
+    embed.add_field(
+        name="**__Details:__**",
+        value=f"​\n**`All Moons: `**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} syndonic aberoth months```"
+        "\n**`Next Full Moon:   `**\n```Provides the time at which the next full moon will start.```"
+        "\n**`Next New Moon:    `**\n````Provides the time at which the next new moon will start.```"
+        "\n**`Filter:           `**\n```Use the drop down menu to select one or more moon phases."
+        f"\nA list with the times at which the selected phases start for the next {numDisplayMoonCycles} syndonic aberoth months will be provided```",
+        inline=False,
+    )
+    embed.set_thumbnail(url=scrollThumbnailURL)
+    await interaction.response.send_message(
+        embed=embed, view=GuildLunarMenu(), ephemeral=False
     )
 
 
@@ -601,7 +614,7 @@ class GuildDaySelMenu(discord.ui.Select):
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
-            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
+            ephemeris.updateScrollCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
             dayList = dayList = getDayList(
                 ephemeris,
                 startDay=start,
@@ -672,7 +685,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=False, thinking=True)
             messageDefered = True
-            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
+            ephemeris.updateScrollCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
             dayList = getDayList(
                 ephemeris,
                 startDay=start,
@@ -680,6 +693,116 @@ class UserInstallSelDayMenu(discord.ui.Select):
                 filters=self.filterList,
                 useEmojis=self.useEmojis,
                 emojis=self.emojis,
+            )
+        msgArr = splitMsg(dayList)
+        if messageDefered:
+            await interaction.followup.send(
+            content=msgArr[0], ephemeral=self.ephemeralRes
+        )
+        else:
+            await interaction.response.send_message(
+            content=msgArr[0], ephemeral=self.ephemeralRes
+        )
+        if len(msgArr) > 1:
+            for msg in msgArr[1:]:
+                await interaction.followup.send(
+                    content=msg, ephemeral=self.ephemeralRes
+                )
+
+
+class GuildPhaseSelMenu(discord.ui.Select):
+    def __init__(self, ephemeralRes=True, filterList=None, setUp=False, whiteListUsersOnly=False):
+        self.setUp = setUp
+        self.whiteListUsersOnly = False
+        self.ephemeralRes = ephemeralRes
+        self.filterList = filterList
+        options = [discord.SelectOption(label=x) for x in range(selectStartDay, selectEndDay+1)]
+        super().__init__(
+            placeholder="Select how many days from today",
+            options=options,
+            custom_id="selectDay",
+            min_values=1,
+            max_values=2,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        whiteListed = False
+        messageDefered = False
+        
+        useEmojis = False
+        emojis = None
+        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "useEmojis"
+                ]
+                == 1
+            ):
+                useEmojis = True
+                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "whitelisted_users_only"
+                ]
+                == 1
+            ):
+                self.whiteListUsersOnly = True
+            if self.setUp == False:
+                # Asignmenu state on interaction when bot is restarted
+                self.setUp = True
+                if "filters" not in guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)]:
+                    guildSettings[str(interaction.guild_id)][
+                        str(interaction.channel_id)
+                    ]["filters"] = {}
+
+                self.filterList = guildSettings[str(interaction.guild_id)][
+                    str(interaction.channel_id)
+                ].get("filters")
+        
+        if 0 in interaction._integration_owners:
+            if str(interaction.guild_id) in guildWhiteList:
+                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
+                whiteListed = True if exp == None or exp == -1 else exp > time.time()
+            if self.whiteListUsersOnly:
+                if str(interaction.user.id) in userWhiteList:
+                    exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                    temp = True if exp == -1 else exp > time.time()
+                else: temp = False
+                whiteListed = whiteListed and temp
+        elif 1 in interaction._integration_owners:
+            if str(interaction.user.id) in userWhiteList:
+                exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                whiteListed = True if exp == -1 else exp > time.time()
+
+        if not whiteListed and not disableWhitelisting:
+            await interaction.response.send_message(
+                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                ephemeral=True,
+            )
+            return
+
+        start = min(self.values)
+        end = max(self.values)
+        dayList = getDayList(
+                ephemeris,
+                startDay=start,
+                endDay=end,
+                filters=self.filterList,
+                useEmojis=useEmojis,
+                emojis=emojis,
+            )
+        if dayList[0] == "Out of Range":
+            await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
+            messageDefered = True
+            ephemeris.updateScrollCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
+            dayList = dayList = getDayList(
+                ephemeris,
+                startDay=start,
+                endDay=end,
+                filters=self.filterList,
+                useEmojis=useEmojis,
+                emojis=emojis,
             )
         msgArr = splitMsg(dayList)
         if messageDefered:
@@ -711,49 +834,49 @@ class UserInstallFilterMenu(discord.ui.Select):
             discord.SelectOption(
                 label="White",
                 value="White",
-                emoji=filterMenuEmojis["White"],
+                emoji=scrollFilterMenuEmojis["White"],
                 default=filterOptions["White"],
             ),
             discord.SelectOption(
                 label="Black",
                 value="Black",
-                emoji=filterMenuEmojis["Black"],
+                emoji=scrollFilterMenuEmojis["Black"],
                 default=filterOptions["Black"],
             ),
             discord.SelectOption(
                 label="Green",
                 value="Green",
-                emoji=filterMenuEmojis["Green"],
+                emoji=scrollFilterMenuEmojis["Green"],
                 default=filterOptions["Green"],
             ),
             discord.SelectOption(
                 label="Red",
                 value="Red",
-                emoji=filterMenuEmojis["Red"],
+                emoji=scrollFilterMenuEmojis["Red"],
                 default=filterOptions["Red"],
             ),
             discord.SelectOption(
                 label="Purple",
                 value="Purple",
-                emoji=filterMenuEmojis["Purple"],
+                emoji=scrollFilterMenuEmojis["Purple"],
                 default=filterOptions["Purple"],
             ),
             discord.SelectOption(
                 label="Yellow",
                 value="Yellow",
-                emoji=filterMenuEmojis["Yellow"],
+                emoji=scrollFilterMenuEmojis["Yellow"],
                 default=filterOptions["Yellow"],
             ),
             discord.SelectOption(
                 label="Cyan",
                 value="Cyan",
-                emoji=filterMenuEmojis["Cyan"],
+                emoji=scrollFilterMenuEmojis["Cyan"],
                 default=filterOptions["Cyan"],
             ),
             discord.SelectOption(
                 label="Blue",
                 value="Blue",
-                emoji=filterMenuEmojis["Blue"],
+                emoji=scrollFilterMenuEmojis["Blue"],
                 default=filterOptions["Blue"],
             ),
         ]
@@ -785,7 +908,7 @@ class UserInstallFilterMenu(discord.ui.Select):
         if newTimeoutTime < 1:
             newTimeoutTime = 0
         await interaction.response.edit_message(
-            view=UserInstallMenu(
+            view=UserInstallScrollMenu(
                 timeout=newTimeoutTime,
                 filterOptions=filterOptions,
                 filterList=filterList,
@@ -814,49 +937,49 @@ class GuildFilterMenu(discord.ui.Select):
             discord.SelectOption(
                 label="White",
                 value="White",
-                emoji=filterMenuEmojis["White"],
+                emoji=scrollFilterMenuEmojis["White"],
                 default=filterOptions["White"],
             ),
             discord.SelectOption(
                 label="Black",
                 value="Black",
-                emoji=filterMenuEmojis["Black"],
+                emoji=scrollFilterMenuEmojis["Black"],
                 default=filterOptions["Black"],
             ),
             discord.SelectOption(
                 label="Green",
                 value="Green",
-                emoji=filterMenuEmojis["Green"],
+                emoji=scrollFilterMenuEmojis["Green"],
                 default=filterOptions["Green"],
             ),
             discord.SelectOption(
                 label="Red",
                 value="Red",
-                emoji=filterMenuEmojis["Red"],
+                emoji=scrollFilterMenuEmojis["Red"],
                 default=filterOptions["Red"],
             ),
             discord.SelectOption(
                 label="Purple",
                 value="Purple",
-                emoji=filterMenuEmojis["Purple"],
+                emoji=scrollFilterMenuEmojis["Purple"],
                 default=filterOptions["Purple"],
             ),
             discord.SelectOption(
                 label="Yellow",
                 value="Yellow",
-                emoji=filterMenuEmojis["Yellow"],
+                emoji=scrollFilterMenuEmojis["Yellow"],
                 default=filterOptions["Yellow"],
             ),
             discord.SelectOption(
                 label="Cyan",
                 value="Cyan",
-                emoji=filterMenuEmojis["Cyan"],
+                emoji=scrollFilterMenuEmojis["Cyan"],
                 default=filterOptions["Cyan"],
             ),
             discord.SelectOption(
                 label="Blue",
                 value="Blue",
-                emoji=filterMenuEmojis["Blue"],
+                emoji=scrollFilterMenuEmojis["Blue"],
                 default=filterOptions["Blue"],
             ),
         ]
@@ -890,7 +1013,7 @@ class GuildFilterMenu(discord.ui.Select):
         updateSettings(settings=guildSettings)
         # change select menu options
         await interaction.response.edit_message(
-            view=GuildMenu(
+            view=GuildScrollMenu(
                 timeout=None,
                 filterOptions=filterOptions,
                 filterList=filterList,
@@ -899,7 +1022,7 @@ class GuildFilterMenu(discord.ui.Select):
         )
 
 
-class UserInstallMenu(discord.ui.View):
+class UserInstallScrollMenu(discord.ui.View):
     def __init__(
         self,
         ephemeralRes=False,
@@ -987,7 +1110,7 @@ class UserInstallMenu(discord.ui.View):
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=False, thinking=True)
             messageDefered = True
-            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
+            ephemeris.updateScrollCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
             dayList = getDayList(
                 ephemeris,
                 startDay=startDays[button.label],
@@ -1013,7 +1136,7 @@ class UserInstallMenu(discord.ui.View):
 
 
 # Create seperate menu that will persist
-class GuildMenu(discord.ui.View):
+class GuildScrollMenu(discord.ui.View):
     def __init__(
         self,
         ephemeralRes=True,
@@ -1039,21 +1162,21 @@ class GuildMenu(discord.ui.View):
     async def yesterday(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
-        await self.guildMenuBtnPress(interaction=interaction, button=button)
+        await self.guildScrollMenuBtnPress(interaction=interaction, button=button)
 
     @discord.ui.button(
         label="Today", style=discord.ButtonStyle.green, custom_id="today"
     )
     async def today(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.guildMenuBtnPress(interaction=interaction, button=button)
+        await self.guildScrollMenuBtnPress(interaction=interaction, button=button)
         
     @discord.ui.button(
         label="Tomorrow", style=discord.ButtonStyle.blurple, custom_id="tomorrow"
     )
     async def tomorrow(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.guildMenuBtnPress(interaction=interaction, button=button)
+        await self.guildScrollMenuBtnPress(interaction=interaction, button=button)
     
-    async def guildMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def guildScrollMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
         whiteListed = False
         messageDefered = False
         
@@ -1121,7 +1244,7 @@ class GuildMenu(discord.ui.View):
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
-            ephemeris.updateCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
+            ephemeris.updateScrollCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
             dayList = getDayList(
                 ephemeris,
                 startDay=startDays[button.label],
@@ -1145,15 +1268,132 @@ class GuildMenu(discord.ui.View):
                     content=msg, ephemeral=self.ephemeralRes
                 )
 
+
+# Create seperate menu that will persist
+class GuildLunarMenu(discord.ui.View):
+    def __init__(
+        self,
+        ephemeralRes=True,
+        setUp=True,
+    ):
+        super().__init__()
+        self.setUp = setUp
+        self.ephemeralRes = ephemeralRes
+        self.whiteListUsersOnly = False
+        self.add_item(GuildPhaseSelMenu(ephemeralRes))
+
+    @discord.ui.button(
+        label="All Moon Phases", style=discord.ButtonStyle.red, custom_id="all"
+    )
+    async def allPhases(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
+
+    @discord.ui.button(
+        label="Next Full Moon", style=discord.ButtonStyle.green, custom_id="full"
+    )
+    async def fullMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
+        
+    @discord.ui.button(
+        label="Next New Moon", style=discord.ButtonStyle.blurple, custom_id="new"
+    )
+    async def newMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
+        
+    @discord.ui.button(
+        label="Current Phase", style=discord.ButtonStyle.blurple, custom_id="current"
+    )
+    async def newMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
+    
+    async def guildLunarMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
+        whiteListed = False
+        messageDefered = False
+        
+        useEmojis = False
+        emojis = None
+        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "useEmojis"
+                ]
+                == 1
+            ):
+                useEmojis = True
+                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
+            if (
+                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+                    "whitelisted_users_only"
+                ]
+                == 1
+            ):
+                self.whiteListUsersOnly = True
+                
+        if 0 in interaction._integration_owners:
+            if str(interaction.guild_id) in guildWhiteList:
+                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
+                whiteListed = True if exp == -1 else exp > time.time()
+            if self.whiteListUsersOnly:
+                if str(interaction.user.id) in userWhiteList:
+                    exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                    temp = True if exp == -1 else exp > time.time()
+                else: temp = False
+                whiteListed = whiteListed and temp
+        elif 1 in interaction._integration_owners:
+            if str(interaction.user.id) in userWhiteList:
+                exp = userWhiteList[str(interaction.user.id)].get('expiration')
+                whiteListed = True if exp == -1 else exp > time.time()
+
+        if not whiteListed and not disableWhitelisting:
+            await interaction.response.send_message(
+                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                ephemeral=True,
+            )
+            return
+
+        phaseList = getPhaseList(
+                        ephemeris,
+                        filters = None,
+                        useEmojis=useEmojis,
+                        emojis=emojis)
+        
+        if phaseList[0] == "Range too Small":
+            await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
+            messageDefered = True
+            ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
+            phaseList = getPhaseList(
+                ephemeris,
+                filters=None,
+                useEmojis=useEmojis,
+                emojis=emojis,
+            )
+        
+        msgArr = splitMsg(phaseList)
+        if messageDefered:
+            await interaction.followup.send(
+            content=msgArr[0], ephemeral=self.ephemeralRes
+        )
+        else:
+            await interaction.response.send_message(
+            content=msgArr[0], ephemeral=self.ephemeralRes
+        )
+        if len(msgArr) > 1:
+            for msg in msgArr[1:]:
+                await interaction.followup.send(
+                    content=msg, ephemeral=self.ephemeralRes
+                )
+
 #######################
 #  Helper Functions
 #######################
 def getDayList(
-    ephemeris,
+    ephemeris:Ephemeris,
     startDay: int,
-    useEmojis=False,
-    filters=None,
-    emojis=None,
+    useEmojis:bool=False,
+    filters:dict=None,
+    emojis:dict=None,
     endDay: int = None,
 ):
     currentTime = round((time.time() * 1000))
@@ -1192,14 +1432,43 @@ def getDayList(
         else:
             return "> **There are no events within the selected range.**"
     startState = cacheSubSet[0]
-    eventMsg = createEventMsgLine(startState, useEmojis, True, emojis=emojis)
+    eventMsg = createScrollEventMsgLine(startState, useEmojis, True, emojis=emojis)
     if len(cacheSubSet) > 1:
         for event in cacheSubSet[1:]:
-            eventMsg += "\n" + createEventMsgLine(event, useEmojis, emojis=emojis)
+            eventMsg += "\n" + createScrollEventMsgLine(event, useEmojis, emojis=emojis)
     return eventMsg
 
+def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None, useEmojis:bool=False, emojis:dict=None):
+    start = startTime
+    if start == None:
+        currentTime = round((time.time() * 1000))
+        start = currentTime - ephemeris.oneAberothDay
+    
+    startIndex = next((i for i, (timestamp, _) in enumerate(ephemeris.moonCyclesCache) if timestamp > start), None)
+    
+    subCache = []
+    if startIndex:
+        subCache = ephemeris.moonCyclesCache[startIndex:]
+    if len(subCache) < numDisplayMoonCycles * 10:
+        return ['Range too Small']
+    
+    if filters != None and len(filters) != 0:
+        subCache = [event for event in subCache if event[1].phase in filters]
+    
+    startPhase = subCache[0]
+    eventMsg = createLunarEventMsgLine(startPhase, useEmojis, emojis=emojis)
+    if len(subCache) > 1:
+        for event in subCache[1:]:
+            eventMsg += "\n" + createLunarEventMsgLine(event, useEmojis, emojis=emojis)
+    return eventMsg
 
-def createEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=None):
+def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=True, emojis:bool=None) -> str:
+    if useEmojis and emojis != None:
+        msg = f"> {emojis[event[1].phase]} {event['discordTS']}"
+    else: msg = f"> {defaultLunarEmojis[event[1].phase]} {event['discordTS']}"
+    
+
+def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=None) -> str:
     glows = event["newGlows"]
     darks = [i for i in event["newDarks"] if i != "Shadow"]
     normals = [i for i in event["returnedToNormal"] if i != "Shadow"]
@@ -1240,7 +1509,6 @@ def createEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=None):
         msg += tempMsg
     return msg
 
-
 def splitMsg(msg):
     msgArr = []
     while len(msg) > 2000:
@@ -1251,20 +1519,18 @@ def splitMsg(msg):
     msgArr.append(msg)
     return msgArr
 
-
-def updateSettings(settings, settingsFile=GSPath):
+def updateSettings(settings, settingsFile:Path=GSPath):
     json_object = json.dumps(settings, indent=4)
     with open(settingsFile, "w") as outfile:
         outfile.write(json_object)
 
-def getSettings(settingsFile=GSPath):
+def getSettings(settingsFile:Path=GSPath):
     settings = {}
     with open(settingsFile, "r") as json_file:
         settings = json.load(json_file)
     return settings
 
-
-def isEmoji(str):
+def isEmoji(emojiStr:str) -> bool:
     """Checks if the argument is an emoji
 
     Args:
@@ -1273,11 +1539,11 @@ def isEmoji(str):
     Returns:
         Boolean: True if string is an emoji, False if string is not an emoji
     """
-    if bool(match(r"\p{Emoji}", str)):
+    if bool(match(r"\p{Emoji}", emojiStr)):
         return True
-    if len(str) < 5:
+    if len(emojiStr) < 5:
         return False
-    if str[:2] + str[-1] == "<:>" or str[0] + str[-1] == "::":
+    if emojiStr[:2] + emojiStr[-1] == "<:>" or emojiStr[0] + emojiStr[-1] == "::":
         return True
     else:
         return False

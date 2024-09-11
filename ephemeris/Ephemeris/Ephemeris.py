@@ -30,11 +30,11 @@ class Ephemeris:
         self.alignmentStates = np.full(9, False)
         self.lastAlignmentStates = np.full(9, False)
         self.scrollEventsCache = []
-        self.scrollEventsCache = self.createEventRange(start, end)
+        self.scrollEventsCache = self.createScrollEventRange(start, end)
         self.moonCyclesCache = self.createLunarCalendar(start, numMoonCycles)
         self.saveCache(self.cacheFile)
 
-    def createEventRange(self, startTime:int, stopTime:int, saveToCache:bool=False) -> list[tuple[int, dict[str, any]]]:
+    def createScrollEventRange(self, startTime:int, stopTime:int, saveToCache:bool=False) -> list[tuple[int, dict[str, any]]]:
         currentTime = startTime
         tempCache = []
         # create event for the starting alignments
@@ -63,7 +63,7 @@ class Ephemeris:
             self.saveCache(self.cacheFile)
         return tempCache
 
-    def getEventsInRange(self, startTime:int, endTime:int) -> list:
+    def getScrollEventsInRange(self, startTime:int, endTime:int) -> list:
         # bisect O(log(n)), total O(2log(n))
         startIndex = bisect.bisect_left(self.scrollEventsCache, (startTime,))
         stopIndex = bisect.bisect_right(self.scrollEventsCache, (endTime,))
@@ -318,7 +318,7 @@ class Ephemeris:
         while True:
             #time.sleep(refreshRate)
             self.updateRefTimes()
-            self.createEventRange(
+            self.createScrollEventRange(
                 startTime=(time.time() * 1000) - 2 * 86400000,
                 stopTime=(time.time() * 1000) + 12 * 86400000,
                 saveToCache=True
@@ -326,14 +326,18 @@ class Ephemeris:
             print("New Cache Last Item:", self.scrollEventsCache[-1])
             time.sleep(60*3)
             
-    def updateCache(self, start:int, stop:int) -> None:
+    def updateScrollCache(self, start:int, stop:int) -> None:
         self.updateRefTimes()
-        self.createEventRange(
+        self.createScrollEventRange(
             startTime=start,
             stopTime=stop,
             saveToCache=True
         )
         # print("New Cache Last Item:", self.eventsCache[-1])
+
+    def updateMoonCache(self, start:int, numMoonCycles:int) -> None:
+        self.updateRefTimes()
+        self.createLunarCalendar(start, numMoonCycles)
 
     def updateRefTimes(self) -> None:
         newVars:dict[str, list[int]] = {}
@@ -368,8 +372,8 @@ class Ephemeris:
         self.updateVariables()
         
     def checkValidRefTime(self, orb:str, refTimes:list[int]) -> bool:
-        startRange = self.getEventsInRange(startTime=refTimes[0]-15000, endTime=refTimes[0]+15000)
-        endRange = self.getEventsInRange(startTime=refTimes[1]-15000, endTime=refTimes[1]+15000)
+        startRange = self.getScrollEventsInRange(startTime=refTimes[0]-15000, endTime=refTimes[0]+15000)
+        endRange = self.getScrollEventsInRange(startTime=refTimes[1]-15000, endTime=refTimes[1]+15000)
         if len(startRange) == 0 or len(endRange) == 0:
             return False
         orb = orb.capitalize()
