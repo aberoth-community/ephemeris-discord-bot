@@ -54,18 +54,25 @@ scrollFilterMenuEmojis = {
 }
 
 lunarFilterMenuEmojis = {
-    
+    "new": "<:New:1092364396602327050>",
+    "waxing_crescent": "<:WaxingCrescent:1092364467712569395>",
+    "first_quarter": "<:FirstQuarter:1092364360812347402>",
+    "waxing_gibbous": "<:WaxingGibbous:1092364485337034792>",
+    "full": "<:Full:1092364372652855397>",
+    "waning_gibbous": "<:waningGibbous:1088075517799972934>",
+    "third_quarter": "<:ThirdQuarter:1092364421113851955>",
+    "waning_crescent": "<:WaningCrescent:1092364435986853928>"
 }
 
 defaultLunarEmojis = {
-    "new": "",
-    "waxing_crescent": "",
-    "first_quarter": "",
-    "waxing_gibbous": "",
-    "full": "",
-    "waning_gibbous": "",
-    "third_quarter": "",
-    "waning_crescent": ""
+    "new": "🌑",
+    "waxing_crescent": "🌒",
+    "first_quarter": "🌓",
+    "waxing_gibbous": "🌔",
+    "full": "🌕",
+    "waning_gibbous": "🌖",
+    "third_quarter": "🌗",
+    "waning_crescent": "🌘"
 }
 
 scrollThumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
