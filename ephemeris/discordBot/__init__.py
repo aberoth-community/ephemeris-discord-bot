@@ -785,12 +785,59 @@ class UserInstallSelDayMenu(discord.ui.Select):
 
 
 class GuildPhaseSelMenu(discord.ui.Select):
-    def __init__(self, ephemeralRes=True, filterList=None, setUp=False, whiteListUsersOnly=False):
-        self.setUp = setUp
+    def __init__(self, ephemeralRes=True, whiteListUsersOnly=False):
         self.whiteListUsersOnly = False
         self.ephemeralRes = ephemeralRes
-        self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(selectStartDay, selectEndDay+1)]
+        options = options = [
+            discord.SelectOption(
+                label="New Moons",
+                value="new",
+                emoji=lunarFilterMenuEmojis['new'],
+                default=False,
+            ),
+            discord.SelectOption(
+                label="Waxing Crescents",
+                value="waxing_crescent",
+                emoji=lunarFilterMenuEmojis['waxing_crescent'],
+                default=False,
+            ),
+            discord.SelectOption(
+                label="First Quarter",
+                value="first_quarter",
+                emoji=lunarFilterMenuEmojis['first_quarter'],
+                default=False,
+            ),
+            discord.SelectOption(
+                label="Waxing Gibbous'",
+                value="waxing_gibbous",
+                emoji=lunarFilterMenuEmojis['waxing_gibbous'],
+                default=False,
+            ),
+            discord.SelectOption(
+                label="Full Moons",
+                value="full",
+                emoji=lunarFilterMenuEmojis['full'],
+                default=False,
+            ),
+            discord.SelectOption(
+                label="Waning Gibbous'",
+                value="waning_gibbous",
+                emoji=lunarFilterMenuEmojis['waning_gibbous'],
+                default=False,
+            ),
+            discord.SelectOption(
+                label="Third Quarters",
+                value="third_quarter",
+                emoji=lunarFilterMenuEmojis['third_quarter'],
+                default=False,
+            ),
+            discord.SelectOption(
+                label="Waning Crescents",
+                value="waning_crescent",
+                emoji=lunarFilterMenuEmojis['waning_crescent'],
+                default=False,
+            ),
+        ]
         super().__init__(
             placeholder="Select which phases",
             options=options,
@@ -821,19 +868,7 @@ class GuildPhaseSelMenu(discord.ui.Select):
                 == 1
             ):
                 self.whiteListUsersOnly = True
-            if self.setUp == False:
-                # Asignmenu state on interaction when bot is restarted
-                self.setUp = True
-                if "filters" not in guildSettings[str(interaction.guild_id)][
-                    str(interaction.channel_id)]:
-                    guildSettings[str(interaction.guild_id)][
-                        str(interaction.channel_id)
-                    ]["filters"] = {}
 
-                self.filterList = guildSettings[str(interaction.guild_id)][
-                    str(interaction.channel_id)
-                ].get("filters")
-        
         if 0 in interaction._integration_owners:
             if str(interaction.guild_id) in guildWhiteList:
                 exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
@@ -856,29 +891,25 @@ class GuildPhaseSelMenu(discord.ui.Select):
             )
             return
 
-        start = min(self.values)
-        end = max(self.values)
-        dayList = getDayList(
-                ephemeris,
-                startDay=start,
-                endDay=end,
-                filters=self.filterList,
-                useEmojis=useEmojis,
-                emojis=emojis,
-            )
-        if dayList[0] == "Out of Range":
+        phaseList = getPhaseList(
+                    ephemeris,
+                    filters = self.values,
+                    useEmojis=useEmojis,
+                    emojis=emojis,
+                    )
+        
+        if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
-            ephemeris.updateScrollCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
-            dayList = dayList = getDayList(
+            ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
+            phaseList = getPhaseList(
                 ephemeris,
-                startDay=start,
-                endDay=end,
-                filters=self.filterList,
+                filters= self.values,
                 useEmojis=useEmojis,
                 emojis=emojis,
             )
-        msgArr = splitMsg(dayList)
+        
+        msgArr = splitMsg(phaseList)
         if messageDefered:
             await interaction.followup.send(
             content=msgArr[0], ephemeral=self.ephemeralRes
@@ -892,6 +923,7 @@ class GuildPhaseSelMenu(discord.ui.Select):
                 await interaction.followup.send(
                     content=msg, ephemeral=self.ephemeralRes
                 )
+
 
 
 class UserInstallFilterMenu(discord.ui.Select):
@@ -1531,16 +1563,24 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
     #     }
     
     firstFilters = {'next_full': 'full', 'next_new': "new"}
-    eventFilters = [firstFilters[phase] if phase in firstFilters else phase
-                    for (phase, label) in lunarLabels.items() if label in filters]
+    # eventFilters = [firstFilters[phase] if phase in firstFilters else phase
+    #                  for (phase, label) in lunarLabels.items() if label in filters]
+    eventFilters = []
+    for (phase, label) in lunarLabels.items():
+        if label in filters or phase in filters:
+            if phase == 'next_new':
+                phase = 'new'
+            elif phase == 'next_full':
+                phase = 'full'
+            eventFilters.append(phase)
+
     displayingCurrent = False
     subCache = []
     if startIndex:
-        if filters != None and len(filters) != 0:
+        if eventFilters != None and len(eventFilters) != 0:
             if 'all' in eventFilters:
                 subCache = ephemeris.moonCyclesCache[startIndex:]
                 if len(subCache) < numDisplayMoonCycles * 8 + 1:
-                    print(subCache, '\n', numDisplayMoonCycles*10, len(subCache))
                     return ['Range too Small']
                 else: 
                     subCache = subCache[:numDisplayMoonCycles * 8 + 1]
@@ -1555,15 +1595,13 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
                 subCache = [next((event for event in ephemeris.moonCyclesCache[startIndex:] if event[1]['phase'] in eventFilters), None)]
                 firstLine = f"__**Next {(subCache[0][1]['phase']).capitalize()} Moon:**__\n*Note: phase may be the current phase.*"
             else:
-                subCache = [(event for event in ephemeris.moonCyclesCache[startIndex:] if event[1]['phase'] in eventFilters)]
-                if len(subCache) < numFilterDisplayMoonCycles * len(filters):
-                    print(subCache, '\n', numFilterDisplayMoonCycles * len(filters), len(subCache))
+                subCache = [event for event in ephemeris.moonCyclesCache[startIndex:] if event[1]['phase'] in eventFilters]
+                if len(subCache) < numFilterDisplayMoonCycles * len(eventFilters):
                     return ['Range too Small']
                 else: 
                     subCache = subCache[:numFilterDisplayMoonCycles * 8 + 1]
-                    firstLine = f"__**Filtered Phases:**__\nNext {join_and_capitalize_with_oxford_comma(eventFilters)} moons over the next {numDisplayMoonCycles} syndonic months"
+                    firstLine = f"__**Filtered Phases:**__\nNext {join_with_oxford_comma(eventFilters)} moons over the next {numFilterDisplayMoonCycles} syndonic months"
     if len(subCache) < 1:
-        print(subCache, '\n', numDisplayMoonCycles*len(filters), len(subCache))
         return ['Range too Small']
     
     eventMsg = firstLine
@@ -1666,17 +1704,16 @@ def isEmoji(emojiStr:str) -> bool:
     else:
         return False
 
-def join_and_capitalize_with_oxford_comma(items):
-    # Capitalize each string in the list
-    capitalized_items = [item.capitalize() for item in items]
-
+def join_with_oxford_comma(items):
+    phaseNames = [moonFilterDisplayNames[item] for item in items]
+    
     # Handle different lengths
-    if len(capitalized_items) == 0:
+    if len(phaseNames) == 0:
         return ""  # Return empty string if list is empty
-    elif len(capitalized_items) == 1:
-        return capitalized_items[0]  # Return single item if only one element
-    elif len(capitalized_items) == 2:
-        return " and ".join(capitalized_items)  # Join with "and" if two elements
+    elif len(phaseNames) == 1:
+        return phaseNames[0]  # Return single item if only one element
+    elif len(phaseNames) == 2:
+        return " and ".join(phaseNames)  # Join with "and" if two elements
     else:
         # Join with commas and an Oxford comma for three or more elements
-        return ", ".join(capitalized_items[:-1]) + ", and " + capitalized_items[-1]
+        return ", ".join(phaseNames[:-1]) + ", and " + phaseNames[-1]

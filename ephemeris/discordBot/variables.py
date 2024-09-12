@@ -89,11 +89,22 @@ moonDisplayNames = {
     "new": "**New**",
     "waxing_crescent": "a **Waxing Crescent**",
     "first_quarter": "in its **First Quarter**",
-    "waxing_gibbous": "a **Waxing Crescent**",
+    "waxing_gibbous": "a **Waxing Gibbous**",
     "full": "**Full**",
     "waning_gibbous": "a **Waning Gibbous**",
     "third_quarter": "in its **Third Quarter**",
     "waning_crescent": "a **Waning Crescent**"
+}
+
+moonFilterDisplayNames = {
+    "new": "**New**",
+    "waxing_crescent": "**Waxing Crescent**",
+    "first_quarter": "**First Quarter**",
+    "waxing_gibbous": "**Waxing Gibbous**",
+    "full": "**Full**",
+    "waning_gibbous": "**Waning Gibbous**",
+    "third_quarter": "**Third Quarter**",
+    "waning_crescent": "**Waning Crescent**"
 }
 
 lunarLabels = {
