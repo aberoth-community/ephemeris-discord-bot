@@ -1,4 +1,5 @@
 import time
+import copy
 from typing import Optional
 import discord.types
 from regex import match
@@ -9,7 +10,8 @@ from ..Ephemeris import Ephemeris
 from .variables import *
 
 ephemeris = Ephemeris.Ephemeris(
-    start=(time.time() * 1000) + cacheStartDay * oneDay, end=(time.time() * 1000) + cacheEndDay * oneDay,
+    start=(time.time() * 1000) + cacheStartDay * oneDay, 
+    end=(time.time() * 1000) + cacheEndDay * oneDay,
     numMoonCycles=numMoonCycles
 )
     
@@ -378,13 +380,13 @@ async def guildLunarMenu(
         color=0xbcc7cf,
     )
     embed.add_field(
-        name="**__Details:__**",
+        name="",
         value=f"​\n{defaultEmojis['lunation']}  **All Moons:**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} syndonic aberoth months```"
                 f"\n{defaultEmojis['full']}  **Next Full Moon:**\n```Provides the time at which the next full moon will start.```"
                 f"\n{defaultEmojis['new']}  **Next New Moon:**\n```Provides the time at which the next new moon will start.```"
                 f"\n:grey_question:   **Current Phase:**\n```Provides the current phase.```"
                 "\n:mag:  **Filter:**\n```Use the drop down menu to select one or more moon phases."
-                f" Creates list with the times at which the selected phases start for the next {numDisplayMoonCycles} syndonic aberoth months will be provided```",
+                f" Creates list with the times at which the selected phases start for the next {numFilterDisplayMoonCycles} syndonic aberoth months will be provided```",
         inline=False,
     )
     embed.set_thumbnail(url=moonThumbnailURL)
@@ -1422,7 +1424,7 @@ class GuildLunarMenu(discord.ui.View):
                 ephemeral=True,
             )
             return
-        
+                
         phaseList = getPhaseList(
                         ephemeris,
                         filters = [button.label],
@@ -1431,8 +1433,6 @@ class GuildLunarMenu(discord.ui.View):
                         firstEventOnly=firstEventOnly
                         )
         
-        firstFilters = {lunarLabels['next_full']: 'full', lunarLabels['next_new']: "new"}
-        filterLabel = firstFilters[button.label] if button.label in firstFilters else button.label
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
@@ -1515,6 +1515,7 @@ def getDayList(
 
 def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None, useEmojis:bool=False, emojis:dict=None, firstEventOnly:bool=False):
     start = startTime
+    firstLine = ''
     if start == None:
         currentTime = round((time.time() * 1000))
         start = currentTime - ephemeris.oneAberothDay
@@ -1537,31 +1538,37 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
     if startIndex:
         if filters != None and len(filters) != 0:
             if 'all' in eventFilters:
-                 subCache = ephemeris.moonCyclesCache[startIndex:]
-                 if len(subCache) < numDisplayMoonCycles * 10:
+                subCache = ephemeris.moonCyclesCache[startIndex:]
+                if len(subCache) < numDisplayMoonCycles * 8 + 1:
                     print(subCache, '\n', numDisplayMoonCycles*10, len(subCache))
                     return ['Range too Small']
+                else: 
+                    subCache = subCache[:numDisplayMoonCycles * 8 + 1]
+                    firstLine = f"__**Next {numDisplayMoonCycles} Syndonic Months:**__"
             elif 'current' in eventFilters:
                 displayingCurrent = True
-                subCache = [ephemeris.moonCyclesCache[startIndex]]
+                subCache = [copy.deepcopy(ephemeris.moonCyclesCache[startIndex])]
                 if ephemeris.moonCyclesCache[startIndex][0] > currentTime:
                     subCache[0][1]['phase'] = previousPhases[subCache[0][1]['phase']]
+                firstLine = "__**Current Phase:**__"
             elif firstEventOnly:
                 subCache = [next((event for event in ephemeris.moonCyclesCache[startIndex:] if event[1]['phase'] in eventFilters), None)]
+                firstLine = f"__**Next {(subCache[0][1]['phase']).capitalize()} Moon:**__\n*Note: phase may be the current phase.*"
             else:
                 subCache = [(event for event in ephemeris.moonCyclesCache[startIndex:] if event[1]['phase'] in eventFilters)]
-                if len(subCache) < numDisplayMoonCycles * len(filters):
-                    print(subCache, '\n', numDisplayMoonCycles*len(filters), len(subCache))
+                if len(subCache) < numFilterDisplayMoonCycles * len(filters):
+                    print(subCache, '\n', numFilterDisplayMoonCycles * len(filters), len(subCache))
                     return ['Range too Small']
+                else: 
+                    subCache = subCache[:numFilterDisplayMoonCycles * 8 + 1]
+                    firstLine = f"__**Filtered Phases:**__\nNext {join_and_capitalize_with_oxford_comma(eventFilters)} moons over the next {numDisplayMoonCycles} syndonic months"
     if len(subCache) < 1:
         print(subCache, '\n', numDisplayMoonCycles*len(filters), len(subCache))
         return ['Range too Small']
-     
-    startPhase = subCache[0]
-    eventMsg = createLunarEventMsgLine(startPhase, useEmojis, emojis=emojis, displayingCurrent=displayingCurrent)
-    if len(subCache) > 1:
-        for event in subCache[1:]:
-            eventMsg += "\n" + createLunarEventMsgLine(event, useEmojis, emojis=emojis, displayingCurrent=displayingCurrent)
+    
+    eventMsg = firstLine
+    for event in subCache:
+        eventMsg += "\n" + createLunarEventMsgLine(event, useEmojis, emojis=emojis, displayingCurrent=displayingCurrent)
     return eventMsg
 
 
@@ -1658,3 +1665,18 @@ def isEmoji(emojiStr:str) -> bool:
         return True
     else:
         return False
+
+def join_and_capitalize_with_oxford_comma(items):
+    # Capitalize each string in the list
+    capitalized_items = [item.capitalize() for item in items]
+
+    # Handle different lengths
+    if len(capitalized_items) == 0:
+        return ""  # Return empty string if list is empty
+    elif len(capitalized_items) == 1:
+        return capitalized_items[0]  # Return single item if only one element
+    elif len(capitalized_items) == 2:
+        return " and ".join(capitalized_items)  # Join with "and" if two elements
+    else:
+        # Join with commas and an Oxford comma for three or more elements
+        return ", ".join(capitalized_items[:-1]) + ", and " + capitalized_items[-1]

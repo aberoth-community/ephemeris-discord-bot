@@ -125,7 +125,6 @@ previousPhases = {
     "waning_crescent": "third_quarter"
 }
 
-
 # embed thumbnail images
 scrollThumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
 moonThumbnailURL = "https://imgur.com/rzm8JUj.gif"
@@ -135,8 +134,9 @@ cacheStartDay = -2
 cacheEndDay = 21
 selectStartDay = -1
 selectEndDay = 14
-numMoonCycles = 6
-numDisplayMoonCycles = 3
+numMoonCycles = 8
+numDisplayMoonCycles = 2
+numFilterDisplayMoonCycles = 5
 oneDay = 86400000
 
 if DEBUGGING:
