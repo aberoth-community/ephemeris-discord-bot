@@ -441,7 +441,7 @@ class Ephemeris:
                     currentTime,
                     {
                         "phase": phase,
-                        "discordTS": f"<t:{int(np.floor(currentTime/1000))}:D> <t:{int(np.floor(currentTime/1000))}:T>"
+                        "discordTS": f"<t:{int(np.floor(currentTime/1000))}:D> <t:{int(np.floor(currentTime/1000))}:t>"
                         # "discordRelTS": f'<t:{np.floor(currentTime/1000)}:R>'
                     }
                 ))
@@ -449,7 +449,7 @@ class Ephemeris:
                     nextNoonTime,
                     {
                         "phase": nextPhase,
-                        "discordTS": f"<t:{int(np.floor(nextNoonTime/1000))}:D> <t:{int(np.floor(nextNoonTime/1000))}:T>"
+                        "discordTS": f"<t:{int(np.floor(nextNoonTime/1000))}:D> <t:{int(np.floor(nextNoonTime/1000))}:t>"
                         # "discordRelTS": f'<t:{np.floor(nextNoonTime/1000)}:R>'
                     }
                 ))

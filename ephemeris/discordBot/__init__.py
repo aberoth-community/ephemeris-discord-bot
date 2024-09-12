@@ -1690,7 +1690,7 @@ def isEmoji(emojiStr:str) -> bool:
     """Checks if the argument is an emoji
 
     Args:
-        str (_type_): the string to check if it's an emoji
+        emojiStr (str): the string to check if it's an emoji
 
     Returns:
         Boolean: True if string is an emoji, False if string is not an emoji
