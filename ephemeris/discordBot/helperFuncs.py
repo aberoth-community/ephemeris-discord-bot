@@ -100,7 +100,7 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
                     return ['Range too Small']
                 else: 
                     subCache = subCache[:numDisplayMoonCycles * 8 + 1]
-                    firstLine = f"__**Next {num2words(numDisplayMoonCycles)} Aberoth Syndonic Months:**__"
+                    firstLine = f"__**Next {num2words(numDisplayMoonCycles).capitalize()} Aberoth Syndonic Months:**__"
             elif 'current' in eventFilters:
                 displayingCurrent = True
                 subCache = [copy.deepcopy(ephemeris.moonCyclesCache[startIndex])]
