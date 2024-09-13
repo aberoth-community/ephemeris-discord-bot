@@ -6,15 +6,31 @@ DEBUGGING = False
 # Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
 disableWhitelisting = False
 
+# cache size and display range configuration
+cacheStartDay = -4
+cacheEndDay = 35
+selectStartDay = -3
+selectEndDay = 21
+numMoonCycles = 8
+numDisplayMoonCycles = 2
+numFilterDisplayMoonCycles = 5
+oneDay = 86400000
+
+if DEBUGGING:
+    cacheStartDay = -9
+    selectStartDay = -9
+    cacheEndDay = 2
+    selectEndDay = 2
+
 guildSettings = {}
 userSettings = {}
 guildWhiteList = {}
 userWhiteList = {}
 
-GSPath = Path("ephemeris/discordBot/guildSettings.json").absolute()
-USPath = Path("ephemeris/discordBot/userSettings.json").absolute()
-GWLPath = Path("ephemeris/discordBot/guildWhiteList.json").absolute()
-UWLPath = Path("ephemeris/discordBot/userWhiteList.json").absolute()
+GSPath = Path("ephemeris/discordBot/configFiles/guildSettings.json").absolute()
+USPath = Path("ephemeris/discordBot/configFiles/userSettings.json").absolute()
+GWLPath = Path("ephemeris/discordBot/configFiles/guildWhiteList.json").absolute()
+UWLPath = Path("ephemeris/discordBot/configFiles/userWhiteList.json").absolute()
 
 # Create Files If they don't already exist
 if not GSPath.exists():
@@ -139,19 +155,3 @@ previousPhases = {
 # embed thumbnail images
 scrollThumbnailURL = "https://i.imgur.com/Lpa96Ry.png"
 moonThumbnailURL = "https://imgur.com/rzm8JUj.gif"
-
-# cache size and display range configuration
-cacheStartDay = -2
-cacheEndDay = 21
-selectStartDay = -1
-selectEndDay = 14
-numMoonCycles = 8
-numDisplayMoonCycles = 2
-numFilterDisplayMoonCycles = 5
-oneDay = 86400000
-
-if DEBUGGING:
-    cacheStartDay = -9
-    selectStartDay = -9
-    cacheEndDay = 2
-    selectEndDay = 2
