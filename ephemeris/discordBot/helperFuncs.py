@@ -99,12 +99,21 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
                     return ['Range too Small']
                 else: 
                     subCache = subCache[:numDisplayMoonCycles * 8 + 1]
-                    firstLine = f"__**Next {numDisplayMoonCycles} Syndonic Months:**__"
+                    firstLine = f"__**Next {numDisplayMoonCycles} Aberoth Syndonic Months:**__"
             elif 'current' in eventFilters:
                 displayingCurrent = True
                 subCache = [copy.deepcopy(ephemeris.moonCyclesCache[startIndex])]
-                if ephemeris.moonCyclesCache[startIndex][0] > currentTime:
+                # if the phase at the start index is the next phase
+                if subCache[0][0] > currentTime:
+                    # we already have the next time now we need to get the phase for current phase
                     subCache[0][1]['phase'] = previousPhases[subCache[0][1]['phase']]
+                # check if there is another event in the moonCycle cache to find end of current event
+                elif len(ephemeris.moonCyclesCache[startIndex:]) < 2:
+                    return ['Range too Small']
+                # if current phase is a 1 night phase it can appear at the start index of mooncyclesCache
+                # in this case we have the current phase already but not the end time
+                else: 
+                    subCache[0][0] = ephemeris.moonCyclesCache[startIndex+1][0]
                 firstLine = "__**Current Phase:**__"
             elif firstEventOnly:
                 subCache = [next((event for event in ephemeris.moonCyclesCache[startIndex:] if event[1]['phase'] in eventFilters), None)]
@@ -115,7 +124,7 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
                     return ['Range too Small']
                 else: 
                     subCache = subCache[:numFilterDisplayMoonCycles * 8 + 1]
-                    firstLine = f"__**Filtered Phases:**__\nNext {join_with_oxford_comma(eventFilters)} moons over the next {numFilterDisplayMoonCycles} syndonic months"
+                    firstLine = f"__**Filtered Phases:**__\nNext {join_with_oxford_comma(eventFilters)} moons over the next {numFilterDisplayMoonCycles} Aberoth syndonic months"
     if len(subCache) < 1:
         return ['Range too Small']
     
