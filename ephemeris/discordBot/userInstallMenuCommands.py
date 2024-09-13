@@ -5,7 +5,7 @@ from .helperFuncs import *
 
 @bot.tree.command(
     name="prediction_menu",
-    description="Creates predictions menu. All users will be able to use the menu. Has a timeout.",
+    description="Creates predictions menu for glows and darks. Has a timeout.",
 )
 @app_commands.allowed_installs(guilds=False, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
@@ -74,6 +74,87 @@ async def userInstallScrollMenu(
             whiteListOnly=True if whitelist_only == 1 else False,
             emojis=None
             if use_emojis.value == 0
+            else userSettings[str(interaction.user.id)]["emojis"],
+        ),
+        ephemeral=False,
+    )
+
+
+@bot.tree.command(
+    name="lunar_calendar",
+    description="Creates lunar calendar menu. Has a timeout",
+)
+@app_commands.allowed_installs(guilds=False, users=True)
+@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+@app_commands.describe(
+    user_set_emojis="Whether or not responses use default or user set emojis for moon phase icons",
+    whitelisted_users_only="Whether or not this menu requires other users to also be white listed to use"
+)
+@app_commands.choices(
+    user_set_emojis=[
+        discord.app_commands.Choice(name="Yes", value=1),
+        discord.app_commands.Choice(name="No", value=0),
+    ],
+    whitelisted_users_only=[
+        discord.app_commands.Choice(name="Yes", value=1),
+        discord.app_commands.Choice(name="No", value=0),
+    ],
+)
+async def userInstallLunarMenu(
+    interaction: discord.Interaction,
+    user_set_emojis: discord.app_commands.Choice[int],
+    whitelisted_users_only: discord.app_commands.Choice[int]
+):
+    ephRes = False
+    whiteListed = False
+    if str(interaction.user.id) in userWhiteList:
+        whiteListed = False
+        exp = userWhiteList[str(interaction.user.id)].get('expiration')
+        whiteListed = True if exp == -1 else exp > time.time()
+
+
+    if not whiteListed and not disableWhitelisting:
+        await interaction.response.send_message(
+            content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
+            ephemeral=True,
+        )
+        return
+    
+    if user_set_emojis.value == 1 and (
+        str(interaction.user.id) not in userSettings
+        or "emojis" not in userSettings[str(interaction.user.id)]
+    ):
+        await interaction.response.send_message(
+            content="**Please configure your personal emoji settings (/set_personal_emojis) to use this command __with emojis.__**"
+                    "\nNote: the default options for `/set_personal_emojis` require the user to have nitro and be in the server the emojis are from.",
+            ephemeral=True,
+        )
+        return
+    embed = discord.Embed(
+        title="**Lunar Calendar**",
+        description="Night will start 42 minutes after the start of each moon phase",
+        color=0xbcc7cf,
+    )
+    embed.add_field(
+        name="",
+        value=f"​\n{defaultEmojis['lunation']}  **All Moons:**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} syndonic aberoth months```"
+                f"\n{defaultEmojis['full']}  **Next Full Moon:**\n```Provides the time at which the next full moon will start.```"
+                f"\n{defaultEmojis['new']}  **Next New Moon:**\n```Provides the time at which the next new moon will start.```"
+                f"\n:grey_question:   **Current Phase:**\n```Provides the current phase.```"
+                "\n:mag:  **Filter:**\n```Use the drop down menu to select one or more moon phases."
+                f" Creates list with the times at which the selected phases start for the next {numFilterDisplayMoonCycles} syndonic aberoth months will be provided```",
+        inline=False,
+    )
+    embed.set_thumbnail(url=moonThumbnailURL)
+    embed.set_footer(text="⏱️ Menu expires in five minutes")
+    whitelisted_users_only = whitelisted_users_only.value if whitelisted_users_only else 0
+    await interaction.response.send_message(
+        embed=embed,
+        view=UserInstallLunarMenu(
+            useEmojis=True if user_set_emojis.value == 1 else False,
+            whiteListUsersOnly=True if whitelisted_users_only == 1 else False,
+            emojis=None
+            if user_set_emojis.value == 0
             else userSettings[str(interaction.user.id)]["emojis"],
         ),
         ephemeral=False,

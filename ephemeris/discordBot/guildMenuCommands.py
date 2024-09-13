@@ -4,8 +4,8 @@ from .guildLunarMenus import *
 from .helperFuncs import *
 
 @bot.tree.command(
-    name="create_persistent_scroll_menu",
-    description="Creates prediction menu with no timeout. Requires admin. All users will be able to use interface.",
+    name="persistent_prediction_menu",
+    description="Creates prediction menu for glows and darks with no timeout. Requires admin.",
 )
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -94,8 +94,8 @@ async def guildScrollMenu(
 
 
 @bot.tree.command(
-    name="create_persistent_lunar_calendar",
-    description="Creates lunar calendar menu with no timeout. Requires admin. Menu usable by all users",
+    name="persistent_lunar_calendar",
+    description="Creates lunar calendar menu with no timeout. Requires admin.",
 )
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
