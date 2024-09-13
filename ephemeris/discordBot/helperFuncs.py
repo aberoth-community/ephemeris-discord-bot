@@ -114,9 +114,7 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
                 # if current phase is a 1 night phase it can appear at the start index of mooncyclesCache
                 # in this case we have the current phase already but not the end time
                 else: 
-                    subCache[0] = list(subCache[0])
                     subCache[0][1]['discordTS'] = ephemeris.moonCyclesCache[startIndex+1][1]['discordTS']
-                    subCache[0] = tuple(subCache[0])
                 firstLine = "__**Current Phase:**__"
             elif firstEventOnly:
                 subCache = [next((event for event in ephemeris.moonCyclesCache[startIndex:] if event[1]['phase'] in eventFilters), None)]
