@@ -83,8 +83,8 @@ async def guildScrollMenu(
         "\n**`Today:    `**\n```Returns all scroll events between 6 hours ago and 24 hours from now.```"
         "\n**`Tomorrow: `**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
         "\n**`Later:    `**\n```Use the drop down menu to select a range of days relative to now you'd like the scroll events for."
-        "\nIf only one day is selected events for that day will be given```"
-        "\n***Note:** Due to daily auto-calibration, predictions may improve in accuracy when requested closer to the date that they occur on.*",
+        "If only one day is selected events for that day will be given```"
+        "\n***Note:** you can add this app to your discord profile to use anywhere, even in DMs.*",
         inline=False,
     )
     embed.set_thumbnail(url=scrollThumbnailURL)
@@ -166,7 +166,8 @@ async def guildLunarMenu(
                 f"\n{defaultEmojis['new']}  **Next New Moon:**\n```Provides the time at which the next new moon will start.```"
                 f"\n:grey_question:   **Current Phase:**\n```Provides the current phase.```"
                 "\n:mag:  **Filter:**\n```Use the drop down menu to select one or more moon phases."
-                f" Creates list with the times at which the selected phases start for the next {numFilterDisplayMoonCycles} syndonic aberoth months will be provided```",
+                f" Creates list with the times at which the selected phases start for the next {numFilterDisplayMoonCycles} syndonic aberoth months will be provided```"
+                "\n***Note:** you can add this app to your discord profile to use anywhere, even in DMs.*",
         inline=False,
     )
     embed.set_thumbnail(url=moonThumbnailURL)
