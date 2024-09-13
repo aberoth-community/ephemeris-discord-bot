@@ -101,6 +101,17 @@ defaultEmojis = {
     "lunation": "<a:moon:440289423750463488>"
 }
 
+UsersInstallDefaultEmojis = {
+    "new": ":new_moon:",
+    "waxing_crescent": ":waxing_crescent_moon:",
+    "first_quarter": ":first_quarter_moon:",
+    "waxing_gibbous": ":waxing_gibbous_moon:",
+    "full": ":full_moon:",
+    "waning_gibbous": ":waning_gibbous_moon:",
+    "third_quarter": ":last_quarter_moon:",
+    "waning_crescent": ":waning_crescent_moon:",
+}
+
 
 moonDisplayNames = {
     "new": "**New**",

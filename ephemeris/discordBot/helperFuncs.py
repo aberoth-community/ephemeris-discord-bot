@@ -141,8 +141,8 @@ def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=Tru
         else: return f"> {emojis[event[1]['phase']]} {event[1]['discordTS']} the moon is {moonDisplayNames[event[1]['phase']]}."
     else:
         if displayingCurrent:
-            return f"> {defaultEmojis[event[1]['phase']]} the moon is {moonDisplayNames[event[1]['phase']]} until {event[1]['discordTS']}."
-        else: return f"> {defaultEmojis[event[1]['phase']]} {event[1]['discordTS']} {moonDisplayNames[event[1]['phase']]}."
+            return f"> {UsersInstallDefaultEmojis[event[1]['phase']]} the moon is {moonDisplayNames[event[1]['phase']]} until {event[1]['discordTS']}."
+        else: return f"> {UsersInstallDefaultEmojis[event[1]['phase']]} {event[1]['discordTS']} {moonDisplayNames[event[1]['phase']]}."
     
 def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=None) -> str:
     glows = event["newGlows"]
