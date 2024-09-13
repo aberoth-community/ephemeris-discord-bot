@@ -1,5 +1,4 @@
 from .commonImports import *
-from .bot import ephemeris
 from .helperFuncs import splitMsg, getPhaseList
 
 # Create seperate menu that will persist

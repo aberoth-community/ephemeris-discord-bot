@@ -1,3 +1,3 @@
-from .guildScrollMenuCommands import *
+from .guildMenuCommands import *
 from .userInstallMenuCommands import *
 from .miscCommands import *
