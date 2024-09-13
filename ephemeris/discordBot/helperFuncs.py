@@ -1,3 +1,4 @@
+from num2words import num2words
 from .commonImports import *
 
 def is_owner(interaction: discord.Interaction) -> bool:
@@ -99,7 +100,7 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
                     return ['Range too Small']
                 else: 
                     subCache = subCache[:numDisplayMoonCycles * 8 + 1]
-                    firstLine = f"__**Next {numDisplayMoonCycles} Aberoth Syndonic Months:**__"
+                    firstLine = f"__**Next {num2words(numDisplayMoonCycles)} Aberoth Syndonic Months:**__"
             elif 'current' in eventFilters:
                 displayingCurrent = True
                 subCache = [copy.deepcopy(ephemeris.moonCyclesCache[startIndex])]
@@ -124,7 +125,7 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
                     return ['Range too Small']
                 else: 
                     subCache = subCache[:numFilterDisplayMoonCycles * 8 + 1]
-                    firstLine = f"__**Filtered Phases:**__\nNext {join_with_oxford_comma(eventFilters)} moons over the next {numFilterDisplayMoonCycles} Aberoth syndonic months"
+                    firstLine = f"__**Filtered Phases:**__\nNext {join_with_oxford_comma(eventFilters)} moons over the next {num2words(numFilterDisplayMoonCycles)} Aberoth syndonic months"
     if len(subCache) < 1:
         return ['Range too Small']
     

@@ -14,7 +14,8 @@ dependencies = [
     "regex==2024.4.28",
     "Flask==3.0.3",
     "Flask-Cors==4.0.1",
-    "waitress==3.0.0"
+    "waitress==3.0.0",
+    "num2words==0.5.13"
 ]
 
 readme = "README.md"
