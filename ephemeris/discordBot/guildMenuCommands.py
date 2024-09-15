@@ -32,7 +32,7 @@ async def guildScrollMenu(
     interaction: discord.Interaction,
     use_emojis: discord.app_commands.Choice[int],
     allow_filters: discord.app_commands.Choice[int],
-    whitelisted_users_only: discord.app_commands.Choice[int]
+    whitelisted_users_only: Optional[discord.app_commands.Choice[int]] = 0
 ):
     ephRes = True
     noPermission = False
@@ -116,7 +116,7 @@ async def guildScrollMenu(
 async def guildLunarMenu(
     interaction: discord.Interaction,
     user_set_emojis: discord.app_commands.Choice[int],
-    whitelisted_users_only: discord.app_commands.Choice[int]
+    whitelisted_users_only: Optional[discord.app_commands.Choice[int]] = 0
 ):
     ephRes = True
     noPermission = False

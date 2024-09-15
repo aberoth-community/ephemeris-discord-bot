@@ -22,7 +22,8 @@ from .helperFuncs import *
 )
 async def userInstallScrollMenu(
     interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int], 
-    whitelist_only: Optional[discord.app_commands.Choice[int]]):
+    whitelist_only: Optional[discord.app_commands.Choice[int]] = 0
+    ):
     
     ephRes = False
     whiteListed = False
@@ -103,7 +104,7 @@ async def userInstallScrollMenu(
 async def userInstallLunarMenu(
     interaction: discord.Interaction,
     user_set_emojis: discord.app_commands.Choice[int],
-    whitelisted_users_only: discord.app_commands.Choice[int]
+    whitelisted_users_only: Optional[discord.app_commands.Choice[int]] = 0
 ):
     ephRes = False
     whiteListed = False
