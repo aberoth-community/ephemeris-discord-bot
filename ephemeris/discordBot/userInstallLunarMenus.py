@@ -222,9 +222,21 @@ class UserInstallPhaseSelMenu(discord.ui.Select):
             await interaction.response.send_message(
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
+            
         if len(msgArr) > 1:
-            for msg in msgArr[1:]:
+            # if the number of responses will reach the max for DMs (messages aren't sent in a guild)
+            if len(msgArr) > 6 and 0 in interaction._integration_owners:
+                for msg in msgArr[1:6]:
+                    await interaction.followup.send(
+                        content=msg, ephemeral=self.ephemeralRes
+                    )
+                msg = "**Maximum number of follow ups reached for private message!**\nPlease use a smaller filter"
                 await interaction.followup.send(
-                    content=msg, ephemeral=self.ephemeralRes
-                )
+                        content=msg, ephemeral=self.ephemeralRes
+                    )
+            else:    
+                for msg in msgArr[1:]:
+                    await interaction.followup.send(
+                        content=msg, ephemeral=self.ephemeralRes
+                    )
 

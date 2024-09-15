@@ -179,10 +179,21 @@ class UserInstallSelDayMenu(discord.ui.Select):
             content=msgArr[0], ephemeral=self.ephemeralRes
         )
         if len(msgArr) > 1:
-            for msg in msgArr[1:]:
+            # if the number of responses will reach the max for DMs (messages aren't sent in a guild)
+            if len(msgArr) > 6 and 0 not in interaction._integration_owners:
+                for msg in msgArr[1:5]:
+                    await interaction.followup.send(
+                        content=msg, ephemeral=self.ephemeralRes
+                    )
+                msg = "**Maximum number of follow-up responses reached for a private message!**\nPlease select a smaller range or use a more specific filter."
                 await interaction.followup.send(
-                    content=msg, ephemeral=self.ephemeralRes
-                )
+                        content=msg, ephemeral=self.ephemeralRes
+                    )
+            else:    
+                for msg in msgArr[1:]:
+                    await interaction.followup.send(
+                        content=msg, ephemeral=self.ephemeralRes
+                    )
 
 class UserInstallScrollFilterMenu(discord.ui.Select):
     def __init__(
