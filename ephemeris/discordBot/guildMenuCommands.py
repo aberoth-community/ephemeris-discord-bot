@@ -37,9 +37,11 @@ async def guildScrollMenu(
     ephRes = True
     noPermission = False
     exp = 0
-    if str(interaction.guild_id) not in guildWhiteList:
-        noPermission = True
-    else: exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
+    guildSettings = fetch_guild_settings(interaction.guild_id)
+    if not guildSettings:
+        guildSettings = newGuildSettings(interaction)
+        noPermission = True 
+    else: exp = guildSettings.get('expiration')
     if (exp != None and exp < time.time() and exp != -1):
         noPermission = True
     if noPermission and not disableWhitelisting:
@@ -48,24 +50,16 @@ async def guildScrollMenu(
             ephemeral=True,
         )
         return
-    if str(interaction.guild_id) in guildSettings:
-        guildSettings[str(interaction.guild_id)][str(interaction.channel_id)] = {
-            "useEmojis": use_emojis.value,
-            "allow_filters": allow_filters.value,
-            "whitelisted_users_only": whitelisted_users_only.value
-        }
-    else:
-        guildSettings[str(interaction.guild_id)] = {
-            str(interaction.channel_id): {
-                "useEmojis": use_emojis.value,
-                "allow_filters": allow_filters.value,
-                "whitelisted_users_only": whitelisted_users_only.value
-            }
-        }
-    updateSettings(settings=guildSettings)
+    guildSettings["channels"][str(interaction.channel_id)] = {
+        "useEmojis": use_emojis.value,
+        "allow_filters": allow_filters.value,
+        "whitelisted_users_only": 0 if whitelisted_users_only == 0 else whitelisted_users_only.value,
+        "filters": []
+    }
+    update_guild_settings(interaction.guild_id, guildSettings)
     if (
         use_emojis.value == 1
-        and "emojis" not in guildSettings[str(interaction.guild_id)]
+        and not guildSettings["emojis"]
     ):
         await interaction.response.send_message(
             content="**Please configure the server emoji settings (/set_server_emojis) to use this command __with emojis.__**",
@@ -133,12 +127,12 @@ async def guildLunarMenu(
         )
         return
     if str(interaction.guild_id) in guildSettings:
-        guildSettings[str(interaction.guild_id)][str(interaction.channel_id)] = {
+        guildSettings["channels"][str(interaction.guild_id)][str(interaction.channel_id)] = {
             "useEmojis": user_set_emojis.value,
             "whitelisted_users_only": whitelisted_users_only.value
         }
     else:
-        guildSettings[str(interaction.guild_id)] = {
+        guildSettings["channels"][str(interaction.guild_id)] = {
             str(interaction.channel_id): {
                 "useEmojis": user_set_emojis.value,
                 "whitelisted_users_only": whitelisted_users_only.value
@@ -147,7 +141,7 @@ async def guildLunarMenu(
     updateSettings(settings=guildSettings)
     if (
         user_set_emojis.value == 1
-        and "emojis" not in guildSettings[str(interaction.guild_id)]
+        and "emojis" not in guildSettings["channels"][str(interaction.guild_id)]
     ):
         await interaction.response.send_message(
             content="**Please configure the server emoji settings (/set_server_emojis) to use this command __with emojis.__**",

@@ -15,7 +15,8 @@ dependencies = [
     "Flask==3.0.3",
     "Flask-Cors==4.0.1",
     "waitress==3.0.0",
-    "num2words==0.5.13"
+    "num2words==0.5.13",
+    "peewee-3.17.6"
 ]
 
 readme = "README.md"

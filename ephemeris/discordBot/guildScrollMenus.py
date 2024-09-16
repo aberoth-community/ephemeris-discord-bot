@@ -1,5 +1,6 @@
 from .commonImports import *
 from .helperFuncs import *
+from .configFiles.dataBase import update_guild_settings, update_user_settings, fetch_guild_settings, fetch_user_settings
 
 # Create seperate menu that will persist
 class GuildScrollMenu(discord.ui.View):
@@ -43,54 +44,38 @@ class GuildScrollMenu(discord.ui.View):
         await self.guildScrollMenuBtnPress(interaction=interaction, button=button)
     
     async def guildScrollMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
+        guildSettings = fetch_guild_settings(interaction.guild_id)
+        userSettings = fetch_user_settings(interaction.user.id)
         whiteListed = False
         messageDefered = False
         
         useEmojis = False
         emojis = None
-        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "useEmojis"
-                ]
-                == 1
-            ):
-                useEmojis = True
-                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "whitelisted_users_only"
-                ]
-                == 1
-            ):
-                self.whiteListUsersOnly = True
-            if self.setUp == False:
-                # Asignmenu state on interaction when bot is restarted
-                self.setUp = True
-                if "filters" not in guildSettings[str(interaction.guild_id)][
-                    str(interaction.channel_id)]:
-                    guildSettings[str(interaction.guild_id)][
-                        str(interaction.channel_id)
-                    ]["filters"] = {}
-
-                self.filterList = guildSettings[str(interaction.guild_id)][
-                    str(interaction.channel_id)
-                ].get("filters")
+        if (guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1):
+            useEmojis = True
+            emojis = guildSettings["emojis"]
+        if (
+            guildSettings["channels"][str(interaction.guild_id)][
+                "whitelisted_users_only"
+            ]
+            == 1
+        ):
+            self.whiteListUsersOnly = True
+        if self.setUp == False:
+            # Asignmenu state on interaction when bot is restarted
+            self.setUp = True
+            self.filterList = guildSettings["channels"][str(interaction.channel_id)].get("filters")
                 
         if 0 in interaction._integration_owners:
-            if str(interaction.guild_id) in guildWhiteList:
-                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
+            exp = guildSettings['expiration']
+            whiteListed = True if exp == -1 else exp > time.time()
             if self.whiteListUsersOnly:
-                if str(interaction.user.id) in userWhiteList:
-                    exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                    temp = True if exp == -1 else exp > time.time()
-                else: temp = False
+                temp = (True if userSettings['expiration'] == -1 
+                        else userSettings['expiration'] > time.time())
                 whiteListed = whiteListed and temp
         elif 1 in interaction._integration_owners:
-            if str(interaction.user.id) in userWhiteList:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
+            whiteListed = (True if userSettings['expiration'] == -1 
+                           else userSettings['expiration'] > time.time())
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -150,54 +135,38 @@ class GuildDaySelMenu(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        guildSettings = fetch_guild_settings(interaction.guild_id)
+        userSettings = fetch_user_settings(interaction.user.id)
         whiteListed = False
         messageDefered = False
         
         useEmojis = False
         emojis = None
-        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "useEmojis"
-                ]
-                == 1
-            ):
-                useEmojis = True
-                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "whitelisted_users_only"
-                ]
-                == 1
-            ):
-                self.whiteListUsersOnly = True
-            if self.setUp == False:
-                # Asignmenu state on interaction when bot is restarted
-                self.setUp = True
-                if "filters" not in guildSettings[str(interaction.guild_id)][
-                    str(interaction.channel_id)]:
-                    guildSettings[str(interaction.guild_id)][
-                        str(interaction.channel_id)
-                    ]["filters"] = {}
-
-                self.filterList = guildSettings[str(interaction.guild_id)][
-                    str(interaction.channel_id)
-                ].get("filters")
-        
+        if (guildSettings["channels"][str(interaction.guild_id)]["useEmojis"] == 1):
+            useEmojis = True
+            emojis = guildSettings["channels"][str(interaction.guild_id)]["emojis"]
+        if (
+            guildSettings["channels"][str(interaction.guild_id)][
+                "whitelisted_users_only"
+            ]
+            == 1
+        ):
+            self.whiteListUsersOnly = True
+        if self.setUp == False:
+            # Asignmenu state on interaction when bot is restarted
+            self.setUp = True
+            self.filterList = guildSettings["channels"][str(interaction.channel_id)].get("filters")
+                
         if 0 in interaction._integration_owners:
-            if str(interaction.guild_id) in guildWhiteList:
-                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp > time.time()
+            exp = guildSettings.expiration
+            whiteListed = True if exp == -1 else exp > time.time()
             if self.whiteListUsersOnly:
-                if str(interaction.user.id) in userWhiteList:
-                    exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                    temp = True if exp == -1 else exp > time.time()
-                else: temp = False
+                temp = (True if userSettings.expiration == -1 
+                        else userSettings.expiration > time.time())
                 whiteListed = whiteListed and temp
         elif 1 in interaction._integration_owners:
-            if str(interaction.user.id) in userWhiteList:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
+            whiteListed = (True if userSettings.expiration == -1 
+                           else userSettings.expiration > time.time())
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -242,6 +211,9 @@ class GuildDaySelMenu(discord.ui.Select):
                 await interaction.followup.send(
                     content=msg, ephemeral=self.ephemeralRes
                 )
+                
+        update_guild_settings(interaction.guild_id, guildSettings)
+        
 
 class GuildFilterMenu(discord.ui.Select):
     def __init__(self, filterOptions=None, timeout=None):
@@ -316,6 +288,7 @@ class GuildFilterMenu(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        guildSettings = fetch_guild_settings(interaction.guild_id)
         # This is done so all users will see the same selected options
         filterOptions = {
             "White": False,
@@ -331,10 +304,10 @@ class GuildFilterMenu(discord.ui.Select):
         for orb in self.values:
             filterOptions[orb] = True
             filterList.append(orb)
-        guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
+        guildSettings["channels"][str(interaction.guild_id)][
             "filters"
         ] = filterList
-        updateSettings(settings=guildSettings)
+        update_guild_settings(interaction.guild_id, guildSettings)
         # change select menu options
         await interaction.response.edit_message(
             view=GuildScrollMenu(

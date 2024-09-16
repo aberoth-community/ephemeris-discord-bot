@@ -34,14 +34,15 @@ async def updateWhiteList(interaction: discord.Interaction, user_or_guild: str, 
             await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"NotFound\"", ephemeral=True)
             return
         except discord.HTTPException:
-            await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)
-            return
-        userWhiteList[user_or_guild] = { "username": userName, "expiration": expiration}
+            await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)   
+        userSettings = fetch_user_settings(user_or_guild)
         try:
-            UWLPath.write_text(json.dumps(userWhiteList, indent=4))
+            userSettings.username = userName
+            userSettings.expiration = expiration
+            update_user_settings(user_or_guild)
         except Exception as e:
-            await interaction.followup.send(f"Failed to write to userWhiteList file.", ephemeral=True)
-            
+            await interaction.followup.send(f"Failed to update user_settings table.", ephemeral=True)
+            return
         await interaction.followup.send(
             f"Whitelist settings updated for <@{user_or_guild}>:\n**New Expiration:**  " + ("No Expiration" if expiration == -1 else f"<t:{expiration}>"), ephemeral=True
             )
@@ -58,10 +59,16 @@ async def updateWhiteList(interaction: discord.Interaction, user_or_guild: str, 
         except discord.HTTPException:
             await interaction.followup.send(f"Error fetching guild name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)
             return
-        guildWhiteList[user_or_guild] = { "guild": guildName, "expiration": expiration}
+        guildSettings = fetch_guild_settings(user_or_guild)
+        if not guildSettings:
+            temp = {"guild_id": user_or_guild, "guild": {"name": guildName}, "channel_id": None}
+            guildSettings = newGuildSettings(temp)
         try:
-            GWLPath.write_text(json.dumps(guildWhiteList, indent=4))
+            guildSettings['guild_name'] = guildName
+            guildSettings['expiration'] = expiration
+            update_guild_settings(user_or_guild, guildSettings)
         except Exception as e:
+            print(e, interaction)
             await interaction.followup.send(f"Failed to write to guildWhiteList file.", ephemeral=True)
             
         await interaction.followup.send(
@@ -137,8 +144,9 @@ async def setServerEmojis(
             ephemeral=True,
         )
     else:
-        if str(interaction.guild_id) in guildSettings:
-            guildSettings[str(interaction.guild_id)]["emojis"] = {
+        guildSettings = fetch_guild_settings(interaction.guild_id)
+        if guildSettings:
+            guildSettings["emojis"] = {
                 "White": white,
                 "Black": black,
                 "Green": green,
@@ -157,28 +165,27 @@ async def setServerEmojis(
                 "waning_crescent": waning_crescent
             }
         else:
-            guildSettings[str(interaction.guild_id)] = {
-                "emojis": {
-                    "White": white,
-                    "Black": black,
-                    "Green": green,
-                    "Red": red,
-                    "Purple": purple,
-                    "Yellow": yellow,
-                    "Cyan": cyan,
-                    "Blue": blue,
-                    "new": new,
-                    "waxing_crescent": waxing_crescent,
-                    "first_quarter": first_quarter,
-                    "waxing_gibbous": waxing_gibbous,
-                    "full": full,
-                    "waning_gibbous": waning_gibbous,
-                    "third_quarter": third_quarter,
-                    "waning_crescent": waning_crescent
-                }
+            guild_settings = newGuildSettings(interaction)
+            guildSettings["emojis"] = {
+                "White": white,
+                "Black": black,
+                "Green": green,
+                "Red": red,
+                "Purple": purple,
+                "Yellow": yellow,
+                "Cyan": cyan,
+                "Blue": blue,
+                "new": new,
+                "waxing_crescent": waxing_crescent,
+                "first_quarter": first_quarter,
+                "waxing_gibbous": waxing_gibbous,
+                "full": full,
+                "waning_gibbous": waning_gibbous,
+                "third_quarter": third_quarter,
+                "waning_crescent": waning_crescent
             }
-        emojis = guildSettings[str(interaction.guild_id)]["emojis"]
-        updateSettings(settings=guildSettings)
+        emojis = guildSettings["emojis"]
+        update_guild_settings(interaction.guild_id, guildSettings)
         await interaction.response.send_message(
             content="**Successfully set server emojis!**"
             f"\n> `White           ` {emojis['White']}"
