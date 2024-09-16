@@ -181,7 +181,23 @@ def update_user_settings(user_id, user_data):
         ).execute()
 
 def newGuildSettings(interaction, use_emojis=0, allow_filters=0, whitelisted_users_only=0) -> dict:
-    return {
+    try:
+        return {
+        'guild_id': interaction.guild_id,
+        'guild_name': interaction.guild.name,
+        'expiration': 0,
+        'emojis': {},
+        'channels': {} if interaction.channel_id is None else {
+            interaction.channel_id: {
+                'useEmojis': use_emojis,
+                'allow_filters': allow_filters,
+                'whitelisted_users_only': whitelisted_users_only,
+                'filters': []
+            }
+        }
+    }
+    except:
+        return {
         'guild_id': interaction['guild_id'],
         'guild_name': interaction['guild']['name'],
         'expiration': 0,
@@ -209,20 +225,21 @@ def newUserSettings(user_id, username, expiration=0) -> dict:
 if __name__ == "__main__":
     # Example usage
 
-    # Fetch settings for a guild
-    guild_id = "1116975978242134026"
-    guild_settings = fetch_guild_settings(guild_id)
-    print(f"Fetched guild settings for {guild_id}: {guild_settings}")
+    # # Fetch settings for a guild
+    # guild_id = "1116975978242134026"
+    # guild_settings = fetch_guild_settings(guild_id)
+    # print(f"Fetched guild settings for {guild_id}: {guild_settings}")
 
-    # Update settings for a guild
-    new_guild_data = newGuildSettings(123123)
-    update_guild_settings(guild_id, new_guild_data)
+    # # Update settings for a guild
+    # new_guild_data = newGuildSettings()
+    # update_guild_settings(guild_id, new_guild_data)
 
-    # Fetch settings for a user
-    user_id = "109931759260430336"
-    user_settings = fetch_user_settings(user_id)
-    print(f"Fetched user settings for {user_id}: {user_settings}")
+    # # Fetch settings for a user
+    # user_id = "109931759260430336"
+    # user_settings = fetch_user_settings(user_id)
+    # print(f"Fetched user settings for {user_id}: {user_settings}")
 
+    # importing userWhiteList.json example
     userSettingsTransfer = {
     "109931759260430336": {
         "username": "figureskate",
@@ -274,8 +291,11 @@ if __name__ == "__main__":
     }
 }
     
-    for user_id, s in userSettingsTransfer.keys():
-        pass
+    for user_id, s in userSettingsTransfer.items():
+        print(s["username"], s['expiration'])
+        userData = newUserSettings(user_id=user_id, username=s['username'], expiration=s['expiration'])
+        update_user_settings(user_id=user_id, user_data=userData)
+    
     # # Update settings for a user
     # new_user_data = {
     #     "username": "new_username",
