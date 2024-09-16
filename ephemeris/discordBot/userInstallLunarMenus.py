@@ -16,7 +16,11 @@ class UserInstallLunarMenu(discord.ui.View):
         self.whiteListUsersOnly = whiteListUsersOnly
         self.emojis=emojis
         self.useEmojis = useEmojis
-        self.add_item(UserInstallPhaseSelMenu(whiteListUsersOnly=whiteListUsersOnly, ephemeralRes=ephemeralRes))
+        self.add_item(UserInstallPhaseSelMenu(
+            whiteListUsersOnly=whiteListUsersOnly,
+            ephemeralRes=ephemeralRes,
+            useEmojis=useEmojis,
+            emojis=emojis))
 
     @discord.ui.button(
         label=lunarLabels["all"], style=discord.ButtonStyle.green, emoji=defaultEmojis['lunation']
@@ -45,14 +49,12 @@ class UserInstallLunarMenu(discord.ui.View):
         await self.UserInstallLunarMenuBtnPress(interaction=interaction, button=button, firstEventOnly=True)
     
     async def UserInstallLunarMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button, firstEventOnly:bool = False):
+        userSettings = fetch_user_settings(interaction.user.id)
         whiteListed = True
         messageDefered = False
         if self.whiteListUsersOnly:
-            if not str(interaction.user.id) in userWhiteList:
-                whiteListed = False
-            else:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
+            exp = userSettings.get('expiration')
+            whiteListed = True if exp == -1 else exp > time.time()
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
                 content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
@@ -173,14 +175,12 @@ class UserInstallPhaseSelMenu(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        userSettings = fetch_user_settings(interaction.user.id)
         whiteListed = True
         messageDefered = False
         if self.whiteListUsersOnly:
-            if not str(interaction.user.id) in userWhiteList:
-                whiteListed = False
-            else:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
+            exp = userSettings.get('expiration')
+            whiteListed = True if exp == -1 else exp > time.time()
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
                 content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",

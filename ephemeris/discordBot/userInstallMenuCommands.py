@@ -115,7 +115,7 @@ async def userInstallLunarMenu(
         )
         return
     
-    if use_emojis.value == 1 and not userSettings["emojis"]:
+    if user_set_emojis.value == 1 and not userSettings["emojis"]:
         await interaction.response.send_message(
             content="**Please configure your personal emoji settings (/set_personal_emojis) to use this command __with emojis.__**"
                     "\nNote: the default options for `/set_personal_emojis` require the user to have nitro and be in the server the emojis are from.",
