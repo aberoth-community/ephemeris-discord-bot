@@ -5,7 +5,7 @@ ownerID = 109931759260430336
 DEBUGGING = False
 
 # Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
-disableWhitelisting = False
+disableWhitelisting = True
 
 # cache size and display range configuration
 cacheStartDay = -4
@@ -23,41 +23,43 @@ if DEBUGGING:
     cacheEndDay = 2
     selectEndDay = 2
 
-guildSettings = {}
-userSettings = {}
-guildWhiteList = {}
-userWhiteList = {}
+# variables for using json files instead of DB
+# guildSettings = {}
+# userSettings = {}
+# guildWhiteList = {}
+# userWhiteList = {}
 
-GSPath = Path("ephemeris/discordBot/configFiles/guildSettings.json").absolute()
-USPath = Path("ephemeris/discordBot/configFiles/userSettings.json").absolute()
-GWLPath = Path("ephemeris/discordBot/configFiles/guildWhiteList.json").absolute()
-UWLPath = Path("ephemeris/discordBot/configFiles/userWhiteList.json").absolute()
+# GSPath = Path("ephemeris/discordBot/configFiles/guildSettings.json").absolute()
+# USPath = Path("ephemeris/discordBot/configFiles/userSettings.json").absolute()
+# GWLPath = Path("ephemeris/discordBot/configFiles/guildWhiteList.json").absolute()
+# UWLPath = Path("ephemeris/discordBot/configFiles/userWhiteList.json").absolute()
 
+# variables for using json files instead of DB
 # Create Files If they don't already exist
-if not GSPath.exists():
-    GSPath.write_text(json.dumps({}))
-    print(f"File created: {GSPath}")
+# if not GSPath.exists():
+#     GSPath.write_text(json.dumps({}))
+#     print(f"File created: {GSPath}")
 
-if not USPath.exists():
-    USPath.write_text(json.dumps({}))
-    print(f"File created: {USPath}")
+# if not USPath.exists():
+#     USPath.write_text(json.dumps({}))
+#     print(f"File created: {USPath}")
     
-if not GWLPath.exists():
-    GWLPath.write_text(json.dumps({}))
-    print(f"File created: {GWLPath}")
+# if not GWLPath.exists():
+#     GWLPath.write_text(json.dumps({}))
+#     print(f"File created: {GWLPath}")
 
-if not UWLPath.exists():
-    UWLPath.write_text(json.dumps({}))
-    print(f"File created: {UWLPath}")
+# if not UWLPath.exists():
+#     UWLPath.write_text(json.dumps({}))
+#     print(f"File created: {UWLPath}")
 
-with GSPath.open("r") as f:
-    guildSettings = json.load(f)
-with USPath.open("r") as f:
-    userSettings = json.load(f)
-with GWLPath.open("r") as f:
-    guildWhiteList = json.load(f)
-with UWLPath.open("r") as f:
-    userWhiteList = json.load(f)
+# with GSPath.open("r") as f:
+#     guildSettings = json.load(f)
+# with USPath.open("r") as f:
+#     userSettings = json.load(f)
+# with GWLPath.open("r") as f:
+#     guildWhiteList = json.load(f)
+# with UWLPath.open("r") as f:
+#     userWhiteList = json.load(f)
 
 scrollFilterMenuEmojis = {
     "White": "<:WhiteOrb:998472151965376602>",

@@ -45,7 +45,11 @@ class GuildScrollMenu(discord.ui.View):
     
     async def guildScrollMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
         guildSettings = fetch_guild_settings(interaction.guild_id)
+        if not guildSettings:
+            guildSettings = newGuildSettings(interaction)
         userSettings = fetch_user_settings(interaction.user.id)
+        if not userSettings:
+            userSettings = newUserSettings(interaction.user.id, interaction.user.name)
         whiteListed = False
         messageDefered = False
         
@@ -127,7 +131,11 @@ class GuildDaySelMenu(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         guildSettings = fetch_guild_settings(interaction.guild_id)
+        if not guildSettings:
+            guildSettings = newGuildSettings(interaction, useEmojis)
         userSettings = fetch_user_settings(interaction.user.id)
+        if not userSettings:
+            userSettings = newUserSettings(interaction.user.id, interaction.user.name)
         whiteListed = False
         messageDefered = False
         

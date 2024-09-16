@@ -91,16 +91,18 @@ async def UpdateWLError(interaction: discord.Interaction, error):
 @app_commands.allowed_installs(guilds=True, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
 async def checkPermissions(interaction: discord.Interaction):
+    userSettings = fetch_user_settings(interaction.user.id)
     expMsg = ""
     if 0 in interaction._integration_owners:
             expMsg = "**Guild:** "
-            if str(interaction.guild_id) in guildWhiteList:
-                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
+            guildSettings = fetch_guild_settings(interaction.guild_id)
+            if guildSettings:
+                exp = guildSettings.get('expiration')
                 expMsg += "No Expiration" if exp == -1 else f"<t:{exp}>"
             else: expMsg += "Not White Listed."
     expMsg += "\n**User:** "
-    if str(interaction.user.id) in userWhiteList:
-        exp = userWhiteList[str(interaction.user.id)].get('expiration')
+    if userSettings:
+        exp = userSettings.get('expiration')
         expMsg += "No Expiration" if exp == -1 else f"<t:{exp}>"
     else: expMsg += "Not White Listed."
     

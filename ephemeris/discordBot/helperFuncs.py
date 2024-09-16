@@ -195,16 +195,17 @@ def splitMsg(msg):
     msgArr.append(msg)
     return msgArr
 
-def updateSettings(settings, settingsFile:Path=GSPath):
-    json_object = json.dumps(settings, indent=4)
-    with open(settingsFile, "w") as outfile:
-        outfile.write(json_object)
+# functions for using json files instead of DB
+# def updateSettings(settings, settingsFile:Path=GSPath):
+#     json_object = json.dumps(settings, indent=4)
+#     with open(settingsFile, "w") as outfile:
+#         outfile.write(json_object)
 
-def getSettings(settingsFile:Path=GSPath):
-    settings = {}
-    with open(settingsFile, "r") as json_file:
-        settings = json.load(json_file)
-    return settings
+# def getSettings(settingsFile:Path=GSPath):
+#     settings = {}
+#     with open(settingsFile, "r") as json_file:
+#         settings = json.load(json_file)
+#     return settings
 
 def isEmoji(emojiStr:str) -> bool:
     """Checks if the argument is an emoji

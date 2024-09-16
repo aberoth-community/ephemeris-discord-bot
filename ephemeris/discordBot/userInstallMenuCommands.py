@@ -30,7 +30,7 @@ async def userInstallScrollMenu(
     if userSettings:
         exp = userSettings.get('expiration')
         whiteListed = True if exp == -1 else exp > time.time()
-
+    else: userSettings = newUserSettings(interaction.user.id, interaction.user.name)
     if not whiteListed and not disableWhitelisting:
         await interaction.response.send_message(
             content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
@@ -107,7 +107,8 @@ async def userInstallLunarMenu(
     if userSettings:
         exp = userSettings.get('expiration')
         whiteListed = True if exp == -1 else exp > time.time()
-
+    else:
+        userSettings = newUserSettings(interaction.user.id)
     if not whiteListed and not disableWhitelisting:
         await interaction.response.send_message(
             content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
