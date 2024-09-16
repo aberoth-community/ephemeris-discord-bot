@@ -149,45 +149,26 @@ async def setServerEmojis(
         )
     else:
         guildSettings = fetch_guild_settings(interaction.guild_id)
-        if guildSettings:
-            guildSettings["emojis"] = {
-                "White": white,
-                "Black": black,
-                "Green": green,
-                "Red": red,
-                "Purple": purple,
-                "Yellow": yellow,
-                "Cyan": cyan,
-                "Blue": blue,
-                "new": new,
-                "waxing_crescent": waxing_crescent,
-                "first_quarter": first_quarter,
-                "waxing_gibbous": waxing_gibbous,
-                "full": full,
-                "waning_gibbous": waning_gibbous,
-                "third_quarter": third_quarter,
-                "waning_crescent": waning_crescent
-            }
-        else:
-            guild_settings = newGuildSettings(interaction)
-            guildSettings["emojis"] = {
-                "White": white,
-                "Black": black,
-                "Green": green,
-                "Red": red,
-                "Purple": purple,
-                "Yellow": yellow,
-                "Cyan": cyan,
-                "Blue": blue,
-                "new": new,
-                "waxing_crescent": waxing_crescent,
-                "first_quarter": first_quarter,
-                "waxing_gibbous": waxing_gibbous,
-                "full": full,
-                "waning_gibbous": waning_gibbous,
-                "third_quarter": third_quarter,
-                "waning_crescent": waning_crescent
-            }
+        if not guildSettings:
+            guildSettings = newGuildSettings(interaction)
+        guildSettings["emojis"] = {
+            "White": white,
+            "Black": black,
+            "Green": green,
+            "Red": red,
+            "Purple": purple,
+            "Yellow": yellow,
+            "Cyan": cyan,
+            "Blue": blue,
+            "new": new,
+            "waxing_crescent": waxing_crescent,
+            "first_quarter": first_quarter,
+            "waxing_gibbous": waxing_gibbous,
+            "full": full,
+            "waning_gibbous": waning_gibbous,
+            "third_quarter": third_quarter,
+            "waning_crescent": waning_crescent
+        }
         emojis = guildSettings["emojis"]
         update_guild_settings(interaction.guild_id, guildSettings)
         await interaction.response.send_message(
@@ -250,48 +231,29 @@ async def setPersonalEmojis(
             ephemeral=True,
         )
     else:
-        if str(interaction.user.id) in userSettings:
-            userSettings[str(interaction.user.id)]["emojis"] = {
-                "White": white,
-                "Black": black,
-                "Green": green,
-                "Red": red,
-                "Purple": purple,
-                "Yellow": yellow,
-                "Cyan": cyan,
-                "Blue": blue,
-                "new": new,
-                "waxing_crescent": waxing_crescent,
-                "first_quarter": first_quarter,
-                "waxing_gibbous": waxing_gibbous,
-                "full": full,
-                "waning_gibbous": waning_gibbous,
-                "third_quarter": third_quarter,
-                "waning_crescent": waning_crescent
-            }
-        else:
-            userSettings[str(interaction.user.id)] = {
-                "emojis": {
-                    "White": white,
-                    "Black": black,
-                    "Green": green,
-                    "Red": red,
-                    "Purple": purple,
-                    "Yellow": yellow,
-                    "Cyan": cyan,
-                    "Blue": blue,
-                    "new": new,
-                    "waxing_crescent": waxing_crescent,
-                    "first_quarter": first_quarter,
-                    "waxing_gibbous": waxing_gibbous,
-                    "full": full,
-                    "waning_gibbous": waning_gibbous,
-                    "third_quarter": third_quarter,
-                    "waning_crescent": waning_crescent
-                }
-            }
-        emojis = userSettings[str(interaction.user.id)]["emojis"]
-        updateSettings(settings=userSettings, settingsFile=USPath)
+        userSettings = fetch_user_settings(interaction.user.id)
+        if not userSettings:
+            userSettings = newUserSettings(interaction.user.id, interaction.user.name)
+        userSettings["emojis"] = {
+            "White": white,
+            "Black": black,
+            "Green": green,
+            "Red": red,
+            "Purple": purple,
+            "Yellow": yellow,
+            "Cyan": cyan,
+            "Blue": blue,
+            "new": new,
+            "waxing_crescent": waxing_crescent,
+            "first_quarter": first_quarter,
+            "waxing_gibbous": waxing_gibbous,
+            "full": full,
+            "waning_gibbous": waning_gibbous,
+            "third_quarter": third_quarter,
+            "waning_crescent": waning_crescent
+        }
+        emojis = userSettings["emojis"]
+        update_user_settings(interaction.user.id, userSettings)
         await interaction.response.send_message(
             content="**Successfully set personal emojis!**"
             f"\n> `White           ` {emojis['White']}"
