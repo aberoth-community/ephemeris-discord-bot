@@ -55,7 +55,7 @@ class GuildScrollMenu(discord.ui.View):
             useEmojis = True
             emojis = guildSettings["emojis"]
         if (
-            guildSettings["channels"][str(interaction.guild_id)][
+            guildSettings["channels"][str(interaction.channel_id)][
                 "whitelisted_users_only"
             ]
             == 1
@@ -67,15 +67,15 @@ class GuildScrollMenu(discord.ui.View):
             self.filterList = guildSettings["channels"][str(interaction.channel_id)].get("filters")
                 
         if 0 in interaction._integration_owners:
-            exp = guildSettings['expiration']
+            exp = guildSettings["expiration"]
             whiteListed = True if exp == -1 else exp > time.time()
             if self.whiteListUsersOnly:
-                temp = (True if userSettings['expiration'] == -1 
-                        else userSettings['expiration'] > time.time())
+                temp = (True if userSettings["expiration"] == -1 
+                        else userSettings["expiration"] > time.time())
                 whiteListed = whiteListed and temp
         elif 1 in interaction._integration_owners:
-            whiteListed = (True if userSettings['expiration'] == -1 
-                           else userSettings['expiration'] > time.time())
+            whiteListed = (True if userSettings["expiration"] == -1 
+                           else userSettings["expiration"] > time.time())
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -142,11 +142,11 @@ class GuildDaySelMenu(discord.ui.Select):
         
         useEmojis = False
         emojis = None
-        if (guildSettings["channels"][str(interaction.guild_id)]["useEmojis"] == 1):
+        if (guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1):
             useEmojis = True
-            emojis = guildSettings["channels"][str(interaction.guild_id)]["emojis"]
+            emojis = guildSettings["emojis"]
         if (
-            guildSettings["channels"][str(interaction.guild_id)][
+            guildSettings["channels"][str(interaction.channel_id)][
                 "whitelisted_users_only"
             ]
             == 1
@@ -158,15 +158,15 @@ class GuildDaySelMenu(discord.ui.Select):
             self.filterList = guildSettings["channels"][str(interaction.channel_id)].get("filters")
                 
         if 0 in interaction._integration_owners:
-            exp = guildSettings.expiration
+            exp = guildSettings["expiration"]
             whiteListed = True if exp == -1 else exp > time.time()
             if self.whiteListUsersOnly:
-                temp = (True if userSettings.expiration == -1 
-                        else userSettings.expiration > time.time())
+                temp = (True if userSettings["expiration"] == -1 
+                        else userSettings["expiration"] > time.time())
                 whiteListed = whiteListed and temp
         elif 1 in interaction._integration_owners:
-            whiteListed = (True if userSettings.expiration == -1 
-                           else userSettings.expiration > time.time())
+            whiteListed = (True if userSettings["expiration"] == -1 
+                           else userSettings["expiration"] > time.time())
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -304,7 +304,7 @@ class GuildFilterMenu(discord.ui.Select):
         for orb in self.values:
             filterOptions[orb] = True
             filterList.append(orb)
-        guildSettings["channels"][str(interaction.guild_id)][
+        guildSettings["channels"][str(interaction.channel_id)][
             "filters"
         ] = filterList
         update_guild_settings(interaction.guild_id, guildSettings)
