@@ -67,6 +67,7 @@ class UserInstallScrollMenu(discord.ui.View):
         userSettings = fetch_user_settings(interaction.user.id)
         if not userSettings:
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
+            update_user_settings(interaction.user.id, userSettings)
         whiteListed = True
         messageDefered = False
         if self.whiteListOnly:
@@ -135,6 +136,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
         userSettings = fetch_user_settings(interaction.user.id)
         if not userSettings:
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
+            update_user_settings(interaction.user.id, userSettings)
         whiteListed = True
         messageDefered = False
         if self.whiteListOnly:

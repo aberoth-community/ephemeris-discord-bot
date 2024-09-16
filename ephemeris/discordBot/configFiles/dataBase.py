@@ -223,19 +223,72 @@ if __name__ == "__main__":
     user_settings = fetch_user_settings(user_id)
     print(f"Fetched user settings for {user_id}: {user_settings}")
 
-    # Update settings for a user
-    new_user_data = {
-        "username": "new_username",
-        "expiration": 1,
-        "emojis": {
-            "emoji_white": "<white>",
-            "emoji_black": "<:NewBlackOrb:123456789012345678>"
-        }
+    userSettingsTransfer = {
+    "109931759260430336": {
+        "username": "figureskate",
+        "expiration": -1
+    },
+    "440192160256491521": {
+        "username": "bigdrew",
+        "expiration": 0
+    },
+    "110109604423163904": {
+        "username": "ashnel",
+        "expiration": -1
+    },
+    "624193482424320000": {
+        "username": "the_cthaeh",
+        "expiration": -1
+    },
+    "245939106029240320": {
+        "username": "canigetameow",
+        "expiration": 1724612473
+    },
+    "1013019511554834452": {
+        "username": "hitech1497",
+        "expiration": 1722321788
+    },
+    "889298297498501151": {
+        "username": ".luckyseven.",
+        "expiration": 1728070376
+    },
+    "563525333257551902": {
+        "username": "vanmorten",
+        "expiration": 1723235990
+    },
+    "471797895440629767": {
+        "username": "athenakazuo",
+        "expiration": 1729914000
+    },
+    "188911699665879041": {
+        "username": "joedread",
+        "expiration": 1753248016
+    },
+    "339373441729953802": {
+        "username": "joker10145",
+        "expiration": 1727915206
+    },
+    "477287995158953995": {
+        "username": "funtcase1",
+        "expiration": 1727919551
     }
-    update_user_settings(user_id, new_user_data)
+}
+    
+    for user_id, s in userSettingsTransfer.keys():
+        pass
+    # # Update settings for a user
+    # new_user_data = {
+    #     "username": "new_username",
+    #     "expiration": 1,
+    #     "emojis": {
+    #         "emoji_white": "<white>",
+    #         "emoji_black": "<:NewBlackOrb:123456789012345678>"
+    #     }
+    # }
+    #update_user_settings(user_id, new_user_data)
 
-    user_settings = fetch_user_settings(user_id)
-    print(f"Fetched user settings for {user_id}: {user_settings}")
+    # user_settings = fetch_user_settings(user_id)
+    # print(f"Fetched user settings for {user_id}: {user_settings}")
 
     db.close()
 
@@ -257,3 +310,5 @@ guildSettings = {1116975978242134026: {
             'filters': ['filter_white', 'filter_black']
             }}}
 }
+
+

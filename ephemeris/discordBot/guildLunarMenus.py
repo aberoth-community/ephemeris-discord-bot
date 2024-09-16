@@ -45,9 +45,11 @@ class GuildLunarMenu(discord.ui.View):
         guildSettings = fetch_guild_settings(interaction.guild_id)
         if not guildSettings:
             guildSettings = newGuildSettings(interaction, useEmojis)
+            update_guild_settings(interaction.guild_id, guildSettings)
         userSettings = fetch_user_settings(interaction.user.id)
         if not userSettings:
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
+            update_user_settings(interaction.user.id, userSettings)
         useEmojis = False
         emojis = None
         if (guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1):
@@ -171,9 +173,11 @@ class GuildPhaseSelMenu(discord.ui.Select):
         guildSettings = fetch_guild_settings(interaction.guild_id)
         if not guildSettings:
             guildSettings = newGuildSettings(interaction, useEmojis)
+            update_guild_settings(interaction.guild_id, guildSettings)
         userSettings = fetch_user_settings(interaction.user.id)
         if not userSettings:
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
+            update_user_settings(interaction.user.id, userSettings)
         whiteListed = False
         messageDefered = False
         
