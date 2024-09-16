@@ -65,6 +65,8 @@ class UserInstallScrollMenu(discord.ui.View):
     
     async def userMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
         userSettings = fetch_user_settings(interaction.user.id)
+        if not userSettings:
+            userSettings = newUserSettings(interaction.user.id, interaction.user.name)
         whiteListed = True
         messageDefered = False
         if self.whiteListOnly:
@@ -131,6 +133,8 @@ class UserInstallSelDayMenu(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         userSettings = fetch_user_settings(interaction.user.id)
+        if not userSettings:
+            userSettings = newUserSettings(interaction.user.id, interaction.user.name)
         whiteListed = True
         messageDefered = False
         if self.whiteListOnly:
