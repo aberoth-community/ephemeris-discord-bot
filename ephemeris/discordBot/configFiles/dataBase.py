@@ -182,12 +182,12 @@ def update_user_settings(user_id, user_data):
 
 def newGuildSettings(interaction, use_emojis=0, allow_filters=0, whitelisted_users_only=0) -> dict:
     return {
-        'guild_id': interaction.guild_id,
-        'guild_name': interaction.guild.name,
+        'guild_id': interaction['guild_id'],
+        'guild_name': interaction['guild']['name'],
         'expiration': 0,
         'emojis': {},
-        'channels': {} if interaction.channel_id is None else {
-            interaction.channel_id: {
+        'channels': {} if interaction['channel_id'] is None else {
+            interaction['channel_id']: {
                 'useEmojis': use_emojis,
                 'allow_filters': allow_filters,
                 'whitelisted_users_only': whitelisted_users_only,
@@ -195,6 +195,7 @@ def newGuildSettings(interaction, use_emojis=0, allow_filters=0, whitelisted_use
             }
         }
     }
+
     
 def newUserSettings(user_id, username, expiration=0) -> dict:
     return {
