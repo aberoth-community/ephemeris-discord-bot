@@ -66,16 +66,7 @@ class GuildScrollMenu(discord.ui.View):
             self.setUp = True
             self.filterList = guildSettings["channels"][str(interaction.channel_id)].get("filters")
                 
-        if 0 in interaction._integration_owners:
-            exp = guildSettings["expiration"]
-            whiteListed = True if exp == -1 else exp > time.time()
-            if self.whiteListUsersOnly:
-                temp = (True if userSettings["expiration"] == -1 
-                        else userSettings["expiration"] > time.time())
-                whiteListed = whiteListed and temp
-        elif 1 in interaction._integration_owners:
-            whiteListed = (True if userSettings["expiration"] == -1 
-                           else userSettings["expiration"] > time.time())
+        whiteListed = checkWhiteListed(interaction, guildSettings, userSettings, self.whiteListUsersOnly)
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -157,16 +148,7 @@ class GuildDaySelMenu(discord.ui.Select):
             self.setUp = True
             self.filterList = guildSettings["channels"][str(interaction.channel_id)].get("filters")
                 
-        if 0 in interaction._integration_owners:
-            exp = guildSettings["expiration"]
-            whiteListed = True if exp == -1 else exp > time.time()
-            if self.whiteListUsersOnly:
-                temp = (True if userSettings["expiration"] == -1 
-                        else userSettings["expiration"] > time.time())
-                whiteListed = whiteListed and temp
-        elif 1 in interaction._integration_owners:
-            whiteListed = (True if userSettings["expiration"] == -1 
-                           else userSettings["expiration"] > time.time())
+        whiteListed = checkWhiteListed(interaction, guildSettings, userSettings, self.whiteListUsersOnly)
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -212,7 +194,7 @@ class GuildDaySelMenu(discord.ui.Select):
                     content=msg, ephemeral=self.ephemeralRes
                 )
                 
-        update_guild_settings(interaction.guild_id, guildSettings)
+        #update_guild_settings(interaction.guild_id, guildSettings)
         
 
 class GuildFilterMenu(discord.ui.Select):

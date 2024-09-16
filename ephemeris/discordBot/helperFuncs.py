@@ -237,3 +237,17 @@ def join_with_oxford_comma(items):
     else:
         # Join with commas and an Oxford comma for three or more elements
         return ", ".join(phaseNames[:-1]) + ", and " + phaseNames[-1]
+    
+def checkWhiteListed(interaction, guildSettings:dict, userSettings:dict, whiteListUsersOnly=True) -> bool:
+    exp = 0
+    if 0 in interaction._integration_owners:
+        exp = guildSettings["expiration"]
+    whiteListed = True if exp == -1 else exp > time.time()
+    if whiteListUsersOnly:
+        temp = (True if userSettings["expiration"] == -1 
+                else userSettings["expiration"] > time.time())
+        whiteListed = whiteListed and temp
+    elif 1 in interaction._integration_owners:
+        whiteListed = (True if userSettings["expiration"] == -1 
+                        else userSettings["expiration"] > time.time())
+    return whiteListed

@@ -1,5 +1,5 @@
 from .commonImports import *
-from .helperFuncs import splitMsg, getPhaseList
+from .helperFuncs import splitMsg, getPhaseList, checkWhiteListed
 
 # Create seperate menu that will persist
 class GuildLunarMenu(discord.ui.View):
@@ -42,40 +42,22 @@ class GuildLunarMenu(discord.ui.View):
     async def guildLunarMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button, firstEventOnly:bool = False):
         whiteListed = False
         messageDefered = False
-        
+        guildSettings = fetch_guild_settings(interaction.guild_id)
+        userSettings = fetch_user_settings(interaction.user.id)
         useEmojis = False
         emojis = None
-        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "useEmojis"
-                ]
-                == 1
-            ):
-                useEmojis = True
-                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "whitelisted_users_only"
-                ]
-                == 1
-            ):
-                self.whiteListUsersOnly = True
-                
-        if 0 in interaction._integration_owners:
-            if str(interaction.guild_id) in guildWhiteList:
-                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
-            if self.whiteListUsersOnly:
-                if str(interaction.user.id) in userWhiteList:
-                    exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                    temp = True if exp == -1 else exp > time.time()
-                else: temp = False
-                whiteListed = whiteListed and temp
-        elif 1 in interaction._integration_owners:
-            if str(interaction.user.id) in userWhiteList:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
+        if (guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1):
+            useEmojis = True
+            emojis = guildSettings["emojis"]
+        if (
+            guildSettings["channels"][str(interaction.channel_id)][
+                "whitelisted_users_only"
+            ]
+            == 1
+        ):
+            self.whiteListUsersOnly = True
+      
+        whiteListed = checkWhiteListed(interaction, guildSettings, userSettings, self.whiteListUsersOnly)
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -121,7 +103,7 @@ class GuildLunarMenu(discord.ui.View):
 
 class GuildPhaseSelMenu(discord.ui.Select):
     def __init__(self, ephemeralRes=True, whiteListUsersOnly=False):
-        self.whiteListUsersOnly = False
+        self.whiteListUsersOnly = whiteListUsersOnly
         self.ephemeralRes = ephemeralRes
         options = options = [
             discord.SelectOption(
@@ -182,42 +164,26 @@ class GuildPhaseSelMenu(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        guildSettings = fetch_guild_settings(interaction.guild_id)
+        userSettings = fetch_user_settings(interaction.user.id)
         whiteListed = False
         messageDefered = False
         
         useEmojis = False
         emojis = None
-        if str(interaction.channel_id) in guildSettings[str(interaction.guild_id)]:
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "useEmojis"
-                ]
-                == 1
-            ):
-                useEmojis = True
-                emojis = guildSettings[str(interaction.guild_id)]["emojis"]
-            if (
-                guildSettings[str(interaction.guild_id)][str(interaction.channel_id)][
-                    "whitelisted_users_only"
-                ]
-                == 1
-            ):
-                self.whiteListUsersOnly = True
-
-        if 0 in interaction._integration_owners:
-            if str(interaction.guild_id) in guildWhiteList:
-                exp = guildWhiteList[str(interaction.guild_id)].get('expiration')
-                whiteListed = True if exp == None or exp == -1 else exp > time.time()
-            if self.whiteListUsersOnly:
-                if str(interaction.user.id) in userWhiteList:
-                    exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                    temp = True if exp == -1 else exp > time.time()
-                else: temp = False
-                whiteListed = whiteListed and temp
-        elif 1 in interaction._integration_owners:
-            if str(interaction.user.id) in userWhiteList:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
+        
+        if (guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1):
+            useEmojis = True
+            emojis = guildSettings["emojis"]
+        if (
+            guildSettings["channels"][str(interaction.channel_id)][
+                "whitelisted_users_only"
+            ]
+            == 1
+        ):
+            self.whiteListUsersOnly = True
+               
+        whiteListed = checkWhiteListed(interaction, guildSettings, userSettings, self.whiteListUsersOnly)
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
