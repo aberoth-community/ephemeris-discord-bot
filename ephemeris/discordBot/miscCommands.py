@@ -26,20 +26,24 @@ async def hello(interaction: discord.Interaction):
 async def updateWhiteList(interaction: discord.Interaction, user_or_guild: str, id_type: discord.app_commands.Choice[int], expiration: int):
     if id_type.name == "User":
         await interaction.response.defer(ephemeral=True, thinking=True)
-        userName = ""
+        username = ""
         try:
             user = await bot.fetch_user(user_or_guild)
-            userName =  user.name
+            username =  user.name
         except discord.NotFound: 
             await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"NotFound\"", ephemeral=True)
             return
         except discord.HTTPException:
-            await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)   
+            await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)
+            return  
         userSettings = fetch_user_settings(user_or_guild)
         try:
-            userSettings.username = userName
-            userSettings.expiration = expiration
-            update_user_settings(user_or_guild)
+            if not userSettings:
+                userSettings = newUserSettings(user_or_guild, username, expiration)
+            else:
+                userSettings['username'] = username
+                userSettings['expiration'] = expiration
+            update_user_settings(user_or_guild, userSettings)
         except Exception as e:
             await interaction.followup.send(f"Failed to update user_settings table.", ephemeral=True)
             return
@@ -49,7 +53,7 @@ async def updateWhiteList(interaction: discord.Interaction, user_or_guild: str, 
         return
     elif id_type.name == "Guild":
         await interaction.response.defer(ephemeral=True, thinking=True)
-        userName = ""
+        username = ""
         try:
             guild = await bot.fetch_guild(user_or_guild)
             guildName =  guild.name

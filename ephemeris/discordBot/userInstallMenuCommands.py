@@ -24,14 +24,12 @@ async def userInstallScrollMenu(
     interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int], 
     whitelist_only: Optional[discord.app_commands.Choice[int]] = 0
     ):
-    
+    userSettings = fetch_user_settings(interaction.user.id)
     ephRes = False
     whiteListed = False
-    if str(interaction.user.id) in userWhiteList:
-        whiteListed = False
-        exp = userWhiteList[str(interaction.user.id)].get('expiration')
+    if userSettings:
+        exp = userSettings.get('expiration')
         whiteListed = True if exp == -1 else exp > time.time()
-
 
     if not whiteListed and not disableWhitelisting:
         await interaction.response.send_message(
@@ -40,10 +38,7 @@ async def userInstallScrollMenu(
         )
         return
     
-    if use_emojis.value == 1 and (
-        str(interaction.user.id) not in userSettings
-        or "emojis" not in userSettings[str(interaction.user.id)]
-    ):
+    if use_emojis.value == 1 and not userSettings["emojis"]:
         await interaction.response.send_message(
             content="**Please configure your personal emoji settings (/set_personal_emojis) to use this command __with emojis.__**"
                     "\nNote: the default options for `/set_personal_emojis` require the user to have nitro and be in the server the emojis are from.",
@@ -75,7 +70,7 @@ async def userInstallScrollMenu(
             whiteListOnly=True if whitelist_only == 1 else False,
             emojis=None
             if use_emojis.value == 0
-            else userSettings[str(interaction.user.id)]["emojis"],
+            else userSettings["emojis"],
         ),
         ephemeral=False,
     )
@@ -106,13 +101,12 @@ async def userInstallLunarMenu(
     user_set_emojis: discord.app_commands.Choice[int],
     whitelisted_users_only: Optional[discord.app_commands.Choice[int]] = 0
 ):
+    userSettings = fetch_user_settings(interaction.user.id)
     ephRes = False
     whiteListed = False
-    if str(interaction.user.id) in userWhiteList:
-        whiteListed = False
-        exp = userWhiteList[str(interaction.user.id)].get('expiration')
+    if userSettings:
+        exp = userSettings.get('expiration')
         whiteListed = True if exp == -1 else exp > time.time()
-
 
     if not whiteListed and not disableWhitelisting:
         await interaction.response.send_message(
@@ -121,10 +115,7 @@ async def userInstallLunarMenu(
         )
         return
     
-    if user_set_emojis.value == 1 and (
-        str(interaction.user.id) not in userSettings
-        or "emojis" not in userSettings[str(interaction.user.id)]
-    ):
+    if use_emojis.value == 1 and not userSettings["emojis"]:
         await interaction.response.send_message(
             content="**Please configure your personal emoji settings (/set_personal_emojis) to use this command __with emojis.__**"
                     "\nNote: the default options for `/set_personal_emojis` require the user to have nitro and be in the server the emojis are from.",
@@ -156,7 +147,7 @@ async def userInstallLunarMenu(
             whiteListUsersOnly=True if whitelisted_users_only == 1 else False,
             emojis=None
             if user_set_emojis.value == 0
-            else userSettings[str(interaction.user.id)]["emojis"],
+            else userSettings["emojis"],
         ),
         ephemeral=False,
     )

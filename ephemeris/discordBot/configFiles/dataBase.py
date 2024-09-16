@@ -161,15 +161,13 @@ def update_user_settings(user_id, user_data):
     """
     user_settings, created = UserSettings.get_or_create(
         user_id=user_id,
-        defaults={
-            'username': user_data.get("username", "unknown"),
-            'expiration': user_data.get("expiration", 0)
-        }
+        defaults=user_data
     )
     if not created:
         user_settings.username = user_data.get("username", "unknown")
         user_settings.expiration = user_data.get("expiration", 0)
         user_settings.save()
+        
 
     # Update user emojis
     for emoji_name, emoji_value in user_data.get("emojis", {}).items():
@@ -196,6 +194,14 @@ def newGuildSettings(interaction, use_emojis=0, allow_filters=0, whitelisted_use
                 'filters': []
             }
         }
+    }
+    
+def newUserSettings(user_id, username, expiration=0) -> dict:
+    return {
+        'user_id': user_id,
+        'username': username,
+        'expiration': expiration,
+        'emojis': {}
     }
 
 

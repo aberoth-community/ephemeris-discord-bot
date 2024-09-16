@@ -64,14 +64,12 @@ class UserInstallScrollMenu(discord.ui.View):
     
     
     async def userMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
+        userSettings = fetch_user_settings(interaction.user.id)
         whiteListed = True
         messageDefered = False
         if self.whiteListOnly:
-            if not str(interaction.user.id) in userWhiteList:
-                whiteListed = False
-            else:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
+            exp = userSettings.get('expiration')
+            whiteListed = True if exp == -1 else exp > time.time()
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
                 content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
@@ -132,14 +130,12 @@ class UserInstallSelDayMenu(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        userSettings = fetch_user_settings(interaction.user.id)
         whiteListed = True
         messageDefered = False
         if self.whiteListOnly:
-            if not str(interaction.user.id) in userWhiteList:
-                whiteListed = False
-            else:
-                exp = userWhiteList[str(interaction.user.id)].get('expiration')
-                whiteListed = True if exp == -1 else exp > time.time()
+            exp = userSettings.get('expiration')
+            whiteListed = True if exp == -1 else exp > time.time()
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
