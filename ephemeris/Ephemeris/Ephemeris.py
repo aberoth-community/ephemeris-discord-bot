@@ -7,7 +7,6 @@ from pathlib import Path
 DEBUG = False
 
 class Ephemeris:
-    # add function to re calibrate and re calc cached events
     def __init__(self, start:int=0, end:int=0, numMoonCycles:int=5) -> None:
         self.glowThresh = 0.5
         self.darkThresh = 1
