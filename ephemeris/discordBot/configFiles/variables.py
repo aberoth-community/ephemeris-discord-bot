@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
+# Discord ID of the bot owner (only this user can update whitelist)
 ownerID = 109931759260430336
+# Triggers a few conditional statements when true
 DEBUGGING = False
 
 # Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
@@ -23,7 +25,9 @@ if DEBUGGING:
     cacheEndDay = 2
     selectEndDay = 2
 
+##############################################
 # variables for using json files instead of DB
+##############################################
 # guildSettings = {}
 # userSettings = {}
 # guildWhiteList = {}
@@ -34,7 +38,9 @@ if DEBUGGING:
 # GWLPath = Path("ephemeris/discordBot/configFiles/guildWhiteList.json").absolute()
 # UWLPath = Path("ephemeris/discordBot/configFiles/userWhiteList.json").absolute()
 
+##############################################
 # variables for using json files instead of DB
+##############################################
 # Create Files If they don't already exist
 # if not GSPath.exists():
 #     GSPath.write_text(json.dumps({}))
@@ -83,6 +89,7 @@ lunarFilterMenuEmojis = {
     "waning_crescent": "<:WaningCrescent:1092364435986853928>"
 }
 
+# can use cross server emojis
 defaultEmojis = {
     "White": "<:WhiteOrb:998472151965376602>",
     "Black": "<:BlackOrb:998472215295164418>",
@@ -103,6 +110,7 @@ defaultEmojis = {
     "lunation": "<a:moon:440289423750463488>"
 }
 
+# user installs have the same emoji perms as the user using them
 UsersInstallDefaultEmojis = {
     "new": ":new_moon:",
     "waxing_crescent": ":waxing_crescent_moon:",
@@ -114,7 +122,7 @@ UsersInstallDefaultEmojis = {
     "waning_crescent": ":waning_crescent_moon:",
 }
 
-
+# text inserts for lunar menus
 moonDisplayNames = {
     "new": "**New**",
     "waxing_crescent": "a **Waxing Crescent**",
@@ -126,6 +134,7 @@ moonDisplayNames = {
     "waning_crescent": "a **Waning Crescent**"
 }
 
+# response message name inserts for filtered phases
 moonFilterDisplayNames = {
     "new": "**New**",
     "waxing_crescent": "**Waxing Crescent**",
@@ -155,6 +164,7 @@ lunarLabels = {
     "waning_crescent": "Waning Crescents"
 }
 
+# key: current phase, value: previous phase from key
 previousPhases = {
     "new": "waning_crescent",
     "waxing_crescent": "new",

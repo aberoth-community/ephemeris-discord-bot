@@ -291,10 +291,20 @@ if __name__ == "__main__":
     }
 }
     
+    #  if not userSettings:
+    #             userSettings = newUserSettings(user_or_guild, username, expiration)
+    #         else:
+    #             userSettings['username'] = username
+    #             userSettings['expiration'] = expiration
+    #         update_user_settings(user_or_guild, userSettings)
+    
     for user_id, s in userSettingsTransfer.items():
-        print(s["username"], s['expiration'])
+        #print(s["username"], s['expiration'])
+        
         userData = newUserSettings(user_id=user_id, username=s['username'], expiration=s['expiration'])
         update_user_settings(user_id=user_id, user_data=userData)
+        print(fetch_user_settings(user_id))
+    
     
     # # Update settings for a user
     # new_user_data = {

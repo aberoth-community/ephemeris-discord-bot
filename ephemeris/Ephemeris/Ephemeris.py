@@ -35,12 +35,31 @@ class Ephemeris:
         self.saveCache(self.cacheFile)
 
     def createScrollEventRange(self, startTime:int, stopTime:int, saveToCache:bool=False) -> list[tuple[int, dict[str, any]]]:
+        """Creates a chronologically ordered list of tuples that each
+        contain information on a unique change in scroll/alignment states
+
+        Parameters
+        ------------
+        startTime: `int` 
+            The epoch time in ms that alignment calculations will start from.
+        stopTime: `int`
+            The epoch time in ms that alignment calculations will stop at.
+        saveToCache: `bool` *(optional)*
+            When set to true the cache contents will be outputed
+            to a local file. Defaults to False.
+        
+        Returns
+        ---------
+        `list[tuple[int, dict[str, any]]]` 
+            A chronologically ordered list of tuples that contains the predicted events information.
+        """
         currentTime = startTime
         tempCache = []
         # create event for the starting alignments
         self.lastAlignmentStates = np.full(9, False)
         self.setAlignmentStates(currentTime)
-        tempCache.append(self.createAlignmentEvent(currentTime))
+        # tempCache.append(self.createAlignmentEvent(currentTime))
+        
         # colon is IMPORTANT, creates shallow copy of list instead of copy by ref
         self.lastAlignmentStates = self.alignmentStates[:]
         # iterate through time range and find events
@@ -63,13 +82,36 @@ class Ephemeris:
             self.saveCache(self.cacheFile)
         return tempCache
 
-    def getScrollEventsInRange(self, startTime:int, endTime:int) -> list:
+    def getScrollEventsInRange(self, startTime:int, endTime:int) -> list[tuple[int, dict[str, any]]]:
+        """Subsections self.scrollEventsCache in O(2log(n)) time to only include all
+        events between the start and stop time. Does not change order of events.
+
+        Parameters
+        ------------
+        startTime: `int` 
+            The epoch time in ms that alignment calculations will start from.
+        stopTime: `int`
+            The epoch time in ms that alignment calculations will stop at.
+        
+        Returns
+        ---------
+        `list[tuple[int, dict[str, any]]]` 
+            A chronologically ordered list of tuples that contains the predicted events information.
+        """
         # bisect O(log(n)), total O(2log(n))
         startIndex = bisect.bisect_left(self.scrollEventsCache, (startTime,))
         stopIndex = bisect.bisect_right(self.scrollEventsCache, (endTime,))
         return [events for _, events in self.scrollEventsCache[startIndex:stopIndex]]
 
     def checkForAlignmentChange(self) -> bool:
+        """Checks to see if there has been a change in alignments between the states
+        at the current time and previously calculated time
+        
+        Returns
+        ---------
+        `bool` 
+            True if any alignment state has changed from the previous alignment check.
+        """
         return not np.array_equal(self.alignmentStates, self.lastAlignmentStates)
 
     def createAlignmentEvent(self, timestamp:int) -> tuple[int, dict[str, any]]:
@@ -125,6 +167,7 @@ class Ephemeris:
             # if not a new dark or returning to normal, newly algined orbs should be glowing
             glowList.extend(aligned)
         
+        # does not run in prod
         if (DEBUG):
             difs = self.calcAlignmentDifs(self.posRelCandle(timestamp))
             eventStr = '\n'.join(f"{difs[0][i] }, {names[i+1]}" for i in range(0, 8))
