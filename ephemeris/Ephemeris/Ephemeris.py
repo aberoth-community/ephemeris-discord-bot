@@ -35,7 +35,7 @@ class Ephemeris:
         self.saveCache(self.cacheFile)
 
     def createScrollEventRange(self, startTime:int, stopTime:int, saveToCache:bool=False) -> list[tuple[int, dict[str, any]]]:
-        """Creates a chronologically ordered list of tuples that each
+        """Creates a chronologically ordered `list` of `tuples` that each
         contain information on a unique change in scroll/alignment states
 
         Parameters
@@ -51,7 +51,7 @@ class Ephemeris:
         Returns
         ---------
         `list[tuple[int, dict[str, any]]]` 
-            A chronologically ordered list of tuples that contains the predicted events information.
+            A chronologically ordered `list` of `tuples` that contains the predicted events information.
         """
         currentTime = startTime
         tempCache = []
@@ -84,7 +84,7 @@ class Ephemeris:
 
     def getScrollEventsInRange(self, startTime:int, endTime:int) -> list[tuple[int, dict[str, any]]]:
         """Subsections self.scrollEventsCache in O(2log(n)) time to only include all
-        events between the start and stop time. Does not change order of events.
+        predicted events between the start and stop time. Does not change order of events.
 
         Parameters
         ------------
@@ -96,7 +96,7 @@ class Ephemeris:
         Returns
         ---------
         `list[tuple[int, dict[str, any]]]` 
-            A chronologically ordered list of tuples that contains the predicted events information.
+            A chronologically ordered `list` of `tuples` that contains the predicted events' information.
         """
         # bisect O(log(n)), total O(2log(n))
         startIndex = bisect.bisect_left(self.scrollEventsCache, (startTime,))
@@ -115,6 +115,21 @@ class Ephemeris:
         return not np.array_equal(self.alignmentStates, self.lastAlignmentStates)
 
     def createAlignmentEvent(self, timestamp:int) -> tuple[int, dict[str, any]]:
+        """Creates a `tuple` containing the epoch timestamp in ms at which the alignment
+        changes and a `dict` containing information about the event.
+        
+        Parameters
+        ---------
+        timestamp: `int` 
+            The epoch time in ms that alignment change happens
+        
+        Returns
+        ---------
+        `tuple[int, dict[str, any]]`
+            A `tuple` who's first element is the epoch time stamp in ms for the event
+            and the second element is a `dict` containing the event information.
+
+        """
         names = [
             "Shadow",
             "White",
@@ -195,17 +210,47 @@ class Ephemeris:
         )
 
     def setAlignmentStates(self, time:int) -> None:
+        """Gets the difference in position between all orbs and determines if each orb is in an
+        aligned state using that information. Stores this information as a boolean in the list 
+        self.alignmentStates[i] with True corresponding to being aligned with any other orb.
+
+        Parameters
+        ---------
+            time: `int`
+                The epoch timestamp in ms at which orb positions are retrieved.
+        """
         self.alignmentStates = np.full(9, False)
+        # get the differences at the given time
         difs = self.calcAlignmentDifs(self.posRelCandle(time))
         for i, arr in enumerate(difs):
+            # the first index corresponds to the list of differences between
+            # the shadow orb other orbs sorted by their proximity to the white orb
             if i == 0:
+                # checks if any of the orbs are with in the larger
+                # threshold for alignment with the shadow orb
                 alignmentPos = arr < self.darkThresh
             else:
+                # all other orbs have the same threshhold of alignment
                 alignmentPos = arr < self.glowThresh
             for j in np.where(alignmentPos)[0]:
+                # gets the indices of the orbs that are aligned with the current orb
+                # sets the current orb and that indice to True (aligned) in the alignments states list
                 self.alignmentStates[i] = self.alignmentStates[i + j + 1] = True
 
-    def calcAlignmentDifs(self, positions:np.ndarray[float]) -> list:
+    def calcAlignmentDifs(self, positions:np.ndarray[float]) -> list[np.ndarray[float]]:
+        """Calculates the difference between the positions of each orb relative to the candle (earth equivalent).
+
+        Parameters
+        ---------
+            positions: `np.ndarray[float]`
+                a list of the angular positions in degrees of each orb relative to the candle.
+        Returns
+        ---------
+        `list[np.ndarray[float]]`
+            Each `np.ndarray` within the `list` corresponds to an orb with the elements of the
+            array being the difference in angular position between the orb and all other orbs that
+            have not been compared to the orb for which the array belongs to.
+        """
         difs = []
         # for each orb
         for i in range(1, 9):
@@ -218,15 +263,44 @@ class Ephemeris:
         return difs
 
     def posRelCandle(self, time:int) -> np.ndarray[float]:
+        """Gets the position of each orb relative to the candle (earth equivalent)
+
+        Parameters
+        ---------
+            time: `int`
+                The epoch timestamp in ms at which the orb positions are retrieved.
+        Returns
+        ---------
+        `np.ndarray[float]`
+            An array with each index corresponding to the position of a unique orb relative to the candle.
+        """
+        # get the positions of the orbs relative to white, exluding the shadow orb
         rw = self.posRelWhite(time)
+        # prepend the shadow orb (moon equivalent) position relative to the candle
         positions = np.array([self.getShadowPos(time), (rw[0] + 180) % 360])
 
+        # find the x and y offset of the of the orbs relative to the candle
+        # note candle implicity has a radius of 1, or 1 AU and planet raddi are in AU
         x = self.radii[1:8] * np.cos(np.radians(rw[1:8])) - np.cos(np.radians(rw[0]))
         y = self.radii[1:8] * np.sin(np.radians(rw[1:8])) - np.sin(np.radians(rw[0]))
+        # calculate the angular positions relative to the candle using the arctan and the x and y offsets
         positions = np.append(positions, (np.degrees(np.arctan2(y, x))) % 360)
         return positions
 
     def posRelWhite(self, time:int) -> np.ndarray[float]:
+        """Calculates the position of each orb, excluding the shadow orb, relative to the 
+        white orb (sun equivalent) 
+
+        Parameters
+        ---------
+            time: `int`
+                The epoch timestamp in ms at which the orb positions are retrieved.
+        Returns
+        ---------
+        `np.ndarray[float]`
+            An array with each index corresponding to the position of a unique orb or the candle in
+            degrees relative to the white orb.
+        """
         positions = (
             (360 / self.periods) * (time - self.refTimes) + self.refPositions
         ) % 360
@@ -235,21 +309,42 @@ class Ephemeris:
         return positions
 
     def getShadowPos(self, time:int) -> float:
+        """Calculates the position of the shadow orb (moon equivalent) relative to
+        the candle (earth equivalent).
+
+        Parameters
+        ---------
+            time: `int`
+                The epoch timestamp in ms at which the shadow orb position is calculated.
+        Returns
+        ---------
+        `float`
+            The position of the shadow orb relative to the candle at the passed in time argument
+        """
         return (
             (360 / self.v["shadow"]["period"]) * (time - self.v["shadow"]["refTime"])
             + self.v["shadow"]["refOffset"]
         ) % 360
 
     def setRefPositions(self) -> None:
+        """Calculates and stores the positions of each orb during their experimentally sampled 
+        reference times in self.refOffsets for future calculations. 
+        Updates variables.json to reflect these calculations
+        """
+        
+        # note the shadow orb refOffset and refTime is experimentally gathered to
+        # to calculate the refOffset of other orbs
         p = self.periods
         rt = self.refTimes
         ros = self.refOffsets
         shadow = self.v["shadow"]
 
+        # the candle position is determined using aligments between the white orb and the shadow orb
         self.v["candle"]["refPos"] = (
             (360 / shadow["period"]) * (rt[0] - shadow["refTime"]) + shadow["refOffset"]
         ) % 360
 
+        # the rest of the orbs are determined using alignments between the white orb and the orb in question
         posList = (
             (360 / p[0]) * (rt[1:8] - rt[0]) + self.v["candle"]["refPos"] + ros[1:8]
         ) % 360
@@ -265,6 +360,14 @@ class Ephemeris:
         self.updateVariables()
 
     def getPeriods(self) -> np.ndarray[int]:
+        """Gets the stored periods from self.v and packages them in an array to more easily parse.
+
+        Returns
+        ---------
+        `np.ndarray[int]`
+            An array with each element corresponding to the time in milliseconds it takes for 
+            the candle or respective orb to complete a full revolution around the white orb.
+        """
         return np.array(
             [
                 self.v["candle"]["period"],
@@ -279,6 +382,13 @@ class Ephemeris:
         )
 
     def getRadii(self) -> np.ndarray[float]:
+        """Gets the stored radii from self.v and packages them in an array to more easily parse.
+
+        Returns
+        ---------
+        `np.ndarray[float]`
+            An array with each element corresponding to the radius in AU of each orb from the white orb.
+        """
         return np.array(
             [
                 self.v["candle"]["radius"],
@@ -293,6 +403,14 @@ class Ephemeris:
         )
 
     def getRefTimes(self) -> np.ndarray[int]:
+        """Gets the stored reference times for the candle and each orb from self.v 
+        and packages them in an array to more easily parse.
+
+        Returns
+        ---------
+        `np.ndarray[int]`
+            An array with each element corresponding to the reference epoch timestamp in ms for the candle or an orb.
+        """
         return np.array(
             [
                 self.v["candle"]["refTime"],
@@ -307,6 +425,14 @@ class Ephemeris:
         )
 
     def getRefPositions(self) -> np.ndarray[float]:
+        """Gets the stored reference position for the candle and each orb from self.v 
+        and packages them in an array to more easily parse.
+
+        Returns
+        ---------
+        `np.ndarray[float]`
+            An array with each element corresponding to the reference position in degrees for the candle or an orb.
+        """
         return np.array(
             [
                 self.v["candle"]["refPos"],
@@ -321,6 +447,17 @@ class Ephemeris:
         )
 
     def getRefOffsets(self) -> np.ndarray[int]:
+        """Gets the stored reference position offset for the candle and each orb from self.v 
+        and packages them in an array to more easily parse. 
+        
+        *Note: the offset will always be 0, 180, or 360 degrees based on whether or not the reference time alignment
+        was a same side or opposite side alignment*
+
+        Returns
+        ---------
+        `np.ndarray[float]`
+            An array with each element corresponding to the reference position offset in degrees for the candle or an orb.
+        """
         return np.array(
             [
                 self.v["candle"]["refOffset"],
@@ -335,41 +472,76 @@ class Ephemeris:
         )
 
     def saveCache(self, fileLoc:Path) -> None:
+        """Saves the scroll event cache a JSON file.
+
+        Parameters
+        ---------
+            fileLoc: `Path` 
+                The path to the JSON file the event cache data will be saved to.
+        """
         json_object = json.dumps(self.scrollEventsCache, indent=4)
         with open(fileLoc, "w") as outfile:
             outfile.write(json_object)
-        # print(f"[{time.time():.0f}] Saved Event Range to Cache File")
 
     def updateVariables(self) -> None:
+        """Overwrites the JSON file containing the orb variables with the current
+        variables object (self.v)
+        """
         json_object = json.dumps(self.v, indent=4)
         with self.variablesFile.open("w") as outfile:
             outfile.write(json_object)
 
     def getVariables(self, variablesFile:Path) -> dict[str, dict]:
+        """Gets the orb variabes from a local JSON file.
+
+        Parameters
+        ---------
+            variablesFile: `Path`
+                The path to the JSON file that the orb variables are saved to. 
+
+        Returns
+        ---------
+            `dict[str, dict]`
+                A dictionary containing variable information about the orbs
+        """
         variables = {}
         with variablesFile.open("r") as json_file:
             variables = json.load(json_file)
         return variables
 
-    def autoRefreshCache(self, refreshRate:int=60 * 60 * 12):
-        """Updates variables with any more recent and reference times received then automatically regenerates the cache. 
-        Should Be used with an asnychronous wrapper.
+    # # used to update the event cache at set intervals (may slightly improve accuracy) instead of when 
+    # # an event is requested outside of the cache range, not actively used in prod
+    # def autoRefreshCache(self, refreshRate:int=60 * 60 * 12):
+    #     """Updates variables with any more recent and reference times received then automatically re-calculate
+    #     event the cache. Should Be used with an asnychronous wrapper.
     
-        Args:
-            refreshRate (int): The frequency in seconds to refresh the cache
-        """
-        while True:
-            #time.sleep(refreshRate)
-            self.updateRefTimes()
-            self.createScrollEventRange(
-                startTime=(time.time() * 1000) - 2 * 86400000,
-                stopTime=(time.time() * 1000) + 12 * 86400000,
-                saveToCache=True
-            )
-            print("New Cache Last Item:", self.scrollEventsCache[-1])
-            time.sleep(60*3)
+    #     Parameters
+    #     ---------
+    #         refreshRate: `int`
+    #             The time interval in seconds between event cache recalculations
+    #     """
+    #     while True:
+    #         #time.sleep(refreshRate)
+    #         self.updateRefTimes()
+    #         self.createScrollEventRange(
+    #             startTime=(time.time() * 1000) - 2 * 86400000,
+    #             stopTime=(time.time() * 1000) + 12 * 86400000,
+    #             saveToCache=True
+    #         )
+    #         print("New Cache Last Item:", self.scrollEventsCache[-1])
+    #         time.sleep(60*3)
             
     def updateScrollCache(self, start:int, stop:int) -> None:
+        """Updates the reference time and position of each orb and overwrites the current
+        scroll event cache with a new one.
+
+        Parameters
+        ------------
+        start: `int` 
+            The epoch time in ms that alignment calculations will start from for the new cache.
+        stop: `int`
+            The epoch time in ms that alignment calculations will stop at for the new cache.
+        """
         self.updateRefTimes()
         self.createScrollEventRange(
             startTime=start,
@@ -379,8 +551,19 @@ class Ephemeris:
         # print("New Cache Last Item:", self.eventsCache[-1])
 
     def updateMoonCache(self, start:int, numMoonCycles:int) -> None:
+        """Updates the reference time and position of each orb and overwrites the current
+        scroll event cache with a new one.
+
+        Parameters
+        ------------
+        start: `int` 
+            The epoch time in ms that alignment calculations will start from for the new cache.
+        numMoonCycles: `int`
+            The number of syndonic months that are calculated.
+        """
         self.updateRefTimes()
-        self.createLunarCalendar(start, numMoonCycles)
+        self.moonCyclesCache = self.createLunarCalendar(start, numMoonCycles)
+        
 
     def updateRefTimes(self) -> None:
         newVars:dict[str, list[int]] = {}
@@ -439,21 +622,30 @@ class Ephemeris:
         return (validStart and validEnd)
         
     def createLunarCalendar(self, startTime:int, numMoonCycles:int) -> list[tuple[int, dict[str, any]]]: 
-        """_summary_
+        """Creates a chronologically ordered `list` of `tuples` that each
+        contain information about a moon phase change.
 
-        Args:
-            startTime (int): The epoch time in ms for which events after will recorded
-            numMoonCycles (int): The number of events for each phase that will be recorded
+        Parameters
+        ---------
+            startTime: `int`
+                The epoch time in ms for which events after will recorded
+            numMoonCycles: `int`
+                The number of events for each phase that will be recorded
 
-        Returns:
-            list[tuple[int, dict[str, any]]]: A list of tuples containing the epoch time at which the moon change happens and\n
-            a dictionary containing the name of the new phase and a discord timestamp for the event.
+        Returns
+        ---------
+            `list[tuple[int, dict[str, any]]]`
+                A `list` of `tuples` containing the epoch time at which the moon phase change happens and
+                a dictionary containing the name of the new phase and a discord timestamp for the event.
         """
         # 8 phases in one moon cycle plus almost full and almost new
         numEvents = numMoonCycles * 10
+        # phases change at noon so we will increment from the previous noon by one aberoth day
         currentTime = self.getLastNoonTime(startTime)
         tempCache = []
         
+        # phase is determined by the position of the white orb (sun equivalent) 
+        # and the shadow orb (moon equivalent) relative to the candle (earth equivalent)
         dayStartWPos = self.getWhitePos(currentTime)
         dayStartSPos = self.getShadowPos(currentTime)
         while len(tempCache) < numEvents:
@@ -463,22 +655,32 @@ class Ephemeris:
             dayEndWPos = self.getWhitePos(nextNoonTime)
             dayEndSPos = self.getShadowPos(nextNoonTime)
             
+            # get the position of the moon from the perspective of the earth 
+            # in the frame of reference where the sun is fixed at 180 degrees relative to the earth
             lunarCycleStartPos = (dayStartSPos - dayStartWPos + 360) % 360
             lunarCycleEndPos = (dayEndSPos - dayEndWPos + 360) % 360
             
+            # new moon occur on a night that the moon crosses the 360/0 degree threshold
             if lunarCycleStartPos < 360 and lunarCycleStartPos > 347.5 and (lunarCycleEndPos > 360 or lunarCycleEndPos < 12.5):
                 phase = "new"
                 nextPhase = "waxing_crescent"
+            # first quarter occurs on the night the moon cross 90 degrees
             elif lunarCycleStartPos < 90 and lunarCycleEndPos > 90:
                 phase = "first_quarter"
                 nextPhase = "waxing_gibbous"
+            # full moon occurs on the night the moon cross 180 degrees
             elif lunarCycleStartPos < 180 and lunarCycleEndPos > 180:
                 phase = "full"
                 nextPhase = "waning_gibbous"
+            # third quarter occurs on the night the moon cross 90 degrees
             elif lunarCycleStartPos < 270 and lunarCycleEndPos > 270:
                 phase = "third_quarter"
                 nextPhase = "waning_crescent"
-              
+            
+            # since phases always occur sequentially, only the new, q1, full, and q3 phases need to be determined
+            # note that the length of the other phases can change a full a aberoth day as their length is determined
+            # by when four primary phases happen and end
+            
             if phase != '':
                 tempCache.append((
                     currentTime,
@@ -518,19 +720,35 @@ class Ephemeris:
         return tempCache
         
     def getLastNoonTime(self, time:int) -> int:
-        """
-        Args:
-            time (int): The epoch time in ms for which the previous Aberoth noon will be found.
+        """Gets the time at which noon last occured in aberoth relative to the passed in time.
+        
+        Parameters
+        ---------
+            time: `int`
+                The epoch time in ms for which the previous Aberoth noon will be found.
 
-        Returns:
-            int: The epoch time in ms of the last Aberoth noon before the passed in time.
+        Returns
+        ---------
+            `int`
+                The epoch time in ms of the last Aberoth noon before the passed in time.
         """
         return time - ((time - self.noonRefTime) % self.oneAberothDay)
         
     def getWhitePos(self, time:int) -> float:
+        """Gets the position of the white orb in degrees at the given time.
+        
+        Parameters
+        ---------
+            time: `int`
+                The epoch time in ms for which the position of the white orb will be calculated.
+
+        Returns
+        ---------
+            `float`
+                The position of the white orb in degrees at the given time.
+        """
         position = (
         (360 / self.periods[0]) * (time - self.refTimes[0]) + self.refPositions[0]) % 360
-        # positions[0] is white pos rel candle
         return position
     
 if __name__ == "__main__":

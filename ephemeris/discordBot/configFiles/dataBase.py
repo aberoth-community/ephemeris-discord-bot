@@ -123,7 +123,7 @@ def update_guild_settings(guild_id, guild_data):
 
     # Update guild channel settings and filters
     for channel_id, settings in guild_data.get("channels", {}).items():
-        filters_json = json.dumps(settings.get("filters", []))  # Serialize filters to JSON
+        filters_json = json.dumps(settings.get("filters", []))
         GuildChannelSettings.insert(
             guild=guild_settings,
             channel_id=channel_id,
@@ -241,10 +241,10 @@ if __name__ == "__main__":
 
     # importing userWhiteList.json example
     userSettingsTransfer = {
-    "109931759260430336": {
-        "username": "figureskate",
-        "expiration": -1
-    },
+        "109931759260430336": {
+            "username": "figureskate",
+            "expiration": -1
+        },
     "440192160256491521": {
         "username": "bigdrew",
         "expiration": 0
