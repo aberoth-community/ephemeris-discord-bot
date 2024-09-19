@@ -1,7 +1,7 @@
 from .commonImports import *
 from .helperFuncs import *
 
-
+# Stores the settings and spawns the buttons for the user installable scroll menu
 class UserInstallScrollMenu(discord.ui.View):
     def __init__(
         self,
@@ -63,8 +63,9 @@ class UserInstallScrollMenu(discord.ui.View):
         await self.userMenuBtnPress(interaction=interaction, button=button)
     
     
-    async def userMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def userMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         userSettings = fetch_user_settings(interaction.user.id)
+        # if user not in SQL DB
         if not userSettings:
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
             update_user_settings(interaction.user.id, userSettings)
@@ -115,6 +116,7 @@ class UserInstallScrollMenu(discord.ui.View):
                     content=msg, ephemeral=self.ephemeralRes
                 )
 
+# the day(s) selection drop down menu for user installable scroll menus
 class UserInstallSelDayMenu(discord.ui.Select):
     def __init__(
         self, ephemeralRes=True, filterList=None, useEmojis=False, emojis=None, whiteListOnly=False
@@ -197,6 +199,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
                         content=msg, ephemeral=self.ephemeralRes
                     )
 
+# The orb filter drop down menu for user installable scroll menus
 class UserInstallScrollFilterMenu(discord.ui.Select):
     def __init__(
         self, filterOptions, initiationTime, timeout=300, useEmojis=False, emojis=None, whiteListOnly=False

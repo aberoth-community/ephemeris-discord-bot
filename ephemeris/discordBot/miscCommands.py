@@ -23,7 +23,11 @@ async def hello(interaction: discord.Interaction):
         discord.app_commands.Choice(name="Guild", value=0),
     ],
 )
-async def updateWhiteList(interaction: discord.Interaction, user_or_guild: str, id_type: discord.app_commands.Choice[int], expiration: int):
+async def updateWhiteList(interaction: discord.Interaction,
+                          user_or_guild: str,
+                          id_type: discord.app_commands.Choice[int],
+                          expiration: int) -> None:
+    """A command used to update guild or user white list settings in the SQL DB. Only usable by the bot owner"""
     if id_type.name == "User":
         await interaction.response.defer(ephemeral=True, thinking=True)
         username = ""
@@ -38,6 +42,7 @@ async def updateWhiteList(interaction: discord.Interaction, user_or_guild: str, 
             return  
         userSettings = fetch_user_settings(user_or_guild)
         try:
+            # if the user is not in the SQL DB
             if not userSettings:
                 userSettings = newUserSettings(user_or_guild, username, expiration)
             else:
@@ -64,6 +69,7 @@ async def updateWhiteList(interaction: discord.Interaction, user_or_guild: str, 
             await interaction.followup.send(f"Error fetching guild name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)
             return
         guildSettings = fetch_guild_settings(user_or_guild)
+        # if the guild is not in the SQL DB
         if not guildSettings:
             temp = {"guild_id": user_or_guild, "guild": {"name": guildName}, "channel_id": None}
             guildSettings = newGuildSettings(temp)
@@ -90,7 +96,9 @@ async def UpdateWLError(interaction: discord.Interaction, error):
 @bot.tree.command(name="permissions", description='Tells the user when their and/or the server\'s access they used it on expires')
 @app_commands.allowed_installs(guilds=True, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-async def checkPermissions(interaction: discord.Interaction):
+async def checkPermissions(interaction: discord.Interaction) -> None:
+    """Responds to the interaction with the white list status of the user that triggered the interaction
+    and if used in a guild also provides the guild's white list status"""
     userSettings = fetch_user_settings(interaction.user.id)
     expMsg = ""
     if 0 in interaction._integration_owners:
@@ -137,7 +145,8 @@ async def setServerEmojis(
     third_quarter: Optional[str] = defaultEmojis['third_quarter'],
     waning_crescent: Optional[str] = defaultEmojis['waning_crescent'],
     
-):
+) -> None:
+    """Used to set the emojis for the server that the interaction came from"""
     invalidEmojis = []
     for emoji in (white, black, green, red, purple, yellow, cyan, blue, new, waxing_crescent,
                 first_quarter, waxing_gibbous, full, waning_gibbous, third_quarter, waning_crescent):
@@ -220,7 +229,9 @@ async def setPersonalEmojis(
     waning_gibbous: Optional[str] = defaultEmojis['waning_gibbous'],
     third_quarter: Optional[str] = defaultEmojis['third_quarter'],
     waning_crescent: Optional[str] = defaultEmojis['waning_crescent'],
-):
+) -> None:
+    """Used to set the emojis that will be used for user installable menus
+    for the user that triggered the interaction"""
     invalidEmojis = []
     for emoji in (white, black, green, red, purple, yellow, cyan, blue, new, waxing_crescent,
                 first_quarter, waxing_gibbous, full, waning_gibbous, third_quarter, waning_crescent):

@@ -23,7 +23,8 @@ from .helperFuncs import *
 async def userInstallScrollMenu(
     interaction: discord.Interaction, use_emojis: discord.app_commands.Choice[int], 
     whitelist_only: Optional[discord.app_commands.Choice[int]] = 0
-    ):
+    ) -> None:
+    """A command that spawns a user install scroll prediction menu"""
     userSettings = fetch_user_settings(interaction.user.id)
     ephRes = False
     whiteListed = False
@@ -102,7 +103,8 @@ async def userInstallLunarMenu(
     interaction: discord.Interaction,
     user_set_emojis: discord.app_commands.Choice[int],
     whitelisted_users_only: Optional[discord.app_commands.Choice[int]] = 0
-):
+) -> None:
+    """A command that spawns a user installable lunar calendar menu"""
     userSettings = fetch_user_settings(interaction.user.id)
     ephRes = False
     whiteListed = False

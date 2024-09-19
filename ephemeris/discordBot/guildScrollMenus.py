@@ -2,7 +2,7 @@ from .commonImports import *
 from .helperFuncs import *
 from .configFiles.dataBase import update_guild_settings, update_user_settings, fetch_guild_settings, fetch_user_settings
 
-# Create seperate menu that will persist
+
 class GuildScrollMenu(discord.ui.View):
     def __init__(
         self,
@@ -156,7 +156,7 @@ class GuildDaySelMenu(discord.ui.Select):
         ):
             self.whiteListUsersOnly = True
         if self.setUp == False:
-            # Asignmenu state on interaction when bot is restarted
+            # Asign menu state on interaction when bot is restarted
             self.setUp = True
             self.filterList = guildSettings["channels"][str(interaction.channel_id)].get("filters")
                 

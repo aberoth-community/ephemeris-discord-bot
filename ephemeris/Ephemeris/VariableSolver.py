@@ -7,11 +7,12 @@ class VariableSolver:
         # print('test')
         # long, short = self.calcAverageEventLength('packages\sampleData\glows\WhiteBlackSamples.json')
         # print('long Avg', long, 'short Avg', short)
-        # print(self.format_time(long), self.format_time(short))
+        # print(self.formatTime(long), self.formatTime(short))
         # print(self.calcRadiusLong('src\sampleData\glows\WhiteYellowSamples.json', 1))
         print(self.calcRadiusShort("src\sampleData\glows\WhiteBlackSamples.json", 1))
 
     def calcAverageEventLength(self, fileExtention: str) -> tuple:
+        
         longEvents = np.array([])
         shortEvents = np.array([])
         with open(fileExtention) as json_file:
@@ -33,18 +34,22 @@ class VariableSolver:
 
     def calcRadiusLong(self, fileExtention: str, candleRadius: float = 1.0) -> float:
         """
-        Calculates the radius from the white orb of an orb
-        for which sample points are provided
+        Calculates the radius from the white orb of an orb for which sample points are provided. 
+        Use for orbs that have a larger radius than the candle (not black or green).
 
-        Args:
-            fileExtention (str): file extention for json file with
-            the sample points for the orb
+        Parameters
+        ---------
+            fileExtention: `str`
+                file extention for json file with the sample points for the orb.
 
-            candleRadius (float = 1) Optional: the radius of the candle relative to the white orb
-            the returned orb radius is ratio relative to this value
+            candleRadius: `float`
+                The radius of the candle relative to the white orb. Default 1
 
-        Returns:
-            float: a float representing the radius of the orb relative to the candle
+        Returns
+        ---------
+            `float`
+                The radius of the orb relative to the white orb. The radius is expressed as a ratio 
+                multiplied by the candle radius.
         """
 
         long, short = self.calcAverageEventLength(fileExtention)
@@ -52,18 +57,22 @@ class VariableSolver:
 
     def calcRadiusShort(self, fileExtention: str, candleRadius: float = 1.0) -> float:
         """
-        Calculates the radius from the white orb of an orb
-        for which sample points are provided
+        Calculates the radius from the white orb of an orb for which sample points are provided. 
+        Use for orbs that have a smaller radius than the candle (black and green)
 
-        Args:
-            fileExtention (str): file extention for json file with
-            the sample points for the orb
+        Parameters
+        ---------
+            fileExtention: `str`
+                file extention for json file with the sample points for the orb.
 
-            candleRadius (float = 1) Optional: the radius of the candle relative to the white orb
-            the returned orb radius is ratio relative to this value
+            candleRadius: `float`
+                The radius of the candle relative to the white orb. Default 1
 
-        Returns:
-            float: a float representing the radius of the orb relative to the candle
+        Returns
+        ---------
+            `float`
+                The radius of the orb relative to the white orb. The radius is expressed as a ratio 
+                multiplied by the candle radius.
         """
 
         long, short = self.calcAverageEventLength(fileExtention)
@@ -73,12 +82,17 @@ class VariableSolver:
         """Calculates the alignment range relative to the candle for an
         alignment event to happen.
 
-        Args:
-            dimStart (float): The start time of a white dim event
-            dimEnd (float): The end time of the same dim event
+        Parameters
+        ---------
+            dimStart: `float`
+                The start time of a white dim event
+            dimEnd: `float`
+                The end time of the same dim event
 
-        Returns:
-            float: A value representing the max angular distance between two bodies
+        Returns
+        ---------
+            `float`
+            A value representing the max angular distance between two bodies
             relative to the candle that still counts as aligned
         """
         pass
@@ -89,7 +103,7 @@ class VariableSolver:
     def calcPeriodFast(self) -> float:
         pass
 
-    def format_time(self, milliseconds):
+    def formatTime(self, milliseconds:int) -> str:
         # Convert milliseconds to seconds
         seconds = milliseconds // 1000
         # Calculate hours, minutes and seconds

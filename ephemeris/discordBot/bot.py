@@ -2,6 +2,7 @@ from .guildScrollMenus import *
 from .guildLunarMenus import *
 
 
+# allows for menus to persist and continue working between bot restarts
 class PersistentViewBot(commands.Bot):
     def __init__(self): 
         intents = discord.Intents().all()

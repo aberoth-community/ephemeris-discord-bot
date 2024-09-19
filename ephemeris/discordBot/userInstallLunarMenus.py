@@ -1,7 +1,7 @@
 from .commonImports import *
 from .helperFuncs import splitMsg, getPhaseList
 
-# Create seperate menu that will persist
+# The user install lunar menu, stores menu settings and spawns buttons
 class UserInstallLunarMenu(discord.ui.View):
     def __init__(
         self,
@@ -107,6 +107,7 @@ class UserInstallLunarMenu(discord.ui.View):
                     content=msg, ephemeral=self.ephemeralRes
                 )
 
+# The drop down menu with phase selection for the userinstall lunarCalendar
 class UserInstallPhaseSelMenu(discord.ui.Select):
     def __init__(
         self, 

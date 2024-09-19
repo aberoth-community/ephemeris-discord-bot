@@ -2,9 +2,12 @@ from num2words import num2words
 from .commonImports import *
 
 def is_owner(interaction: discord.Interaction) -> bool:
+    """Checks if the user that triggered the intereaction is the bot owner"""
     return interaction.user.id == ownerID
 
 async def not_owner_error(interaction: discord.Interaction, error):
+    """Handles the interaction response when the user that triggered the intereaction
+    is not the bot owner"""
     if isinstance(error, discord.app_commands.errors.CheckFailure):
         await interaction.response.send_message(
                     content=f"Only the bot owner (<@{ownerID}>) may use this command",
@@ -15,10 +18,35 @@ def getDayList(
     ephemeris:Ephemeris,
     startDay: int,
     useEmojis:bool=False,
-    filters:dict=None,
+    filters:list[str]=None,
     emojis:dict=None,
     endDay: int = None,
 ):
+    """Subsections ephemeris.scrollEventsCache in order to filter out the user selected events.
+    Combines the events' information into a single string.
+
+    Parameters
+    ---------
+        ephemeris: `Ephemeris`
+            An instance of the Ephemeris class.
+        startDay: `int`
+            The number of days from the current time that that the earliest event in can start
+            at within the filtered events.
+        filters: `list[str]`
+            A `list` containing the phases that should be filtered for.
+        useEmojis: `bool` *optional*
+            When set to true the message line will use emojis instead of the text name for orbs
+            that are affected by the event. Defaults to True.
+        emojis: `dict[str,str]` *optional*
+            A `dict` with orb names for keys and string containing a discord emoji for its values. Defaults to None.
+        endDay: `int`
+            The number of days from the current time that that the latest event in can start
+            at within the filtered events.
+    Returns
+    ---------
+        `str`
+            A multi-line string describing the phase changes for a preset number of cycles from startTime.
+    """
     currentTime = round((time.time() * 1000))
     start = (
         currentTime - round(0.25 * oneDay)
@@ -61,7 +89,33 @@ def getDayList(
             eventMsg += "\n" + createScrollEventMsgLine(event, useEmojis, emojis=emojis)
     return eventMsg
 
-def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None, useEmojis:bool=False, emojis:dict=None, firstEventOnly:bool=False):
+def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict[str,str] = None, useEmojis:bool=False,
+                 emojis:dict[str,str]=None, firstEventOnly:bool=False) -> str:
+    """Subsections ephemeris.moonCyclesCache in order to filter out the user selected events.
+    Combines the events' information into a single string.
+
+    Parameters
+    ---------
+        ephemeris: `Ephemeris`
+            An instance of the Ephemeris class.
+        startTime: `int`
+            An epoch timestamp in ms that represents the earliest time an event can start at within
+            the filtered events.
+        filters: `dict[str,str]`
+            A `dict` containing the phases that should be filtered for.
+        useEmojis: `bool` *optional*
+            When set to true the message line will use emojis instead of the text name for orbs
+            that are affected by the event. Defaults to True.
+        firstEventOnly: `bool` *optional*
+            Indicates that only information from the first of the filtered events should returned. Defaults to False.
+        emojis: `dict[str,str]` *optional*
+            A `dict` with orb names for keys and string containing a discord emoji for its values. Defaults to None.
+
+    Returns
+    ---------
+        `str`
+            A multi-line string describing the phase changes for a preset number of cycles from startTime.
+    """
     start = startTime
     firstLine = ''
     if start == None:
@@ -131,10 +185,31 @@ def getPhaseList(ephemeris:Ephemeris, startTime:int = None, filters:dict = None,
     
     eventMsg = firstLine
     for event in subCache:
-        eventMsg += "\n" + createLunarEventMsgLine(event, useEmojis, emojis=emojis, displayingCurrent=displayingCurrent)
+        eventMsg += "\n" + createLunarEventMsgLine(event, useEmojis, emojis=emojis,
+                                                   displayingCurrent=displayingCurrent)
     return eventMsg
 
-def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=True, emojis:dict=None, displayingCurrent:bool=False) -> str:
+def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=True,
+                            emojis:dict[str,str]=None, displayingCurrent:bool=False) -> str:
+    """Creates a one line string that describes the new phase phase that starts at the event time.
+
+    Parameters
+    ---------
+        event: `tuple[int, dict[str, any]]`
+            The event that the message line provides information about.
+        useEmojis: `bool` *optional*
+            When set to true the message line will use the user's set emojis instead of the default emojis
+            for phase at the event time. Defaults to True.
+        emojis: `dict[str,str]` *optional*
+            A `dict` with orb names for keys and string containing a discord emoji for its values. Defaults to None.
+        displayingCurrent: `bool` *optional*
+            Indicates whether or not the event is for the current phase. Defaults to False.
+
+    Returns
+    ---------
+        `str`
+            A one line string that describes the phase at the time for the passed in event.
+    """
     if useEmojis and emojis != None:
         if displayingCurrent:
             return f"> {emojis[event[1]['phase']]} the moon is {moonDisplayNames[event[1]['phase']]} until {event[1]['discordTS']}."
@@ -144,7 +219,27 @@ def createLunarEventMsgLine(event:tuple[int, dict[str, str]], useEmojis:bool=Tru
             return f"> {UsersInstallDefaultEmojis[event[1]['phase']]} the moon is {moonDisplayNames[event[1]['phase']]} until {event[1]['discordTS']}."
         else: return f"> {UsersInstallDefaultEmojis[event[1]['phase']]} {event[1]['discordTS']} {moonDisplayNames[event[1]['phase']]}."
     
-def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=None) -> str:
+def createScrollEventMsgLine(event:tuple, useEmojis=True, firstEvent=False, emojis=None) -> str:
+    """Creates a one line string that describes the changes in orb states at the event.
+
+    Parameters
+    ---------
+        event: `tuple[int, dict[str, any]]`
+            The event that the message line provides information about.
+        useEmojis: `bool` *optional*
+            When set to true the message line will use emojis instead of the text name for orbs
+            that are affected by the event. Defaults to True.
+        firstEvent: `bool` *optional*
+            Indicates that the passed in event is the first line in the message so formatting can be
+            adjusted accordingly. Defaults to False.
+        emojis: `dict[str,str]` *optional*
+            A `dict` with orb names for keys and string containing a discord emoji for its values. Defaults to None.
+
+    Returns
+    ---------
+        `str`
+            A one line string that describes the scroll event changes for the passed in events
+    """
     glows = event["newGlows"]
     darks = [i for i in event["newDarks"] if i != "Shadow"]
     normals = [i for i in event["returnedToNormal"] if i != "Shadow"]
@@ -152,8 +247,10 @@ def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=Non
     for index, cat in enumerate([glows, darks, normals]):
         tempMsg = ""
         if len(cat) < 1:
+            # only one item in the category has changed
             continue
         elif len(cat) >= 3:
+            # over 3 in the category needs an oxford comma
             if useEmojis and emojis != None:
                 tempMsg += " " + "".join([emojis[orb] for orb in cat]) + " have "
             else:
@@ -165,6 +262,7 @@ def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=Non
                     + "__ have "
                 )
         elif len(cat) == 2:
+            # just two in the category only needs an and 
             if useEmojis and emojis != None:
                 tempMsg += " " + "".join([emojis[orb] for orb in cat]) + " have "
             else:
@@ -185,9 +283,22 @@ def createScrollEventMsgLine(event, useEmojis=True, firstEvent=False, emojis=Non
         msg += tempMsg
     return msg
 
-def splitMsg(msg):
+def splitMsg(msg:str, maxLen:int=2000) -> list[str]:
+    """Splits a message into a `list` of strings. Splits on the previous new line 
+    character when the length of current string exceeds the value of maxLen.
+
+    Parameters
+    ---------
+        msg: `str`
+            The message to be split.
+
+    Returns
+    ---------
+        `list[str]`
+            An ordered `list` of strings with length less than maxLen.
+    """
     msgArr = []
-    while len(msg) > 2000:
+    while len(msg) > maxLen:
         # find last index in range
         i = msg[:2000].rfind("\n")
         msgArr.append(msg[:i])
@@ -208,13 +319,16 @@ def splitMsg(msg):
 #     return settings
 
 def isEmoji(emojiStr:str) -> bool:
-    """Checks if the argument is an emoji
+    """Checks if the argument is an emoji.
 
-    Args:
-        emojiStr (str): the string to check if it's an emoji
-
-    Returns:
-        Boolean: True if string is an emoji, False if string is not an emoji
+    Parameters
+    ---------
+        emojiStr: `str`
+            The string to check if it's an emoji  
+    Returns
+    ---------
+        `bool`
+            True if string is an emoji, False if string is not an emoji.
     """
     if bool(match(r"\p{Emoji}", emojiStr)):
         return True
@@ -225,7 +339,18 @@ def isEmoji(emojiStr:str) -> bool:
     else:
         return False
 
-def join_with_oxford_comma(items):
+def join_with_oxford_comma(items:list) -> str:
+    """Joins a list with using an oxford comma when needed.
+    
+    Parameters
+    ---------
+        items: `list`
+            A list of strings to be joined.
+    Returns
+    ---------
+        `str`
+        A string with the elements in items joined by a comma/oxford comma or and in the case of two elements.
+    """
     phaseNames = [moonFilterDisplayNames[item] for item in items]
     
     # Handle different lengths
@@ -239,7 +364,25 @@ def join_with_oxford_comma(items):
         # Join with commas and an Oxford comma for three or more elements
         return ", ".join(phaseNames[:-1]) + ", and " + phaseNames[-1]
     
-def checkWhiteListed(interaction, guildSettings:dict, userSettings:dict, whiteListUsersOnly=True) -> bool:
+def checkWhiteListed(interaction:discord.Interaction, guildSettings:dict, userSettings:dict, whiteListUsersOnly:bool=True) -> bool:
+    """Checks if the user is white listed to use menus in the settings database.
+
+    Parameters
+    ---------
+        interaction: `discord.Interaction`
+            The interaction that the white list permissions need to be checked for.
+        guildSettings: `dict`
+            The settings for the guild that the interaction ocurred in.
+        userSettings: `dict`
+            The settings for the user that triggered the interaction.
+        whiteListUsersOnly: `bool` *optional*. 
+            True if only white listed users are allowed to complete the interaction request. Defaults to True.
+
+    Returns
+    ---------
+        `bool`
+        True if the user and guild pass the white check.
+    """
     exp = 0
     if 0 in interaction._integration_owners:
         exp = guildSettings["expiration"]

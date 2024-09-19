@@ -563,8 +563,11 @@ class Ephemeris:
         self.updateRefTimes()
         self.moonCyclesCache = self.createLunarCalendar(start, numMoonCycles)
         
-
     def updateRefTimes(self) -> None:
+        """Parses newRefTimes.json which may contain more recent reference times for the orbs.
+        Screens new reference times to make sure they're within an expected range and updates the variables
+        and variables.json file to reflect the new valid reference times.
+        """
         newVars:dict[str, list[int]] = {}
         with self.newRefTimeFile.open("r") as f:
             newVars = json.load(f)
@@ -597,6 +600,22 @@ class Ephemeris:
         self.updateVariables()
         
     def checkValidRefTime(self, orb:str, refTimes:list[int]) -> bool:
+        """Creates a small scroll event cache overlapping the first refTime in order to check if
+        that refTime is within an expected range for that event to happen.
+
+        Parameters
+        ---------
+            orb: `str`
+                The name of the orb
+            refTimes: `list[int]` 
+                A list of the new reference times in reverse chronological order 
+                for the passed in orb.
+
+        Returns
+        ---------
+            `bool`
+            True if the refTimes[0] is a valid reference time.
+        """
         startRange = self.getScrollEventsInRange(startTime=refTimes[0]-15000, endTime=refTimes[0]+15000)
         endRange = self.getScrollEventsInRange(startTime=refTimes[1]-15000, endTime=refTimes[1]+15000)
         if len(startRange) == 0 or len(endRange) == 0:
