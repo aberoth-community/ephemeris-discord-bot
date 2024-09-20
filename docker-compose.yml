@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  ephemeris:
+    image: ephemeris 
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ephemeris-container
+    env_file: 
+      - .env  
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data  
+    restart: unless-stopped 

@@ -17,8 +17,6 @@ dependencies = [
     "waitress==3.0.0",
     "num2words==0.5.13",
     "peewee==3.17.6",
-    "black",
-    "pre_commit"
 ]
 
 readme = "README.md"
@@ -26,7 +24,7 @@ license = {file = "LICENSE"}
 keywords = ["aberoth", "solar system", "orbs", "ephemeris"]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "black", "pre_commit"]
+dev = ["pytest", "black", "pre_commit"]
 
 [project.scripts]
 ephemeris = "ephemeris:main"

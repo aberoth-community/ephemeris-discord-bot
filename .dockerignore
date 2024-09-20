@@ -1,0 +1,16 @@
+# Ignore git-related files
+.git
+.gitignore
+
+# Ignore environment files
+.env
+
+# Ignore database files
+*.db
+*.sqlite3
+
+# Ignore local dependencies and other unwanted files
+__pycache__/
+*.pyc
+dist/
+build/
