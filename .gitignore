@@ -161,11 +161,6 @@ cython_debug/
 
 .ruff_cache
 .vscode
-test.py
 testPage.html
 cache.json
-guildSettings.json
-userSettings.json
-guildWhiteList.json
-userWhiteList.json
 bot_DB.db
