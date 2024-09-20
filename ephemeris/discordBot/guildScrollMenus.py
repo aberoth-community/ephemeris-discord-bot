@@ -1,6 +1,11 @@
 from .commonImports import *
 from .helperFuncs import *
-from .configFiles.dataBase import update_guild_settings, update_user_settings, fetch_guild_settings, fetch_user_settings
+from .configFiles.dataBase import (
+    update_guild_settings,
+    update_user_settings,
+    fetch_guild_settings,
+    fetch_user_settings,
+)
 
 
 class GuildScrollMenu(discord.ui.View):
@@ -36,14 +41,18 @@ class GuildScrollMenu(discord.ui.View):
     )
     async def today(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.guildScrollMenuBtnPress(interaction=interaction, button=button)
-        
+
     @discord.ui.button(
         label="Tomorrow", style=discord.ButtonStyle.blurple, custom_id="tomorrow"
     )
-    async def tomorrow(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def tomorrow(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await self.guildScrollMenuBtnPress(interaction=interaction, button=button)
-    
-    async def guildScrollMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+    async def guildScrollMenuBtnPress(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         guildSettings = fetch_guild_settings(interaction.guild_id)
         if not guildSettings:
             guildSettings = newGuildSettings(interaction, useEmojis)
@@ -54,10 +63,10 @@ class GuildScrollMenu(discord.ui.View):
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = False
         messageDefered = False
-        
+
         useEmojis = False
         emojis = None
-        if (guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1):
+        if guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1:
             useEmojis = True
             emojis = guildSettings["emojis"]
         if (
@@ -70,9 +79,13 @@ class GuildScrollMenu(discord.ui.View):
         if self.setUp == False:
             # Asignmenu state on interaction when bot is restarted
             self.setUp = True
-            self.filterList = guildSettings["channels"][str(interaction.channel_id)].get("filters")
-                
-        whiteListed = checkWhiteListed(interaction, guildSettings, userSettings, self.whiteListUsersOnly)
+            self.filterList = guildSettings["channels"][
+                str(interaction.channel_id)
+            ].get("filters")
+
+        whiteListed = checkWhiteListed(
+            interaction, guildSettings, userSettings, self.whiteListUsersOnly
+        )
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -83,16 +96,19 @@ class GuildScrollMenu(discord.ui.View):
 
         startDays = {"Yesterday": -1, "Today": 0, "Tomorrow": 1}
         dayList = getDayList(
-                ephemeris,
-                startDay=startDays[button.label],
-                filters=self.filterList,
-                useEmojis=useEmojis,
-                emojis=emojis,
-            )
+            ephemeris,
+            startDay=startDays[button.label],
+            filters=self.filterList,
+            useEmojis=useEmojis,
+            emojis=emojis,
+        )
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
-            ephemeris.updateScrollCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
+            ephemeris.updateScrollCache(
+                start=(time.time() * 1000) + cacheStartDay * oneDay,
+                stop=(time.time() * 1000) + cacheEndDay * oneDay,
+            )
             dayList = getDayList(
                 ephemeris,
                 startDay=startDays[button.label],
@@ -100,29 +116,35 @@ class GuildScrollMenu(discord.ui.View):
                 useEmojis=useEmojis,
                 emojis=emojis,
             )
-        
+
         msgArr = splitMsg(dayList)
         if messageDefered:
             await interaction.followup.send(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
+                content=msgArr[0], ephemeral=self.ephemeralRes
+            )
         else:
             await interaction.response.send_message(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
+                content=msgArr[0], ephemeral=self.ephemeralRes
+            )
         if len(msgArr) > 1:
             for msg in msgArr[1:]:
                 await interaction.followup.send(
                     content=msg, ephemeral=self.ephemeralRes
                 )
 
+
 class GuildDaySelMenu(discord.ui.Select):
-    def __init__(self, ephemeralRes=True, filterList=None, setUp=False, whiteListUsersOnly=False):
+    def __init__(
+        self, ephemeralRes=True, filterList=None, setUp=False, whiteListUsersOnly=False
+    ):
         self.setUp = setUp
         self.whiteListUsersOnly = False
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
-        options = [discord.SelectOption(label=x) for x in range(selectStartDay, selectEndDay+1)]
+        options = [
+            discord.SelectOption(label=x)
+            for x in range(selectStartDay, selectEndDay + 1)
+        ]
         super().__init__(
             placeholder="Select how many days from today",
             options=options,
@@ -142,10 +164,10 @@ class GuildDaySelMenu(discord.ui.Select):
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = False
         messageDefered = False
-        
+
         useEmojis = False
         emojis = None
-        if (guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1):
+        if guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1:
             useEmojis = True
             emojis = guildSettings["emojis"]
         if (
@@ -158,9 +180,13 @@ class GuildDaySelMenu(discord.ui.Select):
         if self.setUp == False:
             # Asign menu state on interaction when bot is restarted
             self.setUp = True
-            self.filterList = guildSettings["channels"][str(interaction.channel_id)].get("filters")
-                
-        whiteListed = checkWhiteListed(interaction, guildSettings, userSettings, self.whiteListUsersOnly)
+            self.filterList = guildSettings["channels"][
+                str(interaction.channel_id)
+            ].get("filters")
+
+        whiteListed = checkWhiteListed(
+            interaction, guildSettings, userSettings, self.whiteListUsersOnly
+        )
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -172,17 +198,20 @@ class GuildDaySelMenu(discord.ui.Select):
         start = min(map(int, self.values))
         end = max(map(int, self.values))
         dayList = getDayList(
-                ephemeris,
-                startDay=start,
-                endDay=end,
-                filters=self.filterList,
-                useEmojis=useEmojis,
-                emojis=emojis,
-            )
+            ephemeris,
+            startDay=start,
+            endDay=end,
+            filters=self.filterList,
+            useEmojis=useEmojis,
+            emojis=emojis,
+        )
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
-            ephemeris.updateScrollCache(start=(time.time() * 1000) + cacheStartDay * oneDay, stop=(time.time() * 1000) + cacheEndDay * oneDay)
+            ephemeris.updateScrollCache(
+                start=(time.time() * 1000) + cacheStartDay * oneDay,
+                stop=(time.time() * 1000) + cacheEndDay * oneDay,
+            )
             dayList = dayList = getDayList(
                 ephemeris,
                 startDay=start,
@@ -194,20 +223,20 @@ class GuildDaySelMenu(discord.ui.Select):
         msgArr = splitMsg(dayList)
         if messageDefered:
             await interaction.followup.send(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
+                content=msgArr[0], ephemeral=self.ephemeralRes
+            )
         else:
             await interaction.response.send_message(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
+                content=msgArr[0], ephemeral=self.ephemeralRes
+            )
         if len(msgArr) > 1:
             for msg in msgArr[1:]:
                 await interaction.followup.send(
                     content=msg, ephemeral=self.ephemeralRes
                 )
-                
-        #update_guild_settings(interaction.guild_id, guildSettings)
-        
+
+        # update_guild_settings(interaction.guild_id, guildSettings)
+
 
 class GuildFilterMenu(discord.ui.Select):
     def __init__(self, filterOptions=None, timeout=None):
@@ -298,9 +327,7 @@ class GuildFilterMenu(discord.ui.Select):
         for orb in self.values:
             filterOptions[orb] = True
             filterList.append(orb)
-        guildSettings["channels"][str(interaction.channel_id)][
-            "filters"
-        ] = filterList
+        guildSettings["channels"][str(interaction.channel_id)]["filters"] = filterList
         update_guild_settings(interaction.guild_id, guildSettings)
         # change select menu options
         await interaction.response.edit_message(
@@ -311,4 +338,3 @@ class GuildFilterMenu(discord.ui.Select):
                 allow_filters=1,
             )
         )
-

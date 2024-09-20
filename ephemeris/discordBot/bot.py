@@ -4,7 +4,7 @@ from .guildLunarMenus import *
 
 # allows for menus to persist and continue working between bot restarts
 class PersistentViewBot(commands.Bot):
-    def __init__(self): 
+    def __init__(self):
         intents = discord.Intents().all()
         super().__init__(command_prefix="~", intents=intents)
 
@@ -14,6 +14,7 @@ class PersistentViewBot(commands.Bot):
 
 
 bot = PersistentViewBot()
+
 
 @bot.event
 async def on_ready():

@@ -10,7 +10,7 @@ from .configFiles.variables import *
 from .configFiles.dataBase import *
 
 ephemeris = Ephemeris.Ephemeris(
-    start=(time.time() * 1000) + cacheStartDay * oneDay, 
+    start=(time.time() * 1000) + cacheStartDay * oneDay,
     end=(time.time() * 1000) + cacheEndDay * oneDay,
-    numMoonCycles=numMoonCycles
+    numMoonCycles=numMoonCycles,
 )

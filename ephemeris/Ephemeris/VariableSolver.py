@@ -12,7 +12,7 @@ class VariableSolver:
         print(self.calcRadiusShort("src\sampleData\glows\WhiteBlackSamples.json", 1))
 
     def calcAverageEventLength(self, fileExtention: str) -> tuple:
-        
+
         longEvents = np.array([])
         shortEvents = np.array([])
         with open(fileExtention) as json_file:
@@ -34,7 +34,7 @@ class VariableSolver:
 
     def calcRadiusLong(self, fileExtention: str, candleRadius: float = 1.0) -> float:
         """
-        Calculates the radius from the white orb of an orb for which sample points are provided. 
+        Calculates the radius from the white orb of an orb for which sample points are provided.
         Use for orbs that have a larger radius than the candle (not black or green).
 
         Parameters
@@ -48,7 +48,7 @@ class VariableSolver:
         Returns
         ---------
             `float`
-                The radius of the orb relative to the white orb. The radius is expressed as a ratio 
+                The radius of the orb relative to the white orb. The radius is expressed as a ratio
                 multiplied by the candle radius.
         """
 
@@ -57,7 +57,7 @@ class VariableSolver:
 
     def calcRadiusShort(self, fileExtention: str, candleRadius: float = 1.0) -> float:
         """
-        Calculates the radius from the white orb of an orb for which sample points are provided. 
+        Calculates the radius from the white orb of an orb for which sample points are provided.
         Use for orbs that have a smaller radius than the candle (black and green)
 
         Parameters
@@ -71,7 +71,7 @@ class VariableSolver:
         Returns
         ---------
             `float`
-                The radius of the orb relative to the white orb. The radius is expressed as a ratio 
+                The radius of the orb relative to the white orb. The radius is expressed as a ratio
                 multiplied by the candle radius.
         """
 
@@ -103,7 +103,7 @@ class VariableSolver:
     def calcPeriodFast(self) -> float:
         pass
 
-    def formatTime(self, milliseconds:int) -> str:
+    def formatTime(self, milliseconds: int) -> str:
         # Convert milliseconds to seconds
         seconds = milliseconds // 1000
         # Calculate hours, minutes and seconds

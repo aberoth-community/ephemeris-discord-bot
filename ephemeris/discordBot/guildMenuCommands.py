@@ -3,6 +3,7 @@ from .guildScrollMenus import *
 from .guildLunarMenus import *
 from .helperFuncs import *
 
+
 @bot.tree.command(
     name="persistent_prediction_menu",
     description="Creates prediction menu for glows and darks with no timeout. Requires admin.",
@@ -32,7 +33,7 @@ async def guildScrollMenu(
     interaction: discord.Interaction,
     use_emojis: discord.app_commands.Choice[int],
     allow_filters: discord.app_commands.Choice[int],
-    whitelisted_users_only: Optional[discord.app_commands.Choice[int]] = 0
+    whitelisted_users_only: Optional[discord.app_commands.Choice[int]] = 0,
 ):
     ephRes = True
     noPermission = False
@@ -40,9 +41,10 @@ async def guildScrollMenu(
     guildSettings = fetch_guild_settings(interaction.guild_id)
     if not guildSettings:
         guildSettings = newGuildSettings(interaction)
-        noPermission = True 
-    else: exp = guildSettings.get('expiration')
-    if (exp != None and exp < time.time() and exp != -1):
+        noPermission = True
+    else:
+        exp = guildSettings.get("expiration")
+    if exp != None and exp < time.time() and exp != -1:
         noPermission = True
     if noPermission and not disableWhitelisting:
         await interaction.response.send_message(
@@ -53,14 +55,13 @@ async def guildScrollMenu(
     guildSettings["channels"][str(interaction.channel_id)] = {
         "useEmojis": use_emojis.value,
         "allow_filters": allow_filters.value,
-        "whitelisted_users_only": 0 if whitelisted_users_only == 0 else whitelisted_users_only.value,
-        "filters": []
+        "whitelisted_users_only": (
+            0 if whitelisted_users_only == 0 else whitelisted_users_only.value
+        ),
+        "filters": [],
     }
     update_guild_settings(interaction.guild_id, guildSettings)
-    if (
-        use_emojis.value == 1
-        and not guildSettings["emojis"]
-    ):
+    if use_emojis.value == 1 and not guildSettings["emojis"]:
         await interaction.response.send_message(
             content="**Please configure the server emoji settings (/set_server_emojis) to use this command __with emojis.__**",
             ephemeral=True,
@@ -83,7 +84,9 @@ async def guildScrollMenu(
     )
     embed.set_thumbnail(url=scrollThumbnailURL)
     await interaction.response.send_message(
-        embed=embed, view=GuildScrollMenu(allow_filters=allow_filters.value), ephemeral=False
+        embed=embed,
+        view=GuildScrollMenu(allow_filters=allow_filters.value),
+        ephemeral=False,
     )
 
 
@@ -110,7 +113,7 @@ async def guildScrollMenu(
 async def guildLunarMenu(
     interaction: discord.Interaction,
     user_set_emojis: discord.app_commands.Choice[int],
-    whitelisted_users_only: Optional[discord.app_commands.Choice[int]] = 0
+    whitelisted_users_only: Optional[discord.app_commands.Choice[int]] = 0,
 ):
     ephRes = True
     noPermission = False
@@ -118,9 +121,10 @@ async def guildLunarMenu(
     guildSettings = fetch_guild_settings(interaction.guild_id)
     if not guildSettings:
         guildSettings = newGuildSettings(interaction)
-        noPermission = True 
-    else: exp = guildSettings.get('expiration')
-    if (exp != None and exp < time.time() and exp != -1):
+        noPermission = True
+    else:
+        exp = guildSettings.get("expiration")
+    if exp != None and exp < time.time() and exp != -1:
         noPermission = True
     if noPermission and not disableWhitelisting:
         await interaction.response.send_message(
@@ -128,16 +132,15 @@ async def guildLunarMenu(
             ephemeral=True,
         )
         return
-    
+
     guildSettings["channels"][str(interaction.channel_id)] = {
         "useEmojis": user_set_emojis.value,
-        "whitelisted_users_only": 0 if whitelisted_users_only == 0 else whitelisted_users_only.value,
+        "whitelisted_users_only": (
+            0 if whitelisted_users_only == 0 else whitelisted_users_only.value
+        ),
     }
     update_guild_settings(interaction.guild_id, guildSettings)
-    if (
-        user_set_emojis.value == 1
-        and not guildSettings["emojis"]
-    ):
+    if user_set_emojis.value == 1 and not guildSettings["emojis"]:
         await interaction.response.send_message(
             content="**Please configure the server emoji settings (/set_server_emojis) to use this command __with emojis.__**",
             ephemeral=True,
@@ -146,21 +149,20 @@ async def guildLunarMenu(
     embed = discord.Embed(
         title="**Lunar Calendar**",
         description="Night will start 42 minutes after the start of each moon phase",
-        color=0xbcc7cf,
+        color=0xBCC7CF,
     )
     embed.add_field(
         name="",
         value=f"​\n{defaultEmojis['lunation']}  **All Moons:**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} syndonic aberoth months```"
-                f"\n{defaultEmojis['full']}  **Next Full Moon:**\n```Provides the time at which the next full moon will start.```"
-                f"\n{defaultEmojis['new']}  **Next New Moon:**\n```Provides the time at which the next new moon will start.```"
-                f"\n:grey_question:   **Current Phase:**\n```Provides the current phase.```"
-                "\n:mag:  **Filter:**\n```Use the drop down menu to select one or more moon phases."
-                f" Creates list with the times at which the selected phases start for the next {numFilterDisplayMoonCycles} syndonic aberoth months will be provided```"
-                "\n***Note:** you can add this app to your discord profile to use anywhere, even in DMs.*",
+        f"\n{defaultEmojis['full']}  **Next Full Moon:**\n```Provides the time at which the next full moon will start.```"
+        f"\n{defaultEmojis['new']}  **Next New Moon:**\n```Provides the time at which the next new moon will start.```"
+        f"\n:grey_question:   **Current Phase:**\n```Provides the current phase.```"
+        "\n:mag:  **Filter:**\n```Use the drop down menu to select one or more moon phases."
+        f" Creates list with the times at which the selected phases start for the next {numFilterDisplayMoonCycles} syndonic aberoth months will be provided```"
+        "\n***Note:** you can add this app to your discord profile to use anywhere, even in DMs.*",
         inline=False,
     )
     embed.set_thumbnail(url=moonThumbnailURL)
     await interaction.response.send_message(
         embed=embed, view=GuildLunarMenu(), ephemeral=False
     )
-

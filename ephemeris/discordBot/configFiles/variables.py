@@ -49,7 +49,7 @@ if DEBUGGING:
 # if not USPath.exists():
 #     USPath.write_text(json.dumps({}))
 #     print(f"File created: {USPath}")
-    
+
 # if not GWLPath.exists():
 #     GWLPath.write_text(json.dumps({}))
 #     print(f"File created: {GWLPath}")
@@ -86,7 +86,7 @@ lunarFilterMenuEmojis = {
     "full": "<:Full:1092364372652855397>",
     "waning_gibbous": "<:waningGibbous:1088075517799972934>",
     "third_quarter": "<:ThirdQuarter:1092364421113851955>",
-    "waning_crescent": "<:WaningCrescent:1092364435986853928>"
+    "waning_crescent": "<:WaningCrescent:1092364435986853928>",
 }
 
 # can use cross server emojis
@@ -107,7 +107,7 @@ defaultEmojis = {
     "waning_gibbous": "<:WaningGibbous:1092364454479548456>",
     "third_quarter": "<:ThirdQuarter:1092364421113851955>",
     "waning_crescent": "<:WaningCrescent:1092364435986853928>",
-    "lunation": "<a:moon:440289423750463488>"
+    "lunation": "<a:moon:440289423750463488>",
 }
 
 # user installs have the same emoji perms as the user using them
@@ -131,7 +131,7 @@ moonDisplayNames = {
     "full": "**Full**",
     "waning_gibbous": "a **Waning Gibbous**",
     "third_quarter": "in its **Third Quarter**",
-    "waning_crescent": "a **Waning Crescent**"
+    "waning_crescent": "a **Waning Crescent**",
 }
 
 # response message name inserts for filtered phases
@@ -143,7 +143,7 @@ moonFilterDisplayNames = {
     "full": "**Full**",
     "waning_gibbous": "**Waning Gibbous**",
     "third_quarter": "**Third Quarter**",
-    "waning_crescent": "**Waning Crescent**"
+    "waning_crescent": "**Waning Crescent**",
 }
 
 lunarLabels = {
@@ -152,7 +152,6 @@ lunarLabels = {
     "next_full": "Next Full Moon",
     "next_new": "Next New Moon",
     "current": "Current Phase",
-
     # select menu labels for lunar menus
     "new": "New Moons",
     "waxing_crescent": "Waxing Crescents",
@@ -161,7 +160,7 @@ lunarLabels = {
     "full": "Full Moons",
     "waning_gibbous": "Waning Gibbous'",
     "third_quarter": "Third Quarters",
-    "waning_crescent": "Waning Crescents"
+    "waning_crescent": "Waning Crescents",
 }
 
 # key: current phase, value: previous phase from key
@@ -173,7 +172,7 @@ previousPhases = {
     "full": "waxing_gibbous",
     "waning_gibbous": "full",
     "third_quarter": "waning_gibbous",
-    "waning_crescent": "third_quarter"
+    "waning_crescent": "third_quarter",
 }
 
 # embed thumbnail images

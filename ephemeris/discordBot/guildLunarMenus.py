@@ -1,20 +1,20 @@
 from .commonImports import *
 from .helperFuncs import splitMsg, getPhaseList, checkWhiteListed
 
+
 # Create seperate menu that will persist
 class GuildLunarMenu(discord.ui.View):
-    def __init__(
-        self,
-        ephemeralRes=True,
-        timeout=None
-    ):
+    def __init__(self, ephemeralRes=True, timeout=None):
         super().__init__(timeout=timeout)
         self.ephemeralRes = ephemeralRes
         self.whiteListUsersOnly = False
         self.add_item(GuildPhaseSelMenu(ephemeralRes))
 
     @discord.ui.button(
-        label=lunarLabels["all"], style=discord.ButtonStyle.green, custom_id="all", emoji=defaultEmojis['lunation']
+        label=lunarLabels["all"],
+        style=discord.ButtonStyle.green,
+        custom_id="all",
+        emoji=defaultEmojis["lunation"],
     )
     async def allPhases(
         self, interaction: discord.Interaction, button: discord.ui.Button
@@ -22,24 +22,50 @@ class GuildLunarMenu(discord.ui.View):
         await self.guildLunarMenuBtnPress(interaction=interaction, button=button)
 
     @discord.ui.button(
-        label=lunarLabels['next_full'], style=discord.ButtonStyle.primary, custom_id="full", emoji=defaultEmojis['full']
+        label=lunarLabels["next_full"],
+        style=discord.ButtonStyle.primary,
+        custom_id="full",
+        emoji=defaultEmojis["full"],
     )
-    async def fullMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.guildLunarMenuBtnPress(interaction=interaction, button=button, firstEventOnly=True)
-        
+    async def fullMoon(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await self.guildLunarMenuBtnPress(
+            interaction=interaction, button=button, firstEventOnly=True
+        )
+
     @discord.ui.button(
-        label=lunarLabels['next_new'], style=discord.ButtonStyle.grey, custom_id="new", emoji=defaultEmojis['new']
+        label=lunarLabels["next_new"],
+        style=discord.ButtonStyle.grey,
+        custom_id="new",
+        emoji=defaultEmojis["new"],
     )
-    async def newMoon(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.guildLunarMenuBtnPress(interaction=interaction, button=button, firstEventOnly=True)
-        
+    async def newMoon(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await self.guildLunarMenuBtnPress(
+            interaction=interaction, button=button, firstEventOnly=True
+        )
+
     @discord.ui.button(
-        label=lunarLabels['current'], style=discord.ButtonStyle.grey, custom_id="current",  emoji='❔'
+        label=lunarLabels["current"],
+        style=discord.ButtonStyle.grey,
+        custom_id="current",
+        emoji="❔",
     )
-    async def currentPhase(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.guildLunarMenuBtnPress(interaction=interaction, button=button, firstEventOnly=True)
-    
-    async def guildLunarMenuBtnPress(self, interaction: discord.Interaction, button: discord.ui.Button, firstEventOnly:bool = False):
+    async def currentPhase(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await self.guildLunarMenuBtnPress(
+            interaction=interaction, button=button, firstEventOnly=True
+        )
+
+    async def guildLunarMenuBtnPress(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button,
+        firstEventOnly: bool = False,
+    ):
         whiteListed = False
         messageDefered = False
         guildSettings = fetch_guild_settings(interaction.guild_id)
@@ -52,7 +78,7 @@ class GuildLunarMenu(discord.ui.View):
             update_user_settings(interaction.user.id, userSettings)
         useEmojis = False
         emojis = None
-        if (guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1):
+        if guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1:
             useEmojis = True
             emojis = guildSettings["emojis"]
         if (
@@ -62,8 +88,10 @@ class GuildLunarMenu(discord.ui.View):
             == 1
         ):
             self.whiteListUsersOnly = True
-      
-        whiteListed = checkWhiteListed(interaction, guildSettings, userSettings, self.whiteListUsersOnly)
+
+        whiteListed = checkWhiteListed(
+            interaction, guildSettings, userSettings, self.whiteListUsersOnly
+        )
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -71,15 +99,15 @@ class GuildLunarMenu(discord.ui.View):
                 ephemeral=True,
             )
             return
-                
+
         phaseList = getPhaseList(
-                        ephemeris,
-                        filters = [button.label],
-                        useEmojis=useEmojis,
-                        emojis=emojis,
-                        firstEventOnly=firstEventOnly
-                        )
-        
+            ephemeris,
+            filters=[button.label],
+            useEmojis=useEmojis,
+            emojis=emojis,
+            firstEventOnly=firstEventOnly,
+        )
+
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
@@ -89,23 +117,24 @@ class GuildLunarMenu(discord.ui.View):
                 filters=[button.label],
                 useEmojis=useEmojis,
                 emojis=emojis,
-                firstEventOnly=firstEventOnly
+                firstEventOnly=firstEventOnly,
             )
-        
+
         msgArr = splitMsg(phaseList)
         if messageDefered:
             await interaction.followup.send(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
+                content=msgArr[0], ephemeral=self.ephemeralRes
+            )
         else:
             await interaction.response.send_message(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
+                content=msgArr[0], ephemeral=self.ephemeralRes
+            )
         if len(msgArr) > 1:
             for msg in msgArr[1:]:
                 await interaction.followup.send(
                     content=msg, ephemeral=self.ephemeralRes
                 )
+
 
 class GuildPhaseSelMenu(discord.ui.Select):
     def __init__(self, ephemeralRes=True, whiteListUsersOnly=False):
@@ -115,49 +144,49 @@ class GuildPhaseSelMenu(discord.ui.Select):
             discord.SelectOption(
                 label="New Moons",
                 value="new",
-                emoji=lunarFilterMenuEmojis['new'],
+                emoji=lunarFilterMenuEmojis["new"],
                 default=False,
             ),
             discord.SelectOption(
                 label="Waxing Crescents",
                 value="waxing_crescent",
-                emoji=lunarFilterMenuEmojis['waxing_crescent'],
+                emoji=lunarFilterMenuEmojis["waxing_crescent"],
                 default=False,
             ),
             discord.SelectOption(
                 label="First Quarter",
                 value="first_quarter",
-                emoji=lunarFilterMenuEmojis['first_quarter'],
+                emoji=lunarFilterMenuEmojis["first_quarter"],
                 default=False,
             ),
             discord.SelectOption(
                 label="Waxing Gibbous'",
                 value="waxing_gibbous",
-                emoji=lunarFilterMenuEmojis['waxing_gibbous'],
+                emoji=lunarFilterMenuEmojis["waxing_gibbous"],
                 default=False,
             ),
             discord.SelectOption(
                 label="Full Moons",
                 value="full",
-                emoji=lunarFilterMenuEmojis['full'],
+                emoji=lunarFilterMenuEmojis["full"],
                 default=False,
             ),
             discord.SelectOption(
                 label="Waning Gibbous'",
                 value="waning_gibbous",
-                emoji=lunarFilterMenuEmojis['waning_gibbous'],
+                emoji=lunarFilterMenuEmojis["waning_gibbous"],
                 default=False,
             ),
             discord.SelectOption(
                 label="Third Quarters",
                 value="third_quarter",
-                emoji=lunarFilterMenuEmojis['third_quarter'],
+                emoji=lunarFilterMenuEmojis["third_quarter"],
                 default=False,
             ),
             discord.SelectOption(
                 label="Waning Crescents",
                 value="waning_crescent",
-                emoji=lunarFilterMenuEmojis['waning_crescent'],
+                emoji=lunarFilterMenuEmojis["waning_crescent"],
                 default=False,
             ),
         ]
@@ -180,11 +209,11 @@ class GuildPhaseSelMenu(discord.ui.Select):
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = False
         messageDefered = False
-        
+
         useEmojis = False
         emojis = None
-        
-        if (guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1):
+
+        if guildSettings["channels"][str(interaction.channel_id)]["useEmojis"] == 1:
             useEmojis = True
             emojis = guildSettings["emojis"]
         if (
@@ -194,8 +223,10 @@ class GuildPhaseSelMenu(discord.ui.Select):
             == 1
         ):
             self.whiteListUsersOnly = True
-               
-        whiteListed = checkWhiteListed(interaction, guildSettings, userSettings, self.whiteListUsersOnly)
+
+        whiteListed = checkWhiteListed(
+            interaction, guildSettings, userSettings, self.whiteListUsersOnly
+        )
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
@@ -205,35 +236,34 @@ class GuildPhaseSelMenu(discord.ui.Select):
             return
 
         phaseList = getPhaseList(
-                    ephemeris,
-                    filters = self.values,
-                    useEmojis=useEmojis,
-                    emojis=emojis,
-                    )
-        
+            ephemeris,
+            filters=self.values,
+            useEmojis=useEmojis,
+            emojis=emojis,
+        )
+
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDefered = True
             ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
-                filters= self.values,
+                filters=self.values,
                 useEmojis=useEmojis,
                 emojis=emojis,
             )
-        
+
         msgArr = splitMsg(phaseList)
         if messageDefered:
             await interaction.followup.send(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
+                content=msgArr[0], ephemeral=self.ephemeralRes
+            )
         else:
             await interaction.response.send_message(
-            content=msgArr[0], ephemeral=self.ephemeralRes
-        )
+                content=msgArr[0], ephemeral=self.ephemeralRes
+            )
         if len(msgArr) > 1:
             for msg in msgArr[1:]:
                 await interaction.followup.send(
                     content=msg, ephemeral=self.ephemeralRes
                 )
-

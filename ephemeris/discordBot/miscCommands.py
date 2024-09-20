@@ -1,6 +1,7 @@
 from .bot import *
 from .helperFuncs import *
 
+
 @bot.tree.command(name="hello")
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -9,91 +10,129 @@ async def hello(interaction: discord.Interaction):
         f"Hello {interaction.user.mention}!", ephemeral=True
     )
 
-@bot.tree.command(name="update_whitelist", description="Only the bot owner may use this command")
+
+@bot.tree.command(
+    name="update_whitelist", description="Only the bot owner may use this command"
+)
 @commands.is_owner()
 @app_commands.check(is_owner)
 @app_commands.default_permissions()
 @app_commands.allowed_installs(guilds=False, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.describe(user_or_guild="ID of the user or guild you wish to update the settings for", id_type="Specifies if the ID provided is a user ID or guild ID", 
-                       expiration="The epoch time in second for which whitelisted status expires. A value of \"-1\" will never expire")
+@app_commands.describe(
+    user_or_guild="ID of the user or guild you wish to update the settings for",
+    id_type="Specifies if the ID provided is a user ID or guild ID",
+    expiration='The epoch time in second for which whitelisted status expires. A value of "-1" will never expire',
+)
 @app_commands.choices(
     id_type=[
         discord.app_commands.Choice(name="User", value=1),
         discord.app_commands.Choice(name="Guild", value=0),
     ],
 )
-async def updateWhiteList(interaction: discord.Interaction,
-                          user_or_guild: str,
-                          id_type: discord.app_commands.Choice[int],
-                          expiration: int) -> None:
+async def updateWhiteList(
+    interaction: discord.Interaction,
+    user_or_guild: str,
+    id_type: discord.app_commands.Choice[int],
+    expiration: int,
+) -> None:
     """A command used to update guild or user white list settings in the SQL DB. Only usable by the bot owner"""
     if id_type.name == "User":
         await interaction.response.defer(ephemeral=True, thinking=True)
         username = ""
         try:
             user = await bot.fetch_user(user_or_guild)
-            username =  user.name
-        except discord.NotFound: 
-            await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"NotFound\"", ephemeral=True)
+            username = user.name
+        except discord.NotFound:
+            await interaction.followup.send(
+                f'Error fetching user name for ID {user_or_guild}:\n"NotFound"',
+                ephemeral=True,
+            )
             return
         except discord.HTTPException:
-            await interaction.followup.send(f"Error fetching user name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)
-            return  
+            await interaction.followup.send(
+                f'Error fetching user name for ID {user_or_guild}:\n"HTTPException"',
+                ephemeral=True,
+            )
+            return
         userSettings = fetch_user_settings(user_or_guild)
         try:
             # if the user is not in the SQL DB
             if not userSettings:
                 userSettings = newUserSettings(user_or_guild, username, expiration)
             else:
-                userSettings['username'] = username
-                userSettings['expiration'] = expiration
+                userSettings["username"] = username
+                userSettings["expiration"] = expiration
             update_user_settings(user_or_guild, userSettings)
         except Exception as e:
-            await interaction.followup.send(f"Failed to update user_settings table.", ephemeral=True)
+            await interaction.followup.send(
+                f"Failed to update user_settings table.", ephemeral=True
+            )
             return
         await interaction.followup.send(
-            f"Whitelist settings updated for <@{user_or_guild}>:\n**New Expiration:**  " + ("No Expiration" if expiration == -1 else f"<t:{expiration}>"), ephemeral=True
-            )
+            f"Whitelist settings updated for <@{user_or_guild}>:\n**New Expiration:**  "
+            + ("No Expiration" if expiration == -1 else f"<t:{expiration}>"),
+            ephemeral=True,
+        )
         return
     elif id_type.name == "Guild":
         await interaction.response.defer(ephemeral=True, thinking=True)
         username = ""
         try:
             guild = await bot.fetch_guild(user_or_guild)
-            guildName =  guild.name
-        except discord.NotFound: 
-            await interaction.followup.send(f"Error fetching guild name for ID {user_or_guild}:\n\"NotFound\"", ephemeral=True)
+            guildName = guild.name
+        except discord.NotFound:
+            await interaction.followup.send(
+                f'Error fetching guild name for ID {user_or_guild}:\n"NotFound"',
+                ephemeral=True,
+            )
             return
         except discord.HTTPException:
-            await interaction.followup.send(f"Error fetching guild name for ID {user_or_guild}:\n\"HTTPException\"", ephemeral=True)
+            await interaction.followup.send(
+                f'Error fetching guild name for ID {user_or_guild}:\n"HTTPException"',
+                ephemeral=True,
+            )
             return
         guildSettings = fetch_guild_settings(user_or_guild)
         # if the guild is not in the SQL DB
         if not guildSettings:
-            temp = {"guild_id": user_or_guild, "guild": {"name": guildName}, "channel_id": None}
+            temp = {
+                "guild_id": user_or_guild,
+                "guild": {"name": guildName},
+                "channel_id": None,
+            }
             guildSettings = newGuildSettings(temp)
         try:
-            guildSettings['guild_name'] = guildName
-            guildSettings['expiration'] = expiration
+            guildSettings["guild_name"] = guildName
+            guildSettings["expiration"] = expiration
             update_guild_settings(user_or_guild, guildSettings)
         except Exception as e:
             print(e, interaction)
-            await interaction.followup.send(f"Failed to write to guildWhiteList file.", ephemeral=True)
-            
-        await interaction.followup.send(
-            f"Whitelist settings updated for {guildName}:\n**New Expiration:**  " + ("No Expiration" if expiration == -1 else f"<t:{expiration}>"), ephemeral=True
+            await interaction.followup.send(
+                f"Failed to write to guildWhiteList file.", ephemeral=True
             )
+
+        await interaction.followup.send(
+            f"Whitelist settings updated for {guildName}:\n**New Expiration:**  "
+            + ("No Expiration" if expiration == -1 else f"<t:{expiration}>"),
+            ephemeral=True,
+        )
         return
-    
-    await interaction.response.send_message(f"Invalid command parameters, action aborted.", ephemeral=True)
+
+    await interaction.response.send_message(
+        f"Invalid command parameters, action aborted.", ephemeral=True
+    )
+
 
 @updateWhiteList.error
 async def UpdateWLError(interaction: discord.Interaction, error):
     await not_owner_error(interaction, error)
 
 
-@bot.tree.command(name="permissions", description='Tells the user when their and/or the server\'s access they used it on expires')
+@bot.tree.command(
+    name="permissions",
+    description="Tells the user when their and/or the server's access they used it on expires",
+)
 @app_commands.allowed_installs(guilds=True, users=True)
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
 async def checkPermissions(interaction: discord.Interaction) -> None:
@@ -102,22 +141,25 @@ async def checkPermissions(interaction: discord.Interaction) -> None:
     userSettings = fetch_user_settings(interaction.user.id)
     expMsg = ""
     if 0 in interaction._integration_owners:
-            expMsg = "**Guild:** "
-            guildSettings = fetch_guild_settings(interaction.guild_id)
-            if guildSettings:
-                exp = guildSettings.get('expiration')
-                expMsg += "No Expiration" if exp == -1 else f"<t:{exp}>"
-            else: expMsg += "Not White Listed."
+        expMsg = "**Guild:** "
+        guildSettings = fetch_guild_settings(interaction.guild_id)
+        if guildSettings:
+            exp = guildSettings.get("expiration")
+            expMsg += "No Expiration" if exp == -1 else f"<t:{exp}>"
+        else:
+            expMsg += "Not White Listed."
     expMsg += "\n**User:** "
     if userSettings:
-        exp = userSettings.get('expiration')
+        exp = userSettings.get("expiration")
         expMsg += "No Expiration" if exp == -1 else f"<t:{exp}>"
-    else: expMsg += "Not White Listed."
-    
+    else:
+        expMsg += "Not White Listed."
+
     await interaction.response.send_message(
         content=expMsg,
         ephemeral=True,
     )
+
 
 @bot.tree.command(
     name="set_server_emojis",
@@ -128,28 +170,43 @@ async def checkPermissions(interaction: discord.Interaction) -> None:
 @app_commands.default_permissions()
 async def setServerEmojis(
     interaction: discord.Interaction,
-    white: str = defaultEmojis['White'],
-    black: str = defaultEmojis['Black'],
-    green: str = defaultEmojis['Green'],
-    red: str = defaultEmojis['Red'],
-    purple: str = defaultEmojis['Purple'],
-    yellow: str = defaultEmojis['Yellow'],
-    cyan: str = defaultEmojis['Cyan'],
-    blue: str = defaultEmojis['Blue'],
-    new: Optional[str] = defaultEmojis['new'],
-    waxing_crescent: Optional[str] = defaultEmojis['waxing_crescent'],
-    first_quarter: Optional[str] = defaultEmojis['first_quarter'],
-    waxing_gibbous: Optional[str] = defaultEmojis['waxing_gibbous'],
-    full: Optional[str] = defaultEmojis['full'],
-    waning_gibbous: Optional[str] = defaultEmojis['waning_gibbous'],
-    third_quarter: Optional[str] = defaultEmojis['third_quarter'],
-    waning_crescent: Optional[str] = defaultEmojis['waning_crescent'],
-    
+    white: str = defaultEmojis["White"],
+    black: str = defaultEmojis["Black"],
+    green: str = defaultEmojis["Green"],
+    red: str = defaultEmojis["Red"],
+    purple: str = defaultEmojis["Purple"],
+    yellow: str = defaultEmojis["Yellow"],
+    cyan: str = defaultEmojis["Cyan"],
+    blue: str = defaultEmojis["Blue"],
+    new: Optional[str] = defaultEmojis["new"],
+    waxing_crescent: Optional[str] = defaultEmojis["waxing_crescent"],
+    first_quarter: Optional[str] = defaultEmojis["first_quarter"],
+    waxing_gibbous: Optional[str] = defaultEmojis["waxing_gibbous"],
+    full: Optional[str] = defaultEmojis["full"],
+    waning_gibbous: Optional[str] = defaultEmojis["waning_gibbous"],
+    third_quarter: Optional[str] = defaultEmojis["third_quarter"],
+    waning_crescent: Optional[str] = defaultEmojis["waning_crescent"],
 ) -> None:
     """Used to set the emojis for the server that the interaction came from"""
     invalidEmojis = []
-    for emoji in (white, black, green, red, purple, yellow, cyan, blue, new, waxing_crescent,
-                first_quarter, waxing_gibbous, full, waning_gibbous, third_quarter, waning_crescent):
+    for emoji in (
+        white,
+        black,
+        green,
+        red,
+        purple,
+        yellow,
+        cyan,
+        blue,
+        new,
+        waxing_crescent,
+        first_quarter,
+        waxing_gibbous,
+        full,
+        waning_gibbous,
+        third_quarter,
+        waning_crescent,
+    ):
         emoji = emoji.strip()
         if not isEmoji(emoji):
             invalidEmojis.append(emoji)
@@ -178,7 +235,7 @@ async def setServerEmojis(
             "full": full,
             "waning_gibbous": waning_gibbous,
             "third_quarter": third_quarter,
-            "waning_crescent": waning_crescent
+            "waning_crescent": waning_crescent,
         }
         emojis = guildSettings["emojis"]
         update_guild_settings(interaction.guild_id, guildSettings)
@@ -213,28 +270,44 @@ async def setServerEmojis(
 @app_commands.describe()
 async def setPersonalEmojis(
     interaction: discord.Interaction,
-    white: str = defaultEmojis['White'],
-    black: str = defaultEmojis['Black'],
-    green: str = defaultEmojis['Green'],
-    red: str = defaultEmojis['Red'],
-    purple: str = defaultEmojis['Purple'],
-    yellow: str = defaultEmojis['Yellow'],
-    cyan: str = defaultEmojis['Cyan'],
-    blue: str = defaultEmojis['Blue'],
-    new: Optional[str] = defaultEmojis['new'],
-    waxing_crescent: Optional[str] = defaultEmojis['waxing_crescent'],
-    first_quarter: Optional[str] = defaultEmojis['first_quarter'],
-    waxing_gibbous: Optional[str] = defaultEmojis['waxing_gibbous'],
-    full: Optional[str] = defaultEmojis['full'],
-    waning_gibbous: Optional[str] = defaultEmojis['waning_gibbous'],
-    third_quarter: Optional[str] = defaultEmojis['third_quarter'],
-    waning_crescent: Optional[str] = defaultEmojis['waning_crescent'],
+    white: str = defaultEmojis["White"],
+    black: str = defaultEmojis["Black"],
+    green: str = defaultEmojis["Green"],
+    red: str = defaultEmojis["Red"],
+    purple: str = defaultEmojis["Purple"],
+    yellow: str = defaultEmojis["Yellow"],
+    cyan: str = defaultEmojis["Cyan"],
+    blue: str = defaultEmojis["Blue"],
+    new: Optional[str] = defaultEmojis["new"],
+    waxing_crescent: Optional[str] = defaultEmojis["waxing_crescent"],
+    first_quarter: Optional[str] = defaultEmojis["first_quarter"],
+    waxing_gibbous: Optional[str] = defaultEmojis["waxing_gibbous"],
+    full: Optional[str] = defaultEmojis["full"],
+    waning_gibbous: Optional[str] = defaultEmojis["waning_gibbous"],
+    third_quarter: Optional[str] = defaultEmojis["third_quarter"],
+    waning_crescent: Optional[str] = defaultEmojis["waning_crescent"],
 ) -> None:
     """Used to set the emojis that will be used for user installable menus
     for the user that triggered the interaction"""
     invalidEmojis = []
-    for emoji in (white, black, green, red, purple, yellow, cyan, blue, new, waxing_crescent,
-                first_quarter, waxing_gibbous, full, waning_gibbous, third_quarter, waning_crescent):
+    for emoji in (
+        white,
+        black,
+        green,
+        red,
+        purple,
+        yellow,
+        cyan,
+        blue,
+        new,
+        waxing_crescent,
+        first_quarter,
+        waxing_gibbous,
+        full,
+        waning_gibbous,
+        third_quarter,
+        waning_crescent,
+    ):
         emoji = emoji.strip()
         if not isEmoji(emoji):
             invalidEmojis.append(emoji)
@@ -263,7 +336,7 @@ async def setPersonalEmojis(
             "full": full,
             "waning_gibbous": waning_gibbous,
             "third_quarter": third_quarter,
-            "waning_crescent": waning_crescent
+            "waning_crescent": waning_crescent,
         }
         emojis = userSettings["emojis"]
         update_user_settings(interaction.user.id, userSettings)
