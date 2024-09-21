@@ -3,12 +3,35 @@ import json
 import numpy as np
 import time
 from pathlib import Path
+from os import cpu_count
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 DEBUG = False
 
 
 class Ephemeris:
-    def __init__(self, start: int = 0, end: int = 0, numMoonCycles: int = 5) -> None:
+    def __init__(
+        self,
+        start: int = 0,
+        end: int = 0,
+        numMoonCycles: int = 0,
+        discordTimestamps: bool = False,
+        multiProcess: bool = True,
+        numCores: int | None = None,
+    ) -> None:
+        self.multiProcess = multiProcess
+        self.numCores = numCores
+        if multiProcess:
+            cpuCount = cpu_count() or 1
+            if numCores:
+                if numCores > cpuCount:
+                    print(
+                        "numCores greater than number of available CPU cores, defaulting to 1"
+                    )
+                    self.numCores = 1
+            else:
+                self.numCores = cpuCount
+
         self.glowThresh = 0.5
         self.darkThresh = 1
         self.increment = 60 * 1000
@@ -27,10 +50,10 @@ class Ephemeris:
 
         # Boolean that indicates if orb is aligned with another orb or the shadow orb
         # Ordered as ['shadow', 'white', 'black', 'green', 'red', 'purple', 'yellow', 'cyan', 'blue']
-        self.alignmentStates = np.full(9, False)
+        self.currentAlignmentStates = np.full(9, False)
         self.lastAlignmentStates = np.full(9, False)
         self.scrollEventsCache = []
-        self.scrollEventsCache = self.createScrollEventRange(start, end)
+        self.scrollEventsCache = self.multiProcessCreateScrollEventRange(start, end)
         self.moonCyclesCache = self.createLunarCalendar(start, numMoonCycles)
         self.saveCache(self.cacheFile)
 
@@ -53,35 +76,176 @@ class Ephemeris:
         Returns
         ---------
         `list[tuple[int, dict[str, any]]]`
-            A chronologically ordered `list` of `tuples` that contains the predicted events information.
+            A chronologically ordered `list` of `tuples` that contain a timestamp and a dictionary containing
+            information about the changed phases and a discord timestamp for the event.
         """
+        if startTime == stopTime or startTime > stopTime:
+            print("stopTime must be greater than startTime")
+            return []
+
         currentTime = startTime
         tempCache = []
         # create event for the starting alignments
         self.lastAlignmentStates = np.full(9, False)
-        self.setAlignmentStates(currentTime)
+        self.currentAlignmentStates = self.setAlignmentStates(currentTime)
         # tempCache.append(self.createAlignmentEvent(currentTime))
 
         # colon is IMPORTANT, creates shallow copy of list instead of copy by ref
-        self.lastAlignmentStates = self.alignmentStates[:]
+        self.lastAlignmentStates = self.currentAlignmentStates[:]
         # iterate through time range and find events
         while currentTime < stopTime:
-            self.setAlignmentStates(currentTime)
+            self.currentAlignmentStates = self.setAlignmentStates(currentTime)
             if self.checkForAlignmentChange():
                 currentTime -= self.increment
                 # if an alignment is found go back a step and step through with small step size to find more accurate start
                 while currentTime <= (currentTime + self.increment):
-                    self.setAlignmentStates(currentTime)
+                    self.currentAlignmentStates = self.setAlignmentStates(currentTime)
                     if self.checkForAlignmentChange():
                         tempCache.append(self.createAlignmentEvent(currentTime))
                         # colon is IMPORTANT, creates shallow copy of list instead of copy by ref
-                        self.lastAlignmentStates = self.alignmentStates[:]
+                        self.lastAlignmentStates = self.currentAlignmentStates[:]
                         break
                     currentTime += 1000
             currentTime += self.increment
         if saveToCache:
             self.scrollEventsCache = tempCache
             self.saveCache(self.cacheFile)
+        return tempCache
+
+    def multiProcessCreateScrollEventRange(
+        self, startTime: int, stopTime: int, saveToCache: bool = False
+    ) -> list[tuple[int, dict[str, any]]]:
+        """Creates a chronologically ordered `list` of `tuples` that each
+        contain information on a unique change in scroll/alignment states
+
+        Parameters
+        ------------
+        startTime: `int`
+            The epoch time in ms that alignment calculations will start from.
+        stopTime: `int`
+            The epoch time in ms that alignment calculations will stop at.
+        saveToCache: `bool` *(optional)*
+            When set to true the cache contents will be outputed
+            to a local file. Defaults to False.
+
+        Returns
+        ---------
+        `list[tuple[int, dict[str, any]]]`
+            A chronologically ordered `list` of `tuples` that contain a timestamp and a dictionary containing
+            information about the changed phases and a discord timestamp for the event.
+        """
+        if not self.multiProcess or self.numCores == 1:
+            return self.createScrollEventRange(startTime, stopTime, saveToCache)
+        if startTime == stopTime or startTime > stopTime:
+            print("stopTime must be greater than startTime")
+            return []
+        startTime = int(startTime)
+        stopTime = int(stopTime)
+        chunkSize = (stopTime - startTime) // self.numCores
+        chunks = []
+        chunkNum = 0
+        for chunkStart in range(startTime, stopTime, chunkSize):
+            chunks.append(
+                (
+                    chunkStart,
+                    (
+                        chunkEnd
+                        if (chunkEnd := chunkStart + chunkSize) <= stopTime
+                        else stopTime
+                    ),
+                    chunkNum,
+                )
+            )
+            chunkNum += 1
+
+        retries = 0
+        max_retries = 3
+        while retries < max_retries:
+            try:
+                tempCache = self.createProcessPool(chunks)
+                print("Cache Created!")
+                break
+            except Exception as e:
+                print(f"Error during processing: {e}")
+                retries += 1
+                if retries >= max_retries:
+                    print(f"Failed after {max_retries} retries: {e}")
+                    raise
+                else:
+                    print(f"Retrying... ({retries}/{max_retries})")
+
+        if saveToCache:
+            self.scrollEventsCache = tempCache
+            self.saveCache(self.cacheFile)
+        return tempCache
+
+    def createProcessPool(self, chunks):
+        with ProcessPoolExecutor(max_workers=self.numCores) as executor:
+            futures = {
+                executor.submit(
+                    self.processScrollTimeRange, chunkStart, chunkEnd, chunkNum
+                ): chunkNum
+                for chunkStart, chunkEnd, chunkNum in chunks
+            }
+            # Note: this section sorts data similar to a priority queue but allows inserting the
+            # whole chunk at once rather than the elements individually
+            tempCache = [None] * len(chunks)
+            for future in as_completed(futures):
+                chunkNum = futures[future]
+                try:
+                    chunkCache = future.result()
+                    tempCache[chunkNum] = chunkCache
+                except Exception as e:
+                    print(f"Exception in chunk {chunkNum}: {e}")
+                    # Re-raise to propagate the exception
+                    raise
+            # reverse traverse
+            for i in range(len(chunks) - 1, -1, -1):
+                # unpack the lists of events stored in each index in tempCache
+                tempCache[i : i + 1] = tempCache[i]
+        return tempCache
+
+    def processScrollTimeRange(
+        self, startTime, stopTime, chunkNum=None
+    ) -> tuple[int, list[tuple[int, dict[str, any]]]]:
+        try:
+            currentTime = startTime
+            tempCache = []
+            # create event for the starting alignments
+            lastAlignmentStates = np.full(9, False)
+            currentAlignmentStates = self.setAlignmentStates(currentTime)
+            # tempCache.append(self.createAlignmentEvent(currentTime))
+
+            # colon is IMPORTANT, creates shallow copy of list instead of copy by ref
+            lastAlignmentStates = currentAlignmentStates[:]
+            # iterate through time range and find events
+            while currentTime < stopTime:
+                currentAlignmentStates = self.setAlignmentStates(currentTime)
+                if self.checkForAlignmentChange(
+                    lastAlignmentStates, currentAlignmentStates
+                ):
+                    currentTime -= self.increment
+                    # if an alignment is found go back a step and step through with small step size to find more accurate start
+                    while currentTime <= (currentTime + self.increment):
+                        currentAlignmentStates = self.setAlignmentStates(currentTime)
+                        if self.checkForAlignmentChange(
+                            lastAlignmentStates, currentAlignmentStates
+                        ):
+                            tempCache.append(
+                                self.createAlignmentEvent(
+                                    currentTime,
+                                    lastAlignmentStates,
+                                    currentAlignmentStates,
+                                )
+                            )
+                            # colon is IMPORTANT, creates shallow copy of list instead of copy by ref
+                            lastAlignmentStates = currentAlignmentStates[:]
+                            break
+                        currentTime += 1000
+                currentTime += self.increment
+        except Exception as e:
+            print(f"Exception in worker process for chunk {chunkNum}: {e}")
+            raise  # Re-raise to propagate the exception
         return tempCache
 
     def getScrollEventsInRange(
@@ -107,7 +271,9 @@ class Ephemeris:
         stopIndex = bisect.bisect_right(self.scrollEventsCache, (endTime,))
         return [events for _, events in self.scrollEventsCache[startIndex:stopIndex]]
 
-    def checkForAlignmentChange(self) -> bool:
+    def checkForAlignmentChange(
+        self, lastAlignmentStates=[], currentAlignmentStates=[]
+    ) -> bool:
         """Checks to see if there has been a change in alignments between the states
         at the current time and previously calculated time
 
@@ -116,22 +282,30 @@ class Ephemeris:
         `bool`
             True if any alignment state has changed from the previous alignment check.
         """
-        return not np.array_equal(self.alignmentStates, self.lastAlignmentStates)
+        if len(lastAlignmentStates) < 1:
+            lastAlignmentStates = self.lastAlignmentStates
+        if len(currentAlignmentStates) < 1:
+            currentAlignmentStates = self.currentAlignmentStates
+        # lastAlignmentStates = lastAlignmentStates or self.lastAlignmentStates
+        # currentAlignmentStates = currentAlignmentStates or self.currentAlignmentStates
+        return not np.array_equal(currentAlignmentStates, lastAlignmentStates)
 
-    def createAlignmentEvent(self, timestamp: int) -> tuple[int, dict[str, any]]:
+    def createAlignmentEvent(
+        self, timestamp: int, lastAlignmentStates=[], currentAlignmentStates=[]
+    ) -> tuple[int, dict[str, any]]:
         """Creates a `tuple` containing the epoch timestamp in ms at which the alignment
         changes and a `dict` containing information about the event.
 
-                Parameters
-                ---------
-                timestamp: `int`
-                    The epoch time in ms that alignment change happens
+        Parameters
+        ---------
+        timestamp: `int`
+            The epoch time in ms that alignment change happens
 
-                Returns
-                ---------
-                `tuple[int, dict[str, any]]`
-                    A `tuple` who's first element is the epoch time stamp in ms for the event
-                    and the second element is a `dict` containing the event information.
+        Returns
+        ---------
+        `tuple[int, dict[str, any]]`
+            A `tuple` who's first element is the epoch time stamp in ms for the event
+            and the second element is a `dict` containing the event information.
 
         """
         names = [
@@ -150,8 +324,12 @@ class Ephemeris:
         returnedToNormal = []
         aligned = []
         stillAligned = []
-        for i, v in enumerate(self.alignmentStates):
-            if v != self.lastAlignmentStates[i]:
+        if len(lastAlignmentStates) < 1:
+            lastAlignmentStates = self.lastAlignmentStates
+        if len(currentAlignmentStates) < 1:
+            currentAlignmentStates = self.currentAlignmentStates
+        for i, v in enumerate(currentAlignmentStates):
+            if v != lastAlignmentStates[i]:
                 # if changed to being aligned
                 if v == True:
                     aligned.append(names[i])
@@ -170,7 +348,7 @@ class Ephemeris:
             # add all the newly aligned orbs to the new dark list
             darkList.extend(aligned)
             # if there are orbs previously aligned
-            if len(stillAligned) > 0 and not self.lastAlignmentStates[0]:
+            if len(stillAligned) > 0 and not lastAlignmentStates[0]:
                 # add the previously aligned orbs to the dark list if there is a new dark
                 darkList.extend(stillAligned)
         # if alignments with the shadow orb end
@@ -215,6 +393,7 @@ class Ephemeris:
             },
         )
 
+    # UPDATE DOCK STRING, RETURNS NOW
     def setAlignmentStates(self, time: int) -> None:
         """Gets the difference in position between all orbs and determines if each orb is in an
         aligned state using that information. Stores this information as a boolean in the list
@@ -225,7 +404,7 @@ class Ephemeris:
             time: `int`
                 The epoch timestamp in ms at which orb positions are retrieved.
         """
-        self.alignmentStates = np.full(9, False)
+        alignmentStates = np.full(9, False)
         # get the differences at the given time
         difs = self.calcAlignmentDifs(self.posRelCandle(time))
         for i, arr in enumerate(difs):
@@ -241,7 +420,8 @@ class Ephemeris:
             for j in np.where(alignmentPos)[0]:
                 # gets the indices of the orbs that are aligned with the current orb
                 # sets the current orb and that indice to True (aligned) in the alignments states list
-                self.alignmentStates[i] = self.alignmentStates[i + j + 1] = True
+                alignmentStates[i] = alignmentStates[i + j + 1] = True
+        return alignmentStates
 
     def calcAlignmentDifs(
         self, positions: np.ndarray[float]
@@ -683,6 +863,9 @@ class Ephemeris:
                 A `list` of `tuples` containing the epoch time at which the moon phase change happens and
                 a dictionary containing the name of the new phase and a discord timestamp for the event.
         """
+        if numMoonCycles == 0:
+            return []
+
         # 8 phases in one moon cycle plus almost full and almost new
         numEvents = numMoonCycles * 10
         # phases change at noon so we will increment from the previous noon by one aberoth day
@@ -810,8 +993,43 @@ class Ephemeris:
         return position
 
 
+def formatTime(milliseconds: int) -> str:
+    """Takes in a length of time in milliseconds and formats it into h:m:s:ms format
+
+    Parameters
+    ---------
+        milliseconds: `int`
+            The lenght of time to be formatted
+    Returns
+    ---------
+        `str`
+        The length of time in the format f"{hours:.0f}h {minutes:.0f}m {seconds:.0f}s {ms}ms"
+    """
+    # Convert milliseconds to seconds
+    seconds = milliseconds // 1000
+    # Calculate hours, minutes and seconds
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    ms = milliseconds % 1000
+    # Return formatted time string
+    return f"{hours:.0f}h {minutes:.0f}m {seconds:.0f}s {ms}ms"
+
+
 if __name__ == "__main__":
+    startTime = time.time_ns() // 1_000_000
     ephermis = Ephemeris(
-        start=round((time.time() * 1000) - 10 * 86400000),
-        end=round((time.time() * 1000) + 16 * 86400000),
+        start=round((time.time() * 1000) + -4 * 86400000),
+        end=round((time.time() * 1000) + 35 * 86400000),
+        numMoonCycles=8,
+        multiProcess=True,
     )
+    stopTime = time.time_ns() // 1_000_000
+    print(
+        f"{ephermis.numCores} cores\nExecution time: {formatTime(stopTime-startTime)}"
+    )
+    # import timeit
+    # execution_time = timeit.timeit("Ephemeris(start=round((time.time() * 1000) - 0 * 86400000), end=round((time.time() * 1000) + 365 * 86400000), numMoonCycles=8)", globals=globals(), number=1)
+    # execution_time = timeit.timeit("Ephemeris.createLunarCalendar(startTime, 8)", globals=globals(), number=50)
+
+    # print(execution_time)

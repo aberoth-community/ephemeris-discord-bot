@@ -103,15 +103,5 @@ class VariableSolver:
     def calcPeriodFast(self) -> float:
         pass
 
-    def formatTime(self, milliseconds: int) -> str:
-        # Convert milliseconds to seconds
-        seconds = milliseconds // 1000
-        # Calculate hours, minutes and seconds
-        hours = seconds // 3600
-        minutes = (seconds % 3600) // 60
-        seconds = seconds % 60
-        # Return formatted time string
-        return f"{hours:.0f}h {minutes:.0f}m {seconds:.0f}s"
-
 
 VS = VariableSolver()

@@ -60,9 +60,7 @@ def getDayList(
         end = currentTime + oneDay if startDay == 0 else start + oneDay
     else:
         end = currentTime + int(oneDay) * int(endDay) + oneDay
-    # print(f"End: {end}\nEnd: {ephemeris.scrollEventsCache[-1][0]}")
     if end >= ephemeris.scrollEventsCache[-1][0]:
-        # print("end out of range")
         return ["Out of Range"]
     cacheSubSet = ephemeris.getScrollEventsInRange(start, end)
 
@@ -454,3 +452,25 @@ def checkWhiteListed(
             else userSettings["expiration"] > time.time()
         )
     return whiteListed
+
+
+def formatTime(milliseconds: int) -> str:
+    """Takes in a length of time in milliseconds and formats it into h:m:s format
+
+    Parameters
+    ---------
+        milliseconds: `int`
+            The lenght of time to be formatted
+    Returns
+    ---------
+        `str`
+        The length of time in the format f"{hours:.0f}h {minutes:.0f}m {seconds:.2f}s"
+    """
+    # Convert milliseconds to seconds
+    seconds = milliseconds // 1000
+    # Calculate hours, minutes and seconds
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    # Return formatted time string
+    return f"{hours:.0f}h {minutes:.0f}m {seconds:.2f}s"
