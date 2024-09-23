@@ -115,8 +115,8 @@ class Ephemeris:
     def multiProcessCreateScrollEventRange(
         self, startTime: int, stopTime: int, saveToCache: bool = False
     ) -> list[tuple[int, dict[str, any]]]:
-        """Creates a chronologically ordered `list` of `tuples` that each
-        contain information on a unique change in scroll/alignment states
+        """Splits the time range into chunks and utilizes multi-processing inorder to make a chronologically
+        ordered `list` of `tuples` that each contain information on a unique change in scroll/alignment states
 
         Parameters
         ------------
@@ -179,7 +179,25 @@ class Ephemeris:
             self.saveCache(self.cacheFile)
         return tempCache
 
-    def createProcessPool(self, chunks):
+    def createProcessPool(
+        self, chunks: tuple[int, int, int]
+    ) -> list[tuple[int, dict[str, any]]]:
+        """Creates a proccess pool and assigns the time chunks evenly to each process. Each process process makes
+        its own chronologically ordered `list` of `tuples` that each contain information on a unique change in scroll/alignment states.
+        before they're recombined into a bigger cache that spans the whole time range.
+
+        Parameters
+        ------------
+        startTime: `tuple[int, int, int]`
+            A tuple containing the start and stop time of each chunk as an epoch timestamp in ms as well as
+            a number that indicates where in the final cache the results should be inserted.
+
+        Returns
+        ---------
+        `list[tuple[int, dict[str, any]]]`
+            A chronologically ordered `list` of `tuples` that contain a timestamp and a dictionary containing
+            information about the changed phases and a discord timestamp for the event.
+        """
         with ProcessPoolExecutor(max_workers=self.numCores) as executor:
             futures = {
                 executor.submit(
@@ -197,7 +215,7 @@ class Ephemeris:
                     tempCache[chunkNum] = chunkCache
                 except Exception as e:
                     print(f"Exception in chunk {chunkNum}: {e}")
-                    # Re-raise to propagate the exception
+                    # re-raise to propagate the exception
                     raise
             # reverse traverse
             for i in range(len(chunks) - 1, -1, -1):
@@ -207,7 +225,7 @@ class Ephemeris:
 
     def processScrollTimeRange(
         self, startTime, stopTime, chunkNum=None
-    ) -> tuple[int, list[tuple[int, dict[str, any]]]]:
+    ) -> list[tuple[int, dict[str, any]]]:
         try:
             currentTime = startTime
             tempCache = []
@@ -245,7 +263,7 @@ class Ephemeris:
                 currentTime += self.increment
         except Exception as e:
             print(f"Exception in worker process for chunk {chunkNum}: {e}")
-            raise  # Re-raise to propagate the exception
+            raise  # re-raise to propagate the exception
         return tempCache
 
     def getScrollEventsInRange(
