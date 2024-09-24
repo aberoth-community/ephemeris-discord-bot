@@ -135,16 +135,22 @@ class Ephemeris:
             information about the changed phases and a discord timestamp for the event.
         """
         if not self.multiProcess or self.numCores == 1:
+            # use normal process when only one core is available
             return self.createScrollEventRange(startTime, stopTime, saveToCache)
         if startTime == stopTime or startTime > stopTime:
+            # if the time range is not valid return
             print("stopTime must be greater than startTime")
             return []
+        # convert float to int
         startTime = int(startTime)
         stopTime = int(stopTime)
+
+        # divid the time range into ~equal chunks for each core
         chunkSize = (stopTime - startTime) // self.numCores
         chunks = []
         chunkNum = 0
         for chunkStart in range(startTime, stopTime, chunkSize):
+            # package chunk information to be passed as an argument
             chunks.append(
                 (
                     chunkStart,
@@ -161,11 +167,13 @@ class Ephemeris:
         retries = 0
         max_retries = 3
         while retries < max_retries:
+            # try creating event cache with multi-processing
             try:
                 tempCache = self.createProcessPool(chunks)
                 print("Cache Created!")
                 break
             except Exception as e:
+                # retry up to three times before abandoning the calculation
                 print(f"Error during processing: {e}")
                 retries += 1
                 if retries >= max_retries:
@@ -188,9 +196,9 @@ class Ephemeris:
 
         Parameters
         ------------
-        startTime: `tuple[int, int, int]`
+        chunks: `tuple[int, int, int]`
             A tuple containing the start and stop time of each chunk as an epoch timestamp in ms as well as
-            a number that indicates where in the final cache the results should be inserted.
+            an integer that indicates where in the final cache the results should be inserted.
 
         Returns
         ---------
@@ -226,13 +234,30 @@ class Ephemeris:
     def processScrollTimeRange(
         self, startTime, stopTime, chunkNum=None
     ) -> list[tuple[int, dict[str, any]]]:
+        """Creates a chronologically ordered `list` of `tuples` that each contain information on a unique change in scroll/alignment states.
+        Multi-processing friendly
+
+        Parameters
+        ------------
+        startTime: `tuple[int, int, int]`
+            An epoch timestamp in ms that represents the time at which calculations will start at.
+        stopTime: `tuple[int, int, int]`
+            An epoch timestamp in ms that represents the time at which calculations will stop at.
+        chunkNum: `int`
+            An integer that indicates where in the final cache the results should be inserted.
+
+        Returns
+        ---------
+        `list[tuple[int, dict[str, any]]]`
+            A chronologically ordered `list` of `tuples` that contain a timestamp and a dictionary containing
+            information about the changed phases and a discord timestamp for the event.
+        """
         try:
             currentTime = startTime
             tempCache = []
-            # create event for the starting alignments
+            # Set starting state
             lastAlignmentStates = np.full(9, False)
             currentAlignmentStates = self.setAlignmentStates(currentTime)
-            # tempCache.append(self.createAlignmentEvent(currentTime))
 
             # colon is IMPORTANT, creates shallow copy of list instead of copy by ref
             lastAlignmentStates = currentAlignmentStates[:]
@@ -300,12 +325,11 @@ class Ephemeris:
         `bool`
             True if any alignment state has changed from the previous alignment check.
         """
+        #
         if len(lastAlignmentStates) < 1:
             lastAlignmentStates = self.lastAlignmentStates
         if len(currentAlignmentStates) < 1:
             currentAlignmentStates = self.currentAlignmentStates
-        # lastAlignmentStates = lastAlignmentStates or self.lastAlignmentStates
-        # currentAlignmentStates = currentAlignmentStates or self.currentAlignmentStates
         return not np.array_equal(currentAlignmentStates, lastAlignmentStates)
 
     def createAlignmentEvent(
@@ -1012,7 +1036,7 @@ class Ephemeris:
 
 
 def formatTime(milliseconds: int) -> str:
-    """Takes in a length of time in milliseconds and formats it into h:m:s:ms format
+    """Takes in a length of time in milliseconds and formats it into h:m:s:ms format.
 
     Parameters
     ---------
@@ -1044,7 +1068,7 @@ if __name__ == "__main__":
     )
     stopTime = time.time_ns() // 1_000_000
     print(
-        f"{ephermis.numCores} cores\nExecution time: {formatTime(stopTime-startTime)}"
+        f"{ephermis.numCores} cores; Execution time: {formatTime(stopTime-startTime)}"
     )
     # import timeit
     # execution_time = timeit.timeit("Ephemeris(start=round((time.time() * 1000) - 0 * 86400000), end=round((time.time() * 1000) + 365 * 86400000), numMoonCycles=8)", globals=globals(), number=1)
