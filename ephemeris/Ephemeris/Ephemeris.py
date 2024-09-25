@@ -19,12 +19,10 @@ class Ephemeris:
         discordTimestamps: bool = False,
         multiProcess: bool = True,
         numCores: int | None = None,
-        use_njit: bool = True,
     ) -> None:
         self.discordTimestamps = discordTimestamps
         self.multiProcess = multiProcess
         self.numCores = numCores
-        self.use_njit = use_njit
         if multiProcess:
             cpuCount = cpu_count() or 1
             if numCores:
@@ -522,9 +520,6 @@ class Ephemeris:
             An array with each index corresponding to the position of a unique orb or the candle in
             degrees relative to the white orb.
         """
-        if self.use_njit:
-            pass
-
         positions = (
             (360 / self.periods) * (time - self.refTimes) + self.refPositions
         ) % 360
