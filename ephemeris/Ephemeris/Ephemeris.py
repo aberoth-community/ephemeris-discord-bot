@@ -1,6 +1,7 @@
 import bisect
 import json
 import numpy as np
+from numba import njit
 import time
 from pathlib import Path
 from os import cpu_count
@@ -18,9 +19,12 @@ class Ephemeris:
         discordTimestamps: bool = False,
         multiProcess: bool = True,
         numCores: int | None = None,
+        use_njit: bool = True,
     ) -> None:
+        self.discordTimestamps = discordTimestamps
         self.multiProcess = multiProcess
         self.numCores = numCores
+        self.use_njit = use_njit
         if multiProcess:
             cpuCount = cpu_count() or 1
             if numCores:
@@ -409,23 +413,16 @@ class Ephemeris:
             # if not a new dark or returning to normal, newly algined orbs should be glowing
             glowList.extend(aligned)
 
-        # does not run in prod
-        if DEBUG:
-            difs = self.calcAlignmentDifs(self.posRelCandle(timestamp))
-            eventStr = "\n".join(f"{difs[0][i] }, {names[i+1]}" for i in range(0, 8))
-            print(eventStr)
-            print(
-                (
-                    timestamp,
-                    {
-                        "newGlows": glowList,
-                        "newDarks": darkList,
-                        "returnedToNormal": returnedToNormal,
-                        "discordTS": f"<t:{int(np.floor(timestamp/1000))}:D> <t:{int(np.floor(timestamp/1000))}:T>",
-                        # "discordRelTS": f'<t:{np.floor(timestamp/1000)}:R>'
-                    },
-                )
-            )
+        event = {
+            "newGlows": glowList,
+            "newDarks": darkList,
+            "returnedToNormal": returnedToNormal,
+        }
+
+        if self.discordTimestamps:
+            event[
+                "discordTS"
+            ] = f"<t:{int(np.floor(timestamp/1000))}:D> <t:{int(np.floor(timestamp/1000))}:T>"
 
         return (
             timestamp,
@@ -433,8 +430,6 @@ class Ephemeris:
                 "newGlows": glowList,
                 "newDarks": darkList,
                 "returnedToNormal": returnedToNormal,
-                "discordTS": f"<t:{int(np.floor(timestamp/1000))}:D> <t:{int(np.floor(timestamp/1000))}:T>",
-                # "discordRelTS": f'<t:{np.floor(timestamp/1000)}:R>'
             },
         )
 
@@ -534,6 +529,9 @@ class Ephemeris:
             An array with each index corresponding to the position of a unique orb or the candle in
             degrees relative to the white orb.
         """
+        if self.use_njit:
+            pass
+
         positions = (
             (360 / self.periods) * (time - self.refTimes) + self.refPositions
         ) % 360
