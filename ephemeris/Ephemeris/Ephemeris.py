@@ -424,14 +424,7 @@ class Ephemeris:
                 "discordTS"
             ] = f"<t:{int(np.floor(timestamp/1000))}:D> <t:{int(np.floor(timestamp/1000))}:T>"
 
-        return (
-            timestamp,
-            {
-                "newGlows": glowList,
-                "newDarks": darkList,
-                "returnedToNormal": returnedToNormal,
-            },
-        )
+        return event
 
     # UPDATE DOCK STRING, RETURNS NOW
     def setAlignmentStates(self, time: int) -> None:
@@ -1065,6 +1058,7 @@ if __name__ == "__main__":
         start=round((time.time() * 1000) + -4 * 86400000),
         end=round((time.time() * 1000) + 35 * 86400000),
         numMoonCycles=8,
+        discordTimestamps=True,
         multiProcess=True,
     )
     stopTime = time.time_ns() // 1_000_000
@@ -1072,7 +1066,6 @@ if __name__ == "__main__":
         f"{ephermis.numCores} cores; Execution time: {formatTime(stopTime-startTime)}"
     )
     # import timeit
-    # execution_time = timeit.timeit("Ephemeris(start=round((time.time() * 1000) - 0 * 86400000), end=round((time.time() * 1000) + 365 * 86400000), numMoonCycles=8)", globals=globals(), number=1)
-    # execution_time = timeit.timeit("Ephemeris.createLunarCalendar(startTime, 8)", globals=globals(), number=50)
+    # execution_time = timeit.timeit("Ephemeris(start=round((time.time() * 1000) - 0 * 86400000), end=round((time.time() * 1000) + 35 * 86400000), numMoonCycles=8, multiProcess=False)", globals=globals(), number=10)
 
-    # print(execution_time)
+    # print(execution_time/10)
