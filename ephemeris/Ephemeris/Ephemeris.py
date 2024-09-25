@@ -177,8 +177,11 @@ class Ephemeris:
                 print(f"Error during processing: {e}")
                 retries += 1
                 if retries >= max_retries:
-                    print(f"Failed after {max_retries} retries: {e}")
-                    raise
+                    print(
+                        f"Failed after {max_retries} retries: {e}\nSwapping to single core processing mode."
+                    )
+                    return self.createScrollEventRange(startTime, stopTime, saveToCache)
+                    # raise
                 else:
                     print(f"Retrying... ({retries}/{max_retries})")
 
