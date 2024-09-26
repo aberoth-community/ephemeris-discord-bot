@@ -411,14 +411,17 @@ class Ephemeris:
             # if not a new dark or returning to normal, newly algined orbs should be glowing
             glowList.extend(aligned)
 
-        event = {
-            "newGlows": glowList,
-            "newDarks": darkList,
-            "returnedToNormal": returnedToNormal,
-        }
+        event = (
+            timestamp,
+            {
+                "newGlows": glowList,
+                "newDarks": darkList,
+                "returnedToNormal": returnedToNormal,
+            },
+        )
 
         if self.discordTimestamps:
-            event[
+            event[1][
                 "discordTS"
             ] = f"<t:{int(np.floor(timestamp/1000))}:D> <t:{int(np.floor(timestamp/1000))}:T>"
 
