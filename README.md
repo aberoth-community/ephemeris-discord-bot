@@ -1,4 +1,4 @@
-# ephemeris-generator
+# ephemeris-discord-bot
 
 tmux is recommended and required inorder to run the packaged run.sh script
 
