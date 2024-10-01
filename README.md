@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/Ephemeris%20Logo.png" alt="Ephemeris Logo"></p>
+<p style="user-select: none;" align="center"><img src="assets/Ephemeris%20Logo.png" alt="Ephemeris Logo"></p>
 
 <h1 align="center">Aberoth Ephemeris Discord Bot</h1>
 
@@ -59,5 +59,15 @@ pip install aberoth-ephemeris
 ```
 Be sure to check the [Aberoth Ephemeris](https://github.com/jvandag/aberoth-ephemeris) repository for documentation on how to the module for your own applications.
 
-## Bot Commands and Usage
+## Bot Usage and Commands
 
+If you're hosting you're own distribution of this bot. Be sure to configure the `ownerID` and `disableWhitelisting` variables variables within the [variables.py](ephemeris/discordBot/configFiles/variables.py) file located in the config directory within the bot sub-directory. 
+
+Only the specified owner may use the `/update_whitelist` command which can be used to add users and guilds/servers to the whitelist. By default, all users and guilds are not white listed and thus unable to use the bot or user installable. 
+
+If `disableWhitelisting` is set to `True`, than all users will be able to utilize bot commands and menus as well as the user installable commands and menus regardless of the current whitelist settings.
+
+### `/update_whitelist`:
+**Description**: Adds a specified guild or user to the whitelist allowing them to use the bot while in whitelist mode.
+**Arguments:** 
+**Usage**:
