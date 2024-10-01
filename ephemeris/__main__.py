@@ -13,7 +13,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # For intermitantly refreshing cache and recalibrating
     # refreshCacheProcess = Process(target=ephemeris.autoRefreshCache)
     # refreshCacheProcess.start()
     main()
