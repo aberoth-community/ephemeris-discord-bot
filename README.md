@@ -1,4 +1,8 @@
-<p style="user-select: none;" align="center"><img src="assets/Ephemeris%20Logo.png" alt="Ephemeris Logo"></p>
+<div style="user-select: none;" align="center">
+    
+![Ephemeris Logo](https://github.com/user-attachments/assets/ff091f40-9b89-453d-9692-cf10c9500475)
+    
+</div>
 
 <h1 align="center">Aberoth Ephemeris Discord Bot</h1>
 
@@ -8,9 +12,9 @@ Built with the <a href="https://github.com/jvandag/aberoth-ephemeris">Aberoth Ep
 <div align="center">
 <b>Example scroll event prediction menu:</b>
 <br>
-<video justify="center" width="540" height="540" controls>
-  <source src="https://imgur.com/JNOXC9H.mp4" type="video/mp4">
-</video>
+
+https://github.com/user-attachments/assets/9d1ac76d-a755-4b9b-b36b-f435c71fd833
+
 </div>
 
 ## Installation & Running
