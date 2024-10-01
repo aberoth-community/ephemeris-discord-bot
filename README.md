@@ -14,24 +14,32 @@ Built with the <a href="https://github.com/jvandag/aberoth-ephemeris">Aberoth Ep
 </div>
 
 ## Installation & Running
-<u>**Step One:**</u> Clone the repository
+#### 1. Clone the Repository
 
-<u>**Step Two:**</u> Initialize the repository
+```bash
+git clone https://github.com/aberoth-community/ephemeris-discord-bot
+```
+
+#### 2. Initialize the Repository and Install Requirements
 
 If you're using a bash terminal you can simply run
+
 ```bash
-bash firstTimeSetup.sh
+firstTimeSetup.sh
 ```
+
 Which will set up a venv and install the dependencies. Otherwise, you can, optionally, configure a venv through other means and use
+
 ```bash
 pip install .
 ```
 
-<u>**Step Three:**</u> Configure .env file
+#### 3. Configure .env File
 
 See [example.env](example.env) for structure
 
-<u>**Step Four:**</u> Run bot
+#### 4. Run Bot
+
 ```bash
 python -m ephemeris
 ```
