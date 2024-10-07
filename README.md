@@ -64,7 +64,7 @@ cd ephemeris/UpdateWebServer
 waitress-serve --listen=0.0.0.0:5000 --threads=1 varUpdateWS:app
 ```
 
-An excellent separate script that can be used to send live calibration data to the [Aberoth Ephemeris](https://github.com/jvandag/aberoth-ephemeris) module that's that this bot utilizes is the [Ephemeris Overheard Hook](https://github.com/aberoth-community/ephemeris-overheard-hook/tree/main) by github user [jvandag](https://github.com/jvandag) and is built on github user [ashnel3's](https://github.com/ashnel3) [Overheard Scrapper](https://github.com/aberoth-community/overheard)
+An excellent separate script that can be used to send live calibration data to the [Aberoth Ephemeris](https://github.com/jvandag/aberoth-ephemeris) module used for this bot is the [Ephemeris Overheard Hook](https://github.com/aberoth-community/ephemeris-overheard-hook/tree/main) made by github user [jvandag](https://github.com/jvandag). It is built on github user [ashnel3's](https://github.com/ashnel3) [Overheard Scrapper](https://github.com/aberoth-community/overheard) which scrapes the [Aberoth overheard page](https://aberoth.com/highscore/overheard.html) to find changes in scroll state, moon phase, time of day, and number of players online.
 
 ## Bot Usage and Commands
 
