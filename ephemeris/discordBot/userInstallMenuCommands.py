@@ -64,6 +64,7 @@ async def userInstallScrollMenu(
         "\n**`Today:    `**\n```Returns all scroll events between 6 hours ago and 24 hours from now.```"
         "\n**`Tomorrow: `**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
         "\n**`Later:    `**\n```Use the drop down menu to select what day from now you'd like the scroll events for.```"
+        " If only one day is selected events for that day will be given```"
         "\n***Note:** Due to automatic calibrations, predictions may improve in accuracy when requested closer to the date that they occur on.*",
         inline=False,
     )

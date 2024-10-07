@@ -78,7 +78,7 @@ async def guildScrollMenu(
         "\n**`Today:    `**\n```Returns all scroll events between 6 hours ago and 24 hours from now.```"
         "\n**`Tomorrow: `**\n```Returns all scroll events between 24 hours from now to 48 hours from now.```"
         "\n**`Later:    `**\n```Use the drop down menu to select a range of days relative to now you'd like the scroll events for."
-        "If only one day is selected events for that day will be given```"
+        " If only one day is selected events for that day will be given```"
         "\n***Note:** you can add this app to your discord profile to use anywhere, even in DMs.*",
         inline=False,
     )

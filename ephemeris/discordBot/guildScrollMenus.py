@@ -77,7 +77,7 @@ class GuildScrollMenu(discord.ui.View):
         ):
             self.whiteListUsersOnly = True
         if self.setUp == False:
-            # Asignmenu state on interaction when bot is restarted
+            # Assigns menu state on interaction when bot is restarted
             self.setUp = True
             self.filterList = guildSettings["channels"][
                 str(interaction.channel_id)
