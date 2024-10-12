@@ -41,7 +41,7 @@ If you're using a bash terminal you can simply run
 firstTimeSetup.sh
 ```
 
-This will set up a venv and install the dependencies. Otherwise, you can, optionally, configure a venv through other means and use
+This will set up a venv and install the dependencies. Otherwise, optionally, you can configure a venv through other means and use
 
 ```bash
 pip install .
