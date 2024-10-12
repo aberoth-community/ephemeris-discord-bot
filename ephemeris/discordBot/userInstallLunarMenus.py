@@ -81,20 +81,20 @@ class UserInstallLunarMenu(discord.ui.View):
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = True
-        messageDefered = False
+        messageDeferred = False
         if self.whiteListUsersOnly:
             exp = userSettings.get("expiration")
             whiteListed = True if exp == -1 else exp > time.time()
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
+                content="**User does not have permission to use this menu.**\nType `/permissions` for more information.",
                 ephemeral=True,
             )
             return
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                content="**Server or user does not have permission to use this command.**\nUse `/permissions` for more information.",
                 ephemeral=True,
             )
             return
@@ -109,7 +109,7 @@ class UserInstallLunarMenu(discord.ui.View):
 
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
-            messageDefered = True
+            messageDeferred = True
             ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
@@ -120,7 +120,7 @@ class UserInstallLunarMenu(discord.ui.View):
             )
 
         msgArr = splitMsg(phaseList)
-        if messageDefered:
+        if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
             )
@@ -208,20 +208,20 @@ class UserInstallPhaseSelMenu(discord.ui.Select):
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = True
-        messageDefered = False
+        messageDeferred = False
         if self.whiteListUsersOnly:
             exp = userSettings.get("expiration")
             whiteListed = True if exp == -1 else exp > time.time()
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
+                content="**User does not have permission to use this menu.**\nType `/permissions` for more information.",
                 ephemeral=True,
             )
             return
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                content="**Server or user does not have permission to use this command.**\nUse `/permissions` for more information.",
                 ephemeral=True,
             )
             return
@@ -235,7 +235,7 @@ class UserInstallPhaseSelMenu(discord.ui.Select):
 
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
-            messageDefered = True
+            messageDeferred = True
             ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
@@ -245,7 +245,7 @@ class UserInstallPhaseSelMenu(discord.ui.Select):
             )
 
         msgArr = splitMsg(phaseList)
-        if messageDefered:
+        if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
             )

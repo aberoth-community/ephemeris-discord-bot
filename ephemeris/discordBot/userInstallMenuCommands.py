@@ -41,7 +41,7 @@ async def userInstallScrollMenu(
         update_user_settings(interaction.user.id, userSettings)
     if not whiteListed and not disableWhitelisting:
         await interaction.response.send_message(
-            content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
+            content="**User does not have permission to use this menu.**\nType `/permissions` for more information.",
             ephemeral=True,
         )
         return
@@ -120,7 +120,7 @@ async def userInstallLunarMenu(
         update_user_settings(interaction.user.id, userSettings)
     if not whiteListed and not disableWhitelisting:
         await interaction.response.send_message(
-            content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
+            content="**User does not have permission to use this menu.**\nType `/permissions` for more information.",
             ephemeral=True,
         )
         return
@@ -139,12 +139,12 @@ async def userInstallLunarMenu(
     )
     embed.add_field(
         name="",
-        value=f"​\n{defaultEmojis['lunation']}  **All Moons:**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} syndonic aberoth months```"
+        value=f"​\n{defaultEmojis['lunation']}  **All Moons:**\n```Provides a list with the times at which each phase starts for the next {numDisplayMoonCycles} synodic aberoth months```"
         f"\n{defaultEmojis['full']}  **Next Full Moon:**\n```Provides the time at which the next full moon will start.```"
         f"\n{defaultEmojis['new']}  **Next New Moon:**\n```Provides the time at which the next new moon will start.```"
         f"\n:grey_question:   **Current Phase:**\n```Provides the current phase.```"
         "\n:mag:  **Filter:**\n```Use the drop down menu to select one or more moon phases."
-        f" Creates list with the times at which the selected phases start for the next {numFilterDisplayMoonCycles} syndonic aberoth months will be provided```",
+        f" Creates list with the times at which the selected phases start for the next {numFilterDisplayMoonCycles} synodic aberoth months will be provided```",
         inline=False,
     )
     embed.set_thumbnail(url=moonThumbnailURL)

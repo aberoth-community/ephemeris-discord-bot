@@ -62,7 +62,7 @@ class GuildScrollMenu(discord.ui.View):
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = False
-        messageDefered = False
+        messageDeferred = False
 
         useEmojis = False
         emojis = None
@@ -89,7 +89,7 @@ class GuildScrollMenu(discord.ui.View):
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                content="**Server or user does not have permission to use this command.**\nUse `/permissions` for more information.",
                 ephemeral=True,
             )
             return
@@ -104,7 +104,7 @@ class GuildScrollMenu(discord.ui.View):
         )
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
-            messageDefered = True
+            messageDeferred = True
             ephemeris.updateScrollCache(
                 start=(time.time() * 1000) + cacheStartDay * oneDay,
                 stop=(time.time() * 1000) + cacheEndDay * oneDay,
@@ -118,7 +118,7 @@ class GuildScrollMenu(discord.ui.View):
             )
 
         msgArr = splitMsg(dayList)
-        if messageDefered:
+        if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
             )
@@ -163,7 +163,7 @@ class GuildDaySelMenu(discord.ui.Select):
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = False
-        messageDefered = False
+        messageDeferred = False
 
         useEmojis = False
         emojis = None
@@ -190,7 +190,7 @@ class GuildDaySelMenu(discord.ui.Select):
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                content="**Server or user does not have permission to use this command.**\nUse `/permissions` for more information.",
                 ephemeral=True,
             )
             return
@@ -207,7 +207,7 @@ class GuildDaySelMenu(discord.ui.Select):
         )
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
-            messageDefered = True
+            messageDeferred = True
             ephemeris.updateScrollCache(
                 start=(time.time() * 1000) + cacheStartDay * oneDay,
                 stop=(time.time() * 1000) + cacheEndDay * oneDay,
@@ -221,7 +221,7 @@ class GuildDaySelMenu(discord.ui.Select):
                 emojis=emojis,
             )
         msgArr = splitMsg(dayList)
-        if messageDefered:
+        if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
             )

@@ -76,13 +76,13 @@ class UserInstallScrollMenu(discord.ui.View):
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = True
-        messageDefered = False
+        messageDeferred = False
         if self.whiteListOnly:
             exp = userSettings.get("expiration")
             whiteListed = True if exp == -1 else exp > time.time()
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
+                content="**User does not have permission to use this menu.**\nType `/permissions` for more information.",
                 ephemeral=True,
             )
             return
@@ -97,7 +97,7 @@ class UserInstallScrollMenu(discord.ui.View):
         )
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=False, thinking=True)
-            messageDefered = True
+            messageDeferred = True
             ephemeris.updateScrollCache(
                 start=(time.time() * 1000) + cacheStartDay * oneDay,
                 stop=(time.time() * 1000) + cacheEndDay * oneDay,
@@ -111,7 +111,7 @@ class UserInstallScrollMenu(discord.ui.View):
             )
 
         msgArr = splitMsg(dayList)
-        if messageDefered:
+        if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
             )
@@ -158,14 +158,14 @@ class UserInstallSelDayMenu(discord.ui.Select):
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = True
-        messageDefered = False
+        messageDeferred = False
         if self.whiteListOnly:
             exp = userSettings.get("expiration")
             whiteListed = True if exp == -1 else exp > time.time()
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**User does not have permission to use this menu.**\nType `/permsissions` for more information.",
+                content="**User does not have permission to use this menu.**\nType `/permissions` for more information.",
                 ephemeral=True,
             )
             return
@@ -181,7 +181,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
         )
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=False, thinking=True)
-            messageDefered = True
+            messageDeferred = True
             ephemeris.updateScrollCache(
                 start=(time.time() * 1000) + cacheStartDay * oneDay,
                 stop=(time.time() * 1000) + cacheEndDay * oneDay,
@@ -195,7 +195,7 @@ class UserInstallSelDayMenu(discord.ui.Select):
                 emojis=self.emojis,
             )
         msgArr = splitMsg(dayList)
-        if messageDefered:
+        if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
             )

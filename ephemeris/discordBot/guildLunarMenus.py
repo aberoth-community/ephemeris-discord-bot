@@ -2,7 +2,7 @@ from .commonImports import *
 from .helperFuncs import splitMsg, getPhaseList, checkWhiteListed
 
 
-# Create seperate menu that will persist
+# Create separate menu that will persist
 class GuildLunarMenu(discord.ui.View):
     def __init__(self, ephemeralRes=True, timeout=None):
         super().__init__(timeout=timeout)
@@ -67,7 +67,7 @@ class GuildLunarMenu(discord.ui.View):
         firstEventOnly: bool = False,
     ):
         whiteListed = False
-        messageDefered = False
+        messageDeferred = False
         guildSettings = fetch_guild_settings(interaction.guild_id)
         if not guildSettings:
             guildSettings = newGuildSettings(interaction, useEmojis)
@@ -95,7 +95,7 @@ class GuildLunarMenu(discord.ui.View):
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                content="**Server or user does not have permission to use this command.**\nUse `/permissions` for more information.",
                 ephemeral=True,
             )
             return
@@ -110,7 +110,7 @@ class GuildLunarMenu(discord.ui.View):
 
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
-            messageDefered = True
+            messageDeferred = True
             ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
@@ -121,7 +121,7 @@ class GuildLunarMenu(discord.ui.View):
             )
 
         msgArr = splitMsg(phaseList)
-        if messageDefered:
+        if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
             )
@@ -208,7 +208,7 @@ class GuildPhaseSelMenu(discord.ui.Select):
             userSettings = newUserSettings(interaction.user.id, interaction.user.name)
             update_user_settings(interaction.user.id, userSettings)
         whiteListed = False
-        messageDefered = False
+        messageDeferred = False
 
         useEmojis = False
         emojis = None
@@ -244,7 +244,7 @@ class GuildPhaseSelMenu(discord.ui.Select):
 
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
-            messageDefered = True
+            messageDeferred = True
             ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
@@ -254,7 +254,7 @@ class GuildPhaseSelMenu(discord.ui.Select):
             )
 
         msgArr = splitMsg(phaseList)
-        if messageDefered:
+        if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
             )
