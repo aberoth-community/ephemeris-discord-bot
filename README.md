@@ -51,12 +51,16 @@ pip install .
 
 See [example.env](example.env) for structure
 
-#### 4. Run Bot
+#### 4. Configure Emojis
+
+Change the emojis in [variables.py](ephemeris/discordBot/configFiles/variables.py) to your own variables that your bot instance can use. It is recommended to upload your emojis to the emojis section for your bot in the Discord developer dashboard.
+
+#### 5. Run Bot
 
 ```bash
 python -m ephemeris
 ```
-#### Optional - 5.  Run web server in separate terminal to intake auto-calibration data from separate script
+#### Optional - 6.  Run web server in separate terminal to intake auto-calibration data from separate script
 
 ```bash
 cd ephemeris/UpdateWebServer
