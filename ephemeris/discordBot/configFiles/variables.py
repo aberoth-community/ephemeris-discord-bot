@@ -68,58 +68,58 @@ if DEBUGGING:
 #     userWhiteList = json.load(f)
 
 scrollFilterMenuEmojis = {
-    "White": "<:WhiteOrb:998472151965376602>",
-    "Black": "<:BlackOrb:998472215295164418>",
-    "Green": "<:GreenOrb:998472231640379452>",
-    "Red": "<:RedOrb:998472356303478874>",
-    "Purple": "<:PurpleOrb:998472375400149112>",
-    "Yellow": "<:YellowOrb:998472388406689812>",
-    "Cyan": "<:CyanOrb:998472398707888229>",
-    "Blue": "<:BlueOrb:998472411861233694>",
+    "White": "<:WhiteOrb:1294557088936362037>",
+    "Black": "<:BlackOrb:1294556540937703434>",
+    "Green": "<:GreenOrb:1294556773579227167>",
+    "Red": "<:RedOrb:1294557034083258389>",
+    "Purple": "<:PurpleOrb:1294556982732259400>",
+    "Yellow": "<:YellowOrb:1294555945296203836>",
+    "Cyan": "<:CyanOrb:1294556665005477939>",
+    "Blue": "<:BlueOrb:1294556594595434547>"
 }
 
 lunarFilterMenuEmojis = {
-    "new": "<:New:1092364396602327050>",
-    "waxing_crescent": "<:WaxingCrescent:1092364467712569395>",
-    "first_quarter": "<:FirstQuarter:1092364360812347402>",
-    "waxing_gibbous": "<:WaxingGibbous:1092364485337034792>",
-    "full": "<:Full:1092364372652855397>",
-    "waning_gibbous": "<:waningGibbous:1088075517799972934>",
-    "third_quarter": "<:ThirdQuarter:1092364421113851955>",
-    "waning_crescent": "<:WaningCrescent:1092364435986853928>",
+    "new": "<:New:1294558070743109682>",
+    "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
+    "first_quarter": "<:FirstQuarter:1294558210388394057>",
+    "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
+    "full": "<:Full:1294558315677745182>",
+    "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
+    "third_quarter": "<:ThirdQuarter:1294558347785146370>",
+    "waning_crescent": "<:WaningCrescent:1294558368400281633>"
 }
 
-# can use cross server emojis
+# Change to the emojis you have uploaded to your bot's developer dashboard
 defaultEmojis = {
-    "White": "<:WhiteOrb:998472151965376602>",
-    "Black": "<:BlackOrb:998472215295164418>",
-    "Green": "<:GreenOrb:998472231640379452>",
-    "Red": "<:RedOrb:998472356303478874>",
-    "Purple": "<:PurpleOrb:998472375400149112>",
-    "Yellow": "<:YellowOrb:998472388406689812>",
-    "Cyan": "<:CyanOrb:998472398707888229>",
-    "Blue": "<:BlueOrb:998472411861233694>",
-    "new": "<:New:1092364396602327050>",
-    "waxing_crescent": "<:WaxingCrescent:1092364467712569395>",
-    "first_quarter": "<:FirstQuarter:1092364360812347402>",
-    "waxing_gibbous": "<:WaxingGibbous:1092364485337034792>",
-    "full": "<:Full:1092364372652855397>",
-    "waning_gibbous": "<:WaningGibbous:1092364454479548456>",
-    "third_quarter": "<:ThirdQuarter:1092364421113851955>",
-    "waning_crescent": "<:WaningCrescent:1092364435986853928>",
-    "lunation": "<a:moon:440289423750463488>",
+    "White": "<:WhiteOrb:1294557088936362037>",
+    "Black": "<:BlackOrb:1294556540937703434>",
+    "Green": "<:GreenOrb:1294556773579227167>",
+    "Red": "<:RedOrb:1294557034083258389>",
+    "Purple": "<:PurpleOrb:1294556982732259400>",
+    "Yellow": "<:YellowOrb:1294555945296203836>",
+    "Cyan": "<:CyanOrb:1294556665005477939>",
+    "Blue": "<:BlueOrb:1294556594595434547>",
+    "new": "<:New:1294558070743109682>",
+    "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
+    "first_quarter": "<:FirstQuarter:1294558210388394057>",
+    "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
+    "full": "<:Full:1294558315677745182>",
+    "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
+    "third_quarter": "<:ThirdQuarter:1294558347785146370>",
+    "waning_crescent": "<:WaningCrescent:1294558368400281633>",
+    "lunation": "<a:Lunation:1294559206686462012>",
 }
 
 # user installs have the same emoji perms as the user using them
 UsersInstallDefaultEmojis = {
-    "new": ":new_moon:",
-    "waxing_crescent": ":waxing_crescent_moon:",
-    "first_quarter": ":first_quarter_moon:",
-    "waxing_gibbous": ":waxing_gibbous_moon:",
-    "full": ":full_moon:",
-    "waning_gibbous": ":waning_gibbous_moon:",
-    "third_quarter": ":last_quarter_moon:",
-    "waning_crescent": ":waning_crescent_moon:",
+    "new": "<:New:1294558070743109682>",
+    "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
+    "first_quarter": "<:FirstQuarter:1294558210388394057>",
+    "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
+    "full": "<:Full:1294558315677745182>",
+    "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
+    "third_quarter": "<:ThirdQuarter:1294558347785146370>",
+    "waning_crescent": "<:WaningCrescent:1294558368400281633>"
 }
 
 # text inserts for lunar menus
