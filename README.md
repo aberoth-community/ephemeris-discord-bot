@@ -188,7 +188,7 @@ If `disableWhitelisting` is set to `True`, then all users will be able to utiliz
   <b>`/set_user_emojis`</b>
 
   </td>
-    <td><p><b>Description:</b> Sets the emojis used by the command user's user app/installable menus.<br><br>Note: the menu user must have Discord Nitro for the default emojis to work properly.
+    <td><p><b>Description:</b> Sets the emojis used by the command user's user app/installable menus.<br>
     </p>
     <b>Parameters:</b>
 
