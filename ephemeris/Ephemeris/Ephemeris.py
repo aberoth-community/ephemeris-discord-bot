@@ -1032,7 +1032,7 @@ def formatTime(milliseconds: int) -> str:
     Parameters
     ---------
         milliseconds: `int`
-            The lenght of time to be formatted
+            The length of time to be formatted
     Returns
     ---------
         `str`

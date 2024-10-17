@@ -11,11 +11,11 @@ class VariableSolver:
         # print(self.calcRadiusLong('src\sampleData\glows\WhiteYellowSamples.json', 1))
         print(self.calcRadiusShort("src\sampleData\glows\WhiteBlackSamples.json", 1))
 
-    def calcAverageEventLength(self, fileExtention: str) -> tuple:
+    def calcAverageEventLength(self, fileExtension: str) -> tuple:
 
         longEvents = np.array([])
         shortEvents = np.array([])
-        with open(fileExtention) as json_file:
+        with open(fileExtension) as json_file:
             events = json.load(json_file)
         for set in events:
             if set == "Reference":
@@ -32,15 +32,15 @@ class VariableSolver:
         print("long", longEvents, "short", shortEvents)
         return (np.average(longEvents), np.average(shortEvents))
 
-    def calcRadiusLong(self, fileExtention: str, candleRadius: float = 1.0) -> float:
+    def calcRadiusLong(self, fileExtension: str, candleRadius: float = 1.0) -> float:
         """
         Calculates the radius from the white orb of an orb for which sample points are provided.
         Use for orbs that have a larger radius than the candle (not black or green).
 
         Parameters
         ---------
-            fileExtention: `str`
-                file extention for json file with the sample points for the orb.
+            fileExtension: `str`
+                file extension for json file with the sample points for the orb.
 
             candleRadius: `float`
                 The radius of the candle relative to the white orb. Default 1
@@ -52,17 +52,17 @@ class VariableSolver:
                 multiplied by the candle radius.
         """
 
-        long, short = self.calcAverageEventLength(fileExtention)
+        long, short = self.calcAverageEventLength(fileExtension)
         return candleRadius * ((short + long) / (long - short))
 
-    def calcRadiusShort(self, fileExtention: str, candleRadius: float = 1.0) -> float:
+    def calcRadiusShort(self, fileExtension: str, candleRadius: float = 1.0) -> float:
         """
         Calculates the radius from the white orb of an orb for which sample points are provided.
         Use for orbs that have a smaller radius than the candle (black and green)
 
         Parameters
         ---------
-            fileExtention: `str`
+            fileExtension: `str`
                 file extention for json file with the sample points for the orb.
 
             candleRadius: `float`
@@ -75,7 +75,7 @@ class VariableSolver:
                 multiplied by the candle radius.
         """
 
-        long, short = self.calcAverageEventLength(fileExtention)
+        long, short = self.calcAverageEventLength(fileExtension)
         return candleRadius * ((long - short) / (short + long))
 
     def calcAlignmentRange(self, dimStart: float, dimEnd: float) -> float:
