@@ -63,7 +63,7 @@ class VariableSolver:
         Parameters
         ---------
             fileExtension: `str`
-                file extention for json file with the sample points for the orb.
+                file extension for json file with the sample points for the orb.
 
             candleRadius: `float`
                 The radius of the candle relative to the white orb. Default 1
