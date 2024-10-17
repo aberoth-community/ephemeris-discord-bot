@@ -1,3 +1,5 @@
+from threading import Timer
+from asyncio import run_coroutine_threadsafe
 from .commonImports import *
 from .helperFuncs import *
 from .configFiles.dataBase import (
@@ -17,6 +19,7 @@ class GuildScrollMenu(discord.ui.View):
         filterOptions=None,
         filterList=None,
         setUp=True,
+        filterResetTimer = {}
     ):
         super().__init__(timeout=timeout)
         self.setUp = setUp
@@ -24,9 +27,10 @@ class GuildScrollMenu(discord.ui.View):
         self.filterList = filterList
         self.allow_filters = allow_filters
         self.whiteListUsersOnly = False
-        self.add_item(GuildDaySelMenu(ephemeralRes, self.setUp))
+        self.filterResetTimer = filterResetTimer
+        self.add_item(GuildDaySelMenu(ephemeralRes, self.setUp, filterResetTimer=filterResetTimer))
         if self.allow_filters == 1:
-            self.add_item(GuildFilterMenu(filterOptions))
+            self.add_item(GuildFilterMenu(filterOptions, filterResetTimer=filterResetTimer))
 
     @discord.ui.button(
         label="Yesterday", style=discord.ButtonStyle.red, custom_id="yesterday"
@@ -118,6 +122,12 @@ class GuildScrollMenu(discord.ui.View):
             )
 
         msgArr = splitMsg(dayList)
+        
+        self.filterResetTimer = create_or_reset_filter_timer(self.filterResetTimer,
+                                                             UpdateViewAfterTimer,
+                                                             interaction.client.loop,
+                                                             interaction)
+        
         if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
@@ -135,12 +145,13 @@ class GuildScrollMenu(discord.ui.View):
 
 class GuildDaySelMenu(discord.ui.Select):
     def __init__(
-        self, ephemeralRes=True, filterList=None, setUp=False, whiteListUsersOnly=False
+        self, ephemeralRes=True, filterList=None, setUp=False, whiteListUsersOnly=False,  filterResetTimer={}
     ):
         self.setUp = setUp
         self.whiteListUsersOnly = False
         self.ephemeralRes = ephemeralRes
         self.filterList = filterList
+        self.filterResetTimer =  filterResetTimer
         options = [
             discord.SelectOption(label=x)
             for x in range(selectStartDay, selectEndDay + 1)
@@ -178,7 +189,7 @@ class GuildDaySelMenu(discord.ui.Select):
         ):
             self.whiteListUsersOnly = True
         if self.setUp == False:
-            # Asign menu state on interaction when bot is restarted
+            # Assign menu state on interaction when bot is restarted
             self.setUp = True
             self.filterList = guildSettings["channels"][
                 str(interaction.channel_id)
@@ -221,6 +232,12 @@ class GuildDaySelMenu(discord.ui.Select):
                 emojis=emojis,
             )
         msgArr = splitMsg(dayList)
+        
+        self.filterResetTimer = create_or_reset_filter_timer(self.filterResetTimer,
+                                                             UpdateViewAfterTimer,
+                                                             interaction.client.loop,
+                                                             interaction)
+        
         if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
@@ -239,19 +256,20 @@ class GuildDaySelMenu(discord.ui.Select):
 
 
 class GuildFilterMenu(discord.ui.Select):
-    def __init__(self, filterOptions=None, timeout=None):
+    def __init__(self, filterOptions=None, timeout=None, filterResetTimer={}):
         self.timeout = timeout
         if filterOptions == None:
             filterOptions = {
-                "White": False,
-                "Black": False,
-                "Green": False,
-                "Red": False,
-                "Purple": False,
-                "Yellow": False,
-                "Cyan": False,
-                "Blue": False,
+                "White": True,
+                "Black": True,
+                "Green": True,
+                "Red": True,
+                "Purple": True,
+                "Yellow": True,
+                "Cyan": True,
+                "Blue": True,
             }
+        self.filterResetTimer = filterResetTimer
         options = [
             discord.SelectOption(
                 label="White",
@@ -329,6 +347,12 @@ class GuildFilterMenu(discord.ui.Select):
             filterList.append(orb)
         guildSettings["channels"][str(interaction.channel_id)]["filters"] = filterList
         update_guild_settings(interaction.guild_id, guildSettings)
+        
+        self.filterResetTimer = create_or_reset_filter_timer(self.filterResetTimer,
+                                                             UpdateViewAfterTimer,
+                                                             interaction.client.loop,
+                                                             interaction)
+            
         # change select menu options
         await interaction.response.edit_message(
             view=GuildScrollMenu(
@@ -336,5 +360,61 @@ class GuildFilterMenu(discord.ui.Select):
                 filterOptions=filterOptions,
                 filterList=filterList,
                 allow_filters=1,
+                filterResetTimer=self.filterResetTimer
             )
         )
+
+class AsyncTimer:
+    def __init__(self, interval, callback, loop, *args, **kwargs):
+        self.interval = interval
+        self.callback = callback
+        self.loop = loop
+        self.args = args
+        self.kwargs = kwargs
+        self.timer = None
+
+    def start(self):
+        self.timer = Timer(self.interval, self._runCallback)
+        self.timer.start()
+
+    def _runCallback(self):
+        # runs the callback in the asyncio event loop.
+        run_coroutine_threadsafe(self.callback(*self.args, **self.kwargs), self.loop)
+
+    def reset(self):
+        # current_time = datetime.now().strftime("%H:%M:%S")
+        # print(f"Resetting Current time: {current_time}")
+        self.cancel()
+        self.start()
+
+    def cancel(self):
+        if self.timer:
+            self.timer.cancel()
+
+# Updates the view after the timer ends
+async def UpdateViewAfterTimer(interaction) -> None:
+    # print(f"BZZZZZZZzzz!")
+    
+    # using default arguments sets filter to default filters
+    await interaction.message.edit(
+        view=GuildScrollMenu(
+            allow_filters=1,
+        )
+    )
+
+def create_or_reset_filter_timer(timer, callback, loop, interaction, interval=30, startOnCreate=True) -> None:
+    if timer:
+        # reset the existing timer
+        timer.reset()
+        # print("reset")
+    else:
+        # create a new timer if none exists
+        # print("creating new timer")
+        timer = AsyncTimer(
+            interval, 
+            callback, 
+            loop,
+            interaction
+        )
+        timer.start()
+    return timer
