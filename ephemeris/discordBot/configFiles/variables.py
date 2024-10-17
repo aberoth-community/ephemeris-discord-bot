@@ -1,10 +1,13 @@
 import json
 from pathlib import Path
+import os
 
 # Discord ID of the bot owner (only this user can update whitelist)
 ownerID = 109931759260430336
 # Triggers a few conditional statements when true
 DEBUGGING = False
+# indicates that the bot running is a test bot and should use test bot settings
+TEST_BOT_FLAG = False
 
 # Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
 disableWhitelisting = True
@@ -19,11 +22,16 @@ numDisplayMoonCycles = 2
 numFilterDisplayMoonCycles = 5
 oneDay = 86400000
 
+# the amount of seconds it takes from the last interaction before guild menu
+# filters automatically reset back to their default values when unused
+filterResetTime = 30
+
 if DEBUGGING:
     cacheStartDay = -9
     selectStartDay = -9
     cacheEndDay = 2
     selectEndDay = 2
+    
 
 ##############################################
 # variables for using json files instead of DB
@@ -67,60 +75,117 @@ if DEBUGGING:
 # with UWLPath.open("r") as f:
 #     userWhiteList = json.load(f)
 
-scrollFilterMenuEmojis = {
-    "White": "<:WhiteOrb:1294557088936362037>",
-    "Black": "<:BlackOrb:1294556540937703434>",
-    "Green": "<:GreenOrb:1294556773579227167>",
-    "Red": "<:RedOrb:1294557034083258389>",
-    "Purple": "<:PurpleOrb:1294556982732259400>",
-    "Yellow": "<:YellowOrb:1294555945296203836>",
-    "Cyan": "<:CyanOrb:1294556665005477939>",
-    "Blue": "<:BlueOrb:1294556594595434547>"
-}
+if TEST_BOT_FLAG:
+    print("Using test bot variables...")
+    scrollFilterMenuEmojis = {
+        "White": "<:WhiteOrb:1294557088936362037>",
+        "Black": "<:BlackOrb:1294556540937703434>",
+        "Green": "<:GreenOrb:1294556773579227167>",
+        "Red": "<:RedOrb:1294557034083258389>",
+        "Purple": "<:PurpleOrb:1294556982732259400>",
+        "Yellow": "<:YellowOrb:1294555945296203836>",
+        "Cyan": "<:CyanOrb:1294556665005477939>",
+        "Blue": "<:BlueOrb:1294556594595434547>"
+    }
 
-lunarFilterMenuEmojis = {
-    "new": "<:New:1294558070743109682>",
-    "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
-    "first_quarter": "<:FirstQuarter:1294558210388394057>",
-    "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
-    "full": "<:Full:1294558315677745182>",
-    "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
-    "third_quarter": "<:ThirdQuarter:1294558347785146370>",
-    "waning_crescent": "<:WaningCrescent:1294558368400281633>"
-}
+    lunarFilterMenuEmojis = {
+        "new": "<:New:1294558070743109682>",
+        "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
+        "first_quarter": "<:FirstQuarter:1294558210388394057>",
+        "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
+        "full": "<:Full:1294558315677745182>",
+        "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
+        "third_quarter": "<:ThirdQuarter:1294558347785146370>",
+        "waning_crescent": "<:WaningCrescent:1294558368400281633>"
+    }
 
-# Change to the emojis you have uploaded to your bot's developer dashboard
-defaultEmojis = {
-    "White": "<:WhiteOrb:1294557088936362037>",
-    "Black": "<:BlackOrb:1294556540937703434>",
-    "Green": "<:GreenOrb:1294556773579227167>",
-    "Red": "<:RedOrb:1294557034083258389>",
-    "Purple": "<:PurpleOrb:1294556982732259400>",
-    "Yellow": "<:YellowOrb:1294555945296203836>",
-    "Cyan": "<:CyanOrb:1294556665005477939>",
-    "Blue": "<:BlueOrb:1294556594595434547>",
-    "new": "<:New:1294558070743109682>",
-    "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
-    "first_quarter": "<:FirstQuarter:1294558210388394057>",
-    "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
-    "full": "<:Full:1294558315677745182>",
-    "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
-    "third_quarter": "<:ThirdQuarter:1294558347785146370>",
-    "waning_crescent": "<:WaningCrescent:1294558368400281633>",
-    "lunation": "<a:Lunation:1294559206686462012>",
-}
+    # Change to the emojis you have uploaded to your bot's developer dashboard
+    defaultEmojis = {
+        "White": "<:WhiteOrb:1294557088936362037>",
+        "Black": "<:BlackOrb:1294556540937703434>",
+        "Green": "<:GreenOrb:1294556773579227167>",
+        "Red": "<:RedOrb:1294557034083258389>",
+        "Purple": "<:PurpleOrb:1294556982732259400>",
+        "Yellow": "<:YellowOrb:1294555945296203836>",
+        "Cyan": "<:CyanOrb:1294556665005477939>",
+        "Blue": "<:BlueOrb:1294556594595434547>",
+        "new": "<:New:1294558070743109682>",
+        "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
+        "first_quarter": "<:FirstQuarter:1294558210388394057>",
+        "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
+        "full": "<:Full:1294558315677745182>",
+        "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
+        "third_quarter": "<:ThirdQuarter:1294558347785146370>",
+        "waning_crescent": "<:WaningCrescent:1294558368400281633>",
+        "lunation": "<a:Lunation:1294559206686462012>",
+    }
 
-# user installs have the same emoji perms as the user using them
-UsersInstallDefaultEmojis = {
-    "new": "<:New:1294558070743109682>",
-    "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
-    "first_quarter": "<:FirstQuarter:1294558210388394057>",
-    "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
-    "full": "<:Full:1294558315677745182>",
-    "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
-    "third_quarter": "<:ThirdQuarter:1294558347785146370>",
-    "waning_crescent": "<:WaningCrescent:1294558368400281633>"
-}
+    # user installs have the same emoji perms as the user using them
+    UsersInstallDefaultEmojis = {
+        "new": "<:New:1294558070743109682>",
+        "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
+        "first_quarter": "<:FirstQuarter:1294558210388394057>",
+        "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
+        "full": "<:Full:1294558315677745182>",
+        "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
+        "third_quarter": "<:ThirdQuarter:1294558347785146370>",
+        "waning_crescent": "<:WaningCrescent:1294558368400281633>"
+    }
+else:
+    scrollFilterMenuEmojis = {
+        "White": "<:WhiteOrb:1294557088936362037>",
+        "Black": "<:BlackOrb:1294556540937703434>",
+        "Green": "<:GreenOrb:1294556773579227167>",
+        "Red": "<:RedOrb:1294557034083258389>",
+        "Purple": "<:PurpleOrb:1294556982732259400>",
+        "Yellow": "<:YellowOrb:1294555945296203836>",
+        "Cyan": "<:CyanOrb:1294556665005477939>",
+        "Blue": "<:BlueOrb:1294556594595434547>"
+    }
+
+    lunarFilterMenuEmojis = {
+        "new": "<:New:1294558070743109682>",
+        "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
+        "first_quarter": "<:FirstQuarter:1294558210388394057>",
+        "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
+        "full": "<:Full:1294558315677745182>",
+        "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
+        "third_quarter": "<:ThirdQuarter:1294558347785146370>",
+        "waning_crescent": "<:WaningCrescent:1294558368400281633>"
+    }
+
+    # Change to the emojis you have uploaded to your bot's developer dashboard
+    defaultEmojis = {
+        "White": "<:WhiteOrb:1296488081276539022>",
+        "Black": "<:BlackOrb:1296488143717007482>",
+        "Green": "<:GreenOrb:1296488182552072223>",
+        "Red": "<:RedOrb:1296488214135181333>",
+        "Purple": "<:PurpleOrb:1296488242962632886>",
+        "Yellow": "<:YellowOrb:1296488264756232262>",
+        "Cyan": "<:CyanOrb:1296488298994208778>",
+        "Blue": "<:BlueOrb:1296488323203862659>",
+        "new": "<:New:1296487616983732234>",
+        "waxing_crescent": "<:WaxingCrescent:1296487645781692517>",
+        "first_quarter": "<:FirstQuarter:1296487658310205530>",
+        "waxing_gibbous": "<:WaxingGibbous:1296487684012904569>",
+        "full": "<:Full:1296487767282417746>",
+        "waning_gibbous": "<:WaningGibbous:1296487789793378376>",
+        "third_quarter": "<:ThirdQuarter:1296487803672330301>",
+        "waning_crescent": "<:WaningCrescent:1296487826069655612>",
+        "lunation": "<a:Lunation:1296487228561817651>",
+    }
+
+    # user installs have the same emoji perms as the user using them
+    UsersInstallDefaultEmojis = {
+        "new": "<:New:1294558070743109682>",
+        "waxing_crescent": "<:WaxingCrescent:1294558192512270368>",
+        "first_quarter": "<:FirstQuarter:1294558210388394057>",
+        "waxing_gibbous": "<:WaxingGibbous:1294558273286045737>",
+        "full": "<:Full:1294558315677745182>",
+        "waning_gibbous": "<:WaningGibbous:1294558336657653841>",
+        "third_quarter": "<:ThirdQuarter:1294558347785146370>",
+        "waning_crescent": "<:WaningCrescent:1294558368400281633>"
+    }
 
 # text inserts for lunar menus
 moonDisplayNames = {

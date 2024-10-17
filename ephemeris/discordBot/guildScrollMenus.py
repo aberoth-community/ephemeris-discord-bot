@@ -402,7 +402,7 @@ async def UpdateViewAfterTimer(interaction) -> None:
         )
     )
 
-def create_or_reset_filter_timer(timer, callback, loop, interaction, interval=30, startOnCreate=True) -> None:
+def create_or_reset_filter_timer(timer, callback, loop, interaction, interval=filterResetTime, startOnCreate=True) -> None:
     if timer:
         # reset the existing timer
         timer.reset()
