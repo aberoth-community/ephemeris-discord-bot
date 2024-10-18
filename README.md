@@ -13,7 +13,7 @@ Built with the <a href="https://github.com/jvandag/aberoth-ephemeris">Aberoth Ep
 <b>Example scroll event prediction menu:</b>
 <br>
 
-https://github.com/user-attachments/assets/9d1ac76d-a755-4b9b-b36b-f435c71fd833
+https://github.com/user-attachments/assets/483790cd-93aa-4255-9f74-f32fe008637f
 
 </div>
 
