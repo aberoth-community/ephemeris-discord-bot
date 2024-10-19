@@ -13,7 +13,7 @@ Built with the <a href="https://github.com/jvandag/aberoth-ephemeris">Aberoth Ep
 <b>Example scroll event prediction menu:</b>
 <br>
 
-https://github.com/user-attachments/assets/9d1ac76d-a755-4b9b-b36b-f435c71fd833
+https://github.com/user-attachments/assets/483790cd-93aa-4255-9f74-f32fe008637f
 
 </div>
 
@@ -106,7 +106,7 @@ If `disableWhitelisting` is set to `True`, then all users will be able to utiliz
   <b>`/permissions`</b>  
     
   </td>
-    <td><p><b>Description:</b> Responds with the time the command user's and&mdash;if used in a guild&mdash; the guild's permissions expire.
+    <td><p><b>Description:</b> Responds with the time the command user's and&mdash;if used in a guild&mdash;the guild's permissions expire.<br><br>When disableWhitelisting is set to `False`, the permissions have no effect.
     </b></p>
     <b>Parameters:</b> None.
   </td>
