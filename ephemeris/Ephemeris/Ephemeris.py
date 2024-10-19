@@ -71,7 +71,7 @@ class Ephemeris:
         stopTime: `int`
             The epoch time in ms that alignment calculations will stop at.
         saveToCache: `bool` *(optional)*
-            When set to true the cache contents will be outputed
+            When set to true the cache contents will be outputted
             to a local file. Defaults to False.
 
         Returns
@@ -116,7 +116,7 @@ class Ephemeris:
     def multiProcessCreateScrollEventRange(
         self, startTime: int, stopTime: int, saveToCache: bool = False
     ) -> list[tuple[int, dict[str, any]]]:
-        """Splits the time range into chunks and utilizes multi-processing inorder to make a chronologically
+        """Splits the time range into chunks and utilizes multi-processing in order to make a chronologically
         ordered `list` of `tuples` that each contain information on a unique change in scroll/alignment states
 
         Parameters
@@ -126,7 +126,7 @@ class Ephemeris:
         stopTime: `int`
             The epoch time in ms that alignment calculations will stop at.
         saveToCache: `bool` *(optional)*
-            When set to true the cache contents will be outputed
+            When set to true the cache contents will be outputted
             to a local file. Defaults to False.
 
         Returns
@@ -146,7 +146,7 @@ class Ephemeris:
         startTime = int(startTime)
         stopTime = int(stopTime)
 
-        # divid the time range into ~equal chunks for each core
+        # divide the time range into ~equal chunks for each core
         chunkSize = (stopTime - startTime) // self.numCores
         chunks = []
         chunkNum = 0
@@ -194,7 +194,7 @@ class Ephemeris:
     def createProcessPool(
         self, chunks: tuple[int, int, int]
     ) -> list[tuple[int, dict[str, any]]]:
-        """Creates a proccess pool and assigns the time chunks evenly to each process. Each process process makes
+        """Creates a process pool and assigns the time chunks evenly to each process. Each process process makes
         its own chronologically ordered `list` of `tuples` that each contain information on a unique change in scroll/alignment states.
         before they're recombined into a bigger cache that spans the whole time range.
 
@@ -407,7 +407,7 @@ class Ephemeris:
                 # add the still aligned orbs to the glow list
                 glowList.extend(stillAligned)
         else:
-            # if not a new dark or returning to normal, newly algined orbs should be glowing
+            # if not a new dark or returning to normal, newly aligned orbs should be glowing
             glowList.extend(aligned)
 
         event = (
@@ -448,11 +448,11 @@ class Ephemeris:
                 # threshold for alignment with the shadow orb
                 alignmentPos = arr < self.darkThresh
             else:
-                # all other orbs have the same threshhold of alignment
+                # all other orbs have the same threshold of alignment
                 alignmentPos = arr < self.glowThresh
             for j in np.where(alignmentPos)[0]:
                 # gets the indices of the orbs that are aligned with the current orb
-                # sets the current orb and that indice to True (aligned) in the alignments states list
+                # sets the current orb and that index to True (aligned) in the alignments states list
                 alignmentStates[i] = alignmentStates[i + j + 1] = True
         return alignmentStates
 
@@ -495,13 +495,13 @@ class Ephemeris:
         `np.ndarray[float]`
             An array with each index corresponding to the position of a unique orb relative to the candle.
         """
-        # get the positions of the orbs relative to white, exluding the shadow orb
+        # get the positions of the orbs relative to white, excluding the shadow orb
         rw = self.posRelWhite(time)
         # prepend the shadow orb (moon equivalent) position relative to the candle
         positions = np.array([self.getShadowPos(time), (rw[0] + 180) % 360])
 
         # find the x and y offset of the of the orbs relative to the candle
-        # note candle implicity has a radius of 1, or 1 AU and planet raddi are in AU
+        # note candle implicitly has a radius of 1, or 1 AU and planet radii are in AU
         x = self.radii[1:8] * np.cos(np.radians(rw[1:8])) - np.cos(np.radians(rw[0]))
         y = self.radii[1:8] * np.sin(np.radians(rw[1:8])) - np.sin(np.radians(rw[0]))
         # calculate the angular positions relative to the candle using the arctan and the x and y offsets
@@ -560,7 +560,7 @@ class Ephemeris:
         ros = self.refOffsets
         shadow = self.v["shadow"]
 
-        # the candle position is determined using aligments between the white orb and the shadow orb
+        # the candle position is determined using alignments between the white orb and the shadow orb
         self.v["candle"]["refPos"] = (
             (360 / shadow["period"]) * (rt[0] - shadow["refTime"]) + shadow["refOffset"]
         ) % 360
@@ -713,7 +713,7 @@ class Ephemeris:
             outfile.write(json_object)
 
     def getVariables(self, variablesFile: Path) -> dict[str, dict]:
-        """Gets the orb variabes from a local JSON file.
+        """Gets the orb variables from a local JSON file.
 
         Parameters
         ---------
@@ -734,7 +734,7 @@ class Ephemeris:
     # # an event is requested outside of the cache range, not actively used in prod
     # def autoRefreshCache(self, refreshRate:int=60 * 60 * 12):
     #     """Updates variables with any more recent and reference times received then automatically re-calculate
-    #     event the cache. Should Be used with an asnychronous wrapper.
+    #     event the cache. Should Be used with an asynchronous wrapper.
 
     #     Parameters
     #     ---------
@@ -776,7 +776,7 @@ class Ephemeris:
         start: `int`
             The epoch time in ms that alignment calculations will start from for the new cache.
         numMoonCycles: `int`
-            The number of syndonic months that are calculated.
+            The number of synodic months that are calculated.
         """
         self.updateRefTimes()
         self.moonCyclesCache = self.createLunarCalendar(start, numMoonCycles)
@@ -799,10 +799,10 @@ class Ephemeris:
             ) and self.checkValidRefTime(orb, newVars[orb]):
                 # average two times then subtract the total average time the events are off by
                 eventTime = round((newVars[orb][0] + newVars[orb][1] - 500) / 2)
-                posistions = self.posRelWhite(eventTime)
+                positions = self.posRelWhite(eventTime)
                 if orb == "white":
                     orb = "candle"
-                indicies = {
+                indices = {
                     "candle": 0,
                     "black": 1,
                     "green": 2,
@@ -812,8 +812,8 @@ class Ephemeris:
                     "cyan": 6,
                     "blue": 7,
                 }
-                orbPos = posistions[indicies[orb]]
-                candlePos = posistions[indicies["candle"]]
+                orbPos = positions[indices[orb]]
+                candlePos = positions[indices["candle"]]
                 # check if orb and candle are on same or opposite sides
                 refOffset = min(
                     [0, 180, 360], key=lambda x: abs(x - (orbPos - candlePos))
@@ -967,7 +967,7 @@ class Ephemeris:
                         },
                     )
                 )
-                # every phase except the exclictly checked ones last 5 to 6 days
+                # every phase except the explicitly checked ones last 5 to 6 days
                 currentTime = currentTime + 5 * self.oneAberothDay
 
                 dayStartWPos = self.getWhitePos(currentTime)
@@ -993,7 +993,7 @@ class Ephemeris:
         return tempCache
 
     def getLastNoonTime(self, time: int) -> int:
-        """Gets the time at which noon last occured in aberoth relative to the passed in time.
+        """Gets the time at which noon last occurred in aberoth relative to the passed in time.
 
         Parameters
         ---------
