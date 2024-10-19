@@ -106,7 +106,7 @@ If `disableWhitelisting` is set to `True`, then all users will be able to utiliz
   <b>`/permissions`</b>  
     
   </td>
-    <td><p><b>Description:</b> Responds with the time the command user's and&mdash;if used in a guild&mdash; the guild's permissions expire.
+    <td><p><b>Description:</b> Responds with the time the command user's and&mdash;if used in a guild&mdash;the guild's permissions expire.<br><br>When disableWhitelisting is set to `False`, the permissions have no effect.
     </b></p>
     <b>Parameters:</b> None.
   </td>
