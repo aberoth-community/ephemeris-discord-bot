@@ -3,12 +3,12 @@ from .commonImports import *
 
 
 def is_owner(interaction: discord.Interaction) -> bool:
-    """Checks if the user that triggered the intereaction is the bot owner"""
+    """Checks if the user that triggered the interaction is the bot owner"""
     return interaction.user.id == ownerID
 
 
 async def not_owner_error(interaction: discord.Interaction, error):
-    """Handles the interaction response when the user that triggered the intereaction
+    """Handles the interaction response when the user that triggered the interaction
     is not the bot owner"""
     if isinstance(error, discord.app_commands.errors.CheckFailure):
         await interaction.response.send_message(
@@ -169,7 +169,7 @@ def getPhaseList(
                     return ["Range too Small"]
                 else:
                     subCache = subCache[: numDisplayMoonCycles * 8 + 1]
-                    firstLine = f"__**Next {num2words(numDisplayMoonCycles).capitalize()} Aberoth Syndonic Months:**__"
+                    firstLine = f"__**Next {num2words(numDisplayMoonCycles).capitalize()} Aberoth Synodic Months:**__"
             elif "current" in eventFilters:
                 displayingCurrent = True
                 subCache = [copy.deepcopy(ephemeris.moonCyclesCache[startIndex])]
@@ -180,7 +180,7 @@ def getPhaseList(
                 # check if there is another event in the moonCycle cache to find end of current event
                 elif len(ephemeris.moonCyclesCache[startIndex:]) < 2:
                     return ["Range too Small"]
-                # if current phase is a 1 night phase it can appear at the start index of mooncyclesCache
+                # if current phase is a 1 night phase it can appear at the start index of moonCyclesCache
                 # in this case we have the current phase already but not the end time
                 else:
                     subCache[0][1]["discordTS"] = ephemeris.moonCyclesCache[
@@ -209,7 +209,7 @@ def getPhaseList(
                     return ["Range too Small"]
                 else:
                     subCache = subCache[: numFilterDisplayMoonCycles * 8 + 1]
-                    firstLine = f"__**Filtered Phases:**__\nNext {join_with_oxford_comma(eventFilters)} moons over the next {num2words(numFilterDisplayMoonCycles)} Aberoth syndonic months"
+                    firstLine = f"__**Filtered Phases:**__\nNext {join_with_oxford_comma(eventFilters)} moons over the next {num2words(numFilterDisplayMoonCycles)} Aberoth synodic months"
     if len(subCache) < 1:
         return ["Range too Small"]
 
