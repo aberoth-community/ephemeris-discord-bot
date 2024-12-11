@@ -161,7 +161,7 @@ def getPhaseList(
 
     displayingCurrent = False
     subCache = []
-    if startIndex:
+    if startIndex != None:
         if eventFilters != None and len(eventFilters) != 0:
             if "all" in eventFilters:
                 subCache = ephemeris.moonCyclesCache[startIndex:]

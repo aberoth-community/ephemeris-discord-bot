@@ -106,6 +106,8 @@ class GuildScrollMenu(discord.ui.View):
             useEmojis=useEmojis,
             emojis=emojis,
         )
+        # if the enough time has passed that request can be outside of the cache range
+        # rebuild the cache to expand the range
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDeferred = True
