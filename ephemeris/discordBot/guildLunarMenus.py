@@ -230,7 +230,7 @@ class GuildPhaseSelMenu(discord.ui.Select):
 
         if not whiteListed and not disableWhitelisting:
             await interaction.response.send_message(
-                content="**Server or user does not have permission to use this command.**\nUse `/permsissions` for more information.",
+                content="**Server or user does not have permission to use this command.**\nUse `/permissions` for more information.",
                 ephemeral=True,
             )
             return
