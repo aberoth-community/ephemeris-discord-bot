@@ -28,7 +28,7 @@ class GuildScrollMenu(discord.ui.View):
         self.allow_filters = allow_filters
         self.whiteListUsersOnly = False
         self.filterResetTimer = filterResetTimer
-        self.add_item(GuildDaySelMenu(ephemeralRes, self.setUp, filterResetTimer=filterResetTimer))
+        self.add_item(GuildDaySelMenu(filterList=filterList, setUp=self.setUp, ephemeralRes=ephemeralRes, filterResetTimer=filterResetTimer))
         if self.allow_filters == 1:
             self.add_item(GuildFilterMenu(filterOptions, filterResetTimer=filterResetTimer))
 
@@ -393,8 +393,6 @@ class AsyncTimer:
 
 # Updates the view after the timer ends
 async def UpdateViewAfterTimer(interaction) -> None:
-    # print(f"BZZZZZZZzzz!")
-    
     # using default arguments sets filter to default filters
     await interaction.message.edit(
         view=GuildScrollMenu(
