@@ -13,14 +13,14 @@ class UserInstallScrollMenu(discord.ui.View):
         whiteListOnly=False,
         filterList=None,
         filterOptions={
-            "White": False,
-            "Black": False,
-            "Green": False,
-            "Red": False,
-            "Purple": False,
-            "Yellow": False,
-            "Cyan": False,
-            "Blue": False,
+            "White": True,
+            "Black": True,
+            "Green": True,
+            "Red": True,
+            "Purple": True,
+            "Yellow": True,
+            "Cyan": True,
+            "Blue": True,
         },
     ):
         super().__init__(timeout=timeout)
