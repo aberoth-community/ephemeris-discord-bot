@@ -113,7 +113,7 @@ class GuildLunarMenu(discord.ui.View):
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDeferred = True
-            ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
+            ephemeris.updateMoonCache((time.time() * 1000), numMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
                 filters=[button.label],
@@ -244,12 +244,12 @@ class GuildPhaseSelMenu(discord.ui.Select):
             emojis=emojis,
         )
 
-        # if the enough time has passed that request can be outside of the cache range
+        # if enough time has passed that request can be outside of the cache range
         # rebuild the cache to expand the range
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDeferred = True
-            ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
+            ephemeris.updateMoonCache((time.time() * 1000), numMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
                 filters=self.values,

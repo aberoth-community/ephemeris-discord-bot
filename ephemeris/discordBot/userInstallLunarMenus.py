@@ -110,7 +110,7 @@ class UserInstallLunarMenu(discord.ui.View):
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDeferred = True
-            ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
+            ephemeris.updateMoonCache((time.time() * 1000), numMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
                 filters=[button.label],
@@ -236,7 +236,7 @@ class UserInstallPhaseSelMenu(discord.ui.Select):
         if phaseList[0] == "Range too Small":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
             messageDeferred = True
-            ephemeris.updateMoonCache((time.time() * 1000), numDisplayMoonCycles)
+            ephemeris.updateMoonCache((time.time() * 1000), numMoonCycles)
             phaseList = getPhaseList(
                 ephemeris,
                 filters=self.values,
