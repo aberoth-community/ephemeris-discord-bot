@@ -106,7 +106,7 @@ class GuildScrollMenu(discord.ui.View):
             useEmojis=useEmojis,
             emojis=emojis,
         )
-        # if the enough time has passed that request can be outside of the cache range
+        # if enough time has passed that request can be outside of the cache range
         # rebuild the cache to expand the range
         if dayList[0] == "Out of Range":
             await interaction.response.defer(ephemeral=self.ephemeralRes, thinking=True)
@@ -124,12 +124,12 @@ class GuildScrollMenu(discord.ui.View):
             )
 
         msgArr = splitMsg(dayList)
-        
+
         self.filterResetTimer = create_or_reset_filter_timer(self.filterResetTimer,
                                                              UpdateViewAfterTimer,
                                                              interaction.client.loop,
                                                              interaction)
-        
+
         if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
@@ -234,12 +234,12 @@ class GuildDaySelMenu(discord.ui.Select):
                 emojis=emojis,
             )
         msgArr = splitMsg(dayList)
-        
+
         self.filterResetTimer = create_or_reset_filter_timer(self.filterResetTimer,
                                                              UpdateViewAfterTimer,
                                                              interaction.client.loop,
                                                              interaction)
-        
+
         if messageDeferred:
             await interaction.followup.send(
                 content=msgArr[0], ephemeral=self.ephemeralRes
@@ -349,12 +349,12 @@ class GuildFilterMenu(discord.ui.Select):
             filterList.append(orb)
         guildSettings["channels"][str(interaction.channel_id)]["filters"] = filterList
         update_guild_settings(interaction.guild_id, guildSettings)
-        
+
         self.filterResetTimer = create_or_reset_filter_timer(self.filterResetTimer,
                                                              UpdateViewAfterTimer,
                                                              interaction.client.loop,
                                                              interaction)
-            
+
         # change select menu options
         await interaction.response.edit_message(
             view=GuildScrollMenu(
@@ -411,8 +411,8 @@ def create_or_reset_filter_timer(timer, callback, loop, interaction, interval=fi
         # create a new timer if none exists
         # print("creating new timer")
         timer = AsyncTimer(
-            interval, 
-            callback, 
+            interval,
+            callback,
             loop,
             interaction
         )
