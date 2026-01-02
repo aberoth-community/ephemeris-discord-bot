@@ -91,6 +91,18 @@ def get_source_breakdown(start_ts: int, end_ts: int, user_id: Optional[str] = No
 
 
 def get_top_guild(start_ts: int, end_ts: int, user_id: Optional[str] = None):
+    rows = get_top_guilds(start_ts, end_ts, user_id=user_id, limit=1)
+    if not rows:
+        return None, 0
+    return rows[0]
+
+
+def get_top_guilds(
+    start_ts: int,
+    end_ts: int,
+    user_id: Optional[str] = None,
+    limit: int = 5,
+):
     query = (
         UsageEvent.select(
             UsageEvent.guild_id, fn.COUNT(UsageEvent.id).alias("count")
@@ -101,10 +113,8 @@ def get_top_guild(start_ts: int, end_ts: int, user_id: Optional[str] = None):
         )
         .group_by(UsageEvent.guild_id)
         .order_by(fn.COUNT(UsageEvent.id).desc())
+        .limit(limit)
     )
     if user_id is not None:
         query = query.where(UsageEvent.user_id == str(user_id))
-    row = query.first()
-    if row is None:
-        return None, 0
-    return row.guild_id, row.count
+    return [(row.guild_id, row.count) for row in query]

@@ -4,7 +4,7 @@ from .helperFuncs import *
 from .configFiles.usageDataBase import (
     UsageEvent,
     get_source_breakdown,
-    get_top_guild,
+    get_top_guilds,
 )
 
 
@@ -465,17 +465,6 @@ async def usageStats(
         lunar_source_summary += f", unknown {lunar_sources['unknown']}"
     lunar_source_summary += ")"
 
-    top_guild_id, top_guild_count = get_top_guild(
-        start_ts, end_ts, user_id=str(user.id) if user is not None else None
-    )
-    top_guild_label = "none"
-    if top_guild_id:
-        guild_obj = bot.get_guild(int(top_guild_id))
-        if guild_obj is not None:
-            top_guild_label = f"{guild_obj.name} ({top_guild_id})"
-        else:
-            top_guild_label = f"{top_guild_id}"
-
     action_query = (
         UsageEvent.select(
             UsageEvent.feature,
@@ -491,20 +480,30 @@ async def usageStats(
 
     lines = [
         "**Usage stats**",
-        f"Range: {last_days_end}-{last_days_start} days ago (<t:{start_ts}:d> - <t:{end_ts}:d>)",
+        f"**Range:** {last_days_end}-{last_days_start} days ago (<t:{start_ts}:d> - <t:{end_ts}:d>)",
     ]
     if user is not None:
-        lines.append(f"User: {user.mention} ({user.id})")
-    lines.append(f"Total events: {total_count}")
-    lines.append(f"Unique users: {unique_users}")
-    lines.append(f"By feature: {feature_summary}")
+        lines.append(f"**User:** {user.mention} ({user.id})")
+    lines.append(f"**Total events:** {total_count}")
+    lines.append(f"**Unique users:** {unique_users}")
+    lines.append(f"**By feature:** {feature_summary}")
     lines.append(
-        f"By install: {scroll_source_summary}, {lunar_source_summary}"
+        f"**By install:** {scroll_source_summary}, {lunar_source_summary}"
     )
-    if top_guild_id:
-        lines.append(f"Top guild: {top_guild_label} ({top_guild_count})")
+    top_guilds = get_top_guilds(
+        start_ts, end_ts, user_id=str(user.id) if user is not None else None, limit=5
+    )
+    if top_guilds:
+        lines.append("**Top guilds:**")
+        for guild_id, count in top_guilds:
+            guild_obj = bot.get_guild(int(guild_id))
+            if guild_obj is not None:
+                label = f"{guild_obj.name} ({guild_id})"
+            else:
+                label = f"{guild_id}"
+            lines.append(f"- {label}: {count}")
     else:
-        lines.append("Top guild: none")
+        lines.append("**Top guilds:** none")
 
     if user is None:
         top_users = (
@@ -518,18 +517,20 @@ async def usageStats(
             .order_by(fn.COUNT(UsageEvent.id).desc())
             .limit(10)
         )
-        lines.append("Top users:")
+        lines.append("**Top users:**")
         for row in top_users:
             lines.append(f"- {row.username} ({row.user_id}): {row.count}")
 
-    lines.append("Top actions:")
+    lines.append("**Top actions:**")
     for row in action_query:
         label = f"{row.feature}/{row.action}"
         if row.context:
             label = f"{label} ({row.context})"
         lines.append(f"- {label}: {row.count}")
 
-    await interaction.followup.send(content="\n".join(lines), ephemeral=True)
+    message = "\n".join(lines)
+    for chunk in splitMsg(message):
+        await interaction.followup.send(content=chunk, ephemeral=True)
 
 
 @usageStats.error

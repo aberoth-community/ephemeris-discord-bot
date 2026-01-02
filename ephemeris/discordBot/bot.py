@@ -3,10 +3,11 @@ from peewee import fn
 from discord.ext import tasks
 from .guildScrollMenus import *
 from .guildLunarMenus import *
+from .helperFuncs import splitMsg
 from .configFiles.usageDataBase import (
     UsageEvent,
     get_source_breakdown,
-    get_top_guild,
+    get_top_guilds,
 )
 from .configFiles.variables import (
     ENABLE_USAGE_LOGGING,
@@ -89,14 +90,6 @@ def _format_usage_report(range_label: str, start_ts: int, end_ts: int) -> list[s
     for row in feature_query:
         feature_parts.append(f"{row.feature}: {row.count}")
     feature_summary = ", ".join(feature_parts) if feature_parts else "none"
-    top_guild_id, top_guild_count = get_top_guild(start_ts, end_ts)
-    top_guild_label = "none"
-    if top_guild_id:
-        guild_obj = bot.get_guild(int(top_guild_id))
-        if guild_obj is not None:
-            top_guild_label = f"{guild_obj.name} ({top_guild_id})"
-        else:
-            top_guild_label = f"{top_guild_id}"
     top_users = (
         UsageEvent.select(
             UsageEvent.username,
@@ -110,17 +103,25 @@ def _format_usage_report(range_label: str, start_ts: int, end_ts: int) -> list[s
     )
     lines = [
         f"**{range_label}** (<t:{start_ts}:d> - <t:{end_ts}:d>)",
-        f"Total events: {total_count}",
-        f"Unique users: {unique_users}",
-        f"By feature: {feature_summary}",
-        f"By install: {scroll_source_summary}, {lunar_source_summary}",
+        f"**Total events:** {total_count}",
+        f"**Unique users:** {unique_users}",
+        f"**By feature:** {feature_summary}",
+        f"**By install:** {scroll_source_summary}, {lunar_source_summary}",
     ]
-    if top_guild_id:
-        lines.append(f"Top guild: {top_guild_label} ({top_guild_count})")
+    top_guilds = get_top_guilds(start_ts, end_ts, limit=5)
+    if top_guilds:
+        lines.append("**Top guilds:**")
+        for guild_id, count in top_guilds:
+            guild_obj = bot.get_guild(int(guild_id))
+            if guild_obj is not None:
+                label = f"{guild_obj.name} ({guild_id})"
+            else:
+                label = f"{guild_id}"
+            lines.append(f"- {label}: {count}")
     else:
-        lines.append("Top guild: none")
+        lines.append("**Top guilds:** none")
     if total_count > 0:
-        lines.append("Top users:")
+        lines.append("**Top users:**")
         for row in top_users:
             lines.append(f"- {row.username} ({row.user_id}): {row.count}")
     return lines
@@ -136,7 +137,7 @@ async def usage_report_task():
         weekly_start = now - 7 * 86400
         lines = [
             "**Usage stats (automated)**",
-            f"Interval: every {REPORT_INTERVAL_HOURS} hours",
+            f"**Interval:** every {REPORT_INTERVAL_HOURS} hours",
             "",
         ]
         lines.extend(_format_usage_report("Daily (last 24h)", daily_start, now))
@@ -148,11 +149,13 @@ async def usage_report_task():
             channel = bot.get_channel(int(USAGE_REPORT_CHANNEL_ID))
             if channel is None:
                 channel = await bot.fetch_channel(int(USAGE_REPORT_CHANNEL_ID))
-            await channel.send(message)
+            for chunk in splitMsg(message):
+                await channel.send(chunk)
             return
 
         owner = await bot.fetch_user(ownerID)
-        await owner.send(message)
+        for chunk in splitMsg(message):
+            await owner.send(chunk)
     except Exception as e:
         print(f"Usage report task error: {e}")
 
