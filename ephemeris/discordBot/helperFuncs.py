@@ -1,5 +1,6 @@
 from num2words import num2words
 from .commonImports import *
+from .configFiles.usageDataBase import log_usage_event
 
 
 def is_owner(interaction: discord.Interaction) -> bool:
@@ -15,6 +16,29 @@ async def not_owner_error(interaction: discord.Interaction, error):
             content=f"Only the bot owner (<@{ownerID}>) may use this command",
             ephemeral=True,
         )
+
+
+def log_usage(
+    interaction: discord.Interaction,
+    feature: str,
+    action: str,
+    context=None,
+    details=None,
+) -> None:
+    if not ENABLE_USAGE_LOGGING:
+        return
+    if isinstance(context, (list, tuple, set)):
+        context = ",".join(str(item) for item in context)
+    try:
+        log_usage_event(
+            interaction=interaction,
+            feature=feature,
+            action=action,
+            context=context,
+            details=details,
+        )
+    except Exception:
+        pass
 
 
 def getDayList(

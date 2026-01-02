@@ -87,6 +87,17 @@ class UserInstallScrollMenu(discord.ui.View):
             )
             return
 
+        log_usage(
+            interaction=interaction,
+            feature="scroll",
+            action="button",
+            context=button.label,
+            details={
+                "filters": self.filterList or [],
+                "use_emojis": self.useEmojis,
+                "source": "user_install",
+            },
+        )
         startDays = {"Yesterday": -1, "Today": 0, "Tomorrow": 1}
         dayList = getDayList(
             ephemeris,
@@ -171,6 +182,17 @@ class UserInstallSelDayMenu(discord.ui.Select):
             return
         start = min(self.values)
         end = max(self.values)
+        log_usage(
+            interaction=interaction,
+            feature="scroll",
+            action="select_range",
+            context=f"{start}-{end}",
+            details={
+                "filters": self.filterList or [],
+                "use_emojis": self.useEmojis,
+                "source": "user_install",
+            },
+        )
         dayList = getDayList(
             ephemeris,
             startDay=start,
@@ -311,6 +333,13 @@ class UserInstallScrollFilterMenu(discord.ui.Select):
         for orb in self.values:
             filterOptions[orb] = True
             filterList.append(orb)
+        log_usage(
+            interaction=interaction,
+            feature="scroll",
+            action="filter_select",
+            context=filterList,
+            details={"source": "user_install"},
+        )
         # change select menu options
         newTimeoutTime = self.timeout - (time.time() - self.initiationTime)
         if newTimeoutTime < 1:

@@ -72,6 +72,16 @@ async def userInstallScrollMenu(
     embed.set_footer(text="⏱️ Menu expires in five minutes")
 
     whitelist_only = whitelist_only.value if whitelist_only else 0
+    log_usage(
+        interaction=interaction,
+        feature="scroll",
+        action="menu_spawn",
+        context="user_install",
+        details={
+            "use_emojis": use_emojis.value,
+            "whitelist_only": whitelist_only,
+        },
+    )
     await interaction.response.send_message(
         embed=embed,
         view=UserInstallScrollMenu(
@@ -151,6 +161,16 @@ async def userInstallLunarMenu(
     embed.set_footer(text="⏱️ Menu expires in five minutes")
     whitelisted_users_only = (
         whitelisted_users_only.value if whitelisted_users_only else 0
+    )
+    log_usage(
+        interaction=interaction,
+        feature="lunar",
+        action="menu_spawn",
+        context="user_install",
+        details={
+            "user_set_emojis": user_set_emojis.value,
+            "whitelist_only": whitelisted_users_only,
+        },
     )
     await interaction.response.send_message(
         embed=embed,

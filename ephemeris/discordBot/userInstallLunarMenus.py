@@ -1,5 +1,5 @@
 from .commonImports import *
-from .helperFuncs import splitMsg, getPhaseList
+from .helperFuncs import splitMsg, getPhaseList, log_usage
 
 
 # The user install lunar menu, stores menu settings and spawns buttons
@@ -99,6 +99,16 @@ class UserInstallLunarMenu(discord.ui.View):
             )
             return
 
+        log_usage(
+            interaction=interaction,
+            feature="lunar",
+            action="button",
+            context=button.label,
+            details={
+                "source": "user_install",
+                "first_event_only": firstEventOnly,
+            },
+        )
         phaseList = getPhaseList(
             ephemeris,
             filters=[button.label],
@@ -226,6 +236,13 @@ class UserInstallPhaseSelMenu(discord.ui.Select):
             )
             return
 
+        log_usage(
+            interaction=interaction,
+            feature="lunar",
+            action="phase_select",
+            context=self.values,
+            details={"source": "user_install"},
+        )
         phaseList = getPhaseList(
             ephemeris,
             filters=self.values,

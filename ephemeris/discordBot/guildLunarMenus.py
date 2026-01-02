@@ -1,5 +1,5 @@
 from .commonImports import *
-from .helperFuncs import splitMsg, getPhaseList, checkWhiteListed
+from .helperFuncs import splitMsg, getPhaseList, checkWhiteListed, log_usage
 
 
 # Create separate menu that will persist
@@ -100,6 +100,17 @@ class GuildLunarMenu(discord.ui.View):
             )
             return
 
+        context = button.custom_id if getattr(button, "custom_id", None) else button.label
+        log_usage(
+            interaction=interaction,
+            feature="lunar",
+            action="button",
+            context=context,
+            details={
+                "source": "guild",
+                "first_event_only": firstEventOnly,
+            },
+        )
         phaseList = getPhaseList(
             ephemeris,
             filters=[button.label],
@@ -237,6 +248,13 @@ class GuildPhaseSelMenu(discord.ui.Select):
             )
             return
 
+        log_usage(
+            interaction=interaction,
+            feature="lunar",
+            action="phase_select",
+            context=self.values,
+            details={"source": "guild"},
+        )
         phaseList = getPhaseList(
             ephemeris,
             filters=self.values,

@@ -1,5 +1,11 @@
+from peewee import fn
 from .bot import *
 from .helperFuncs import *
+from .configFiles.usageDataBase import (
+    UsageEvent,
+    get_source_breakdown,
+    get_top_guild,
+)
 
 
 @bot.tree.command(name="hello")
@@ -360,3 +366,172 @@ async def setPersonalEmojis(
             f"\n> `Waning Crescent ` {emojis['waning_crescent']}",
             ephemeral=True,
         )
+
+
+@bot.tree.command(
+    name="usage_stats",
+    description="Owner-only usage overview for a day range",
+)
+@commands.is_owner()
+@app_commands.check(is_owner)
+@app_commands.default_permissions()
+@app_commands.allowed_installs(guilds=False, users=True)
+@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+@app_commands.describe(
+    last_days_start="Start of range in days ago (0 = today)",
+    last_days_end="End of range in days ago (>= start)",
+    user="Optional user for a specific breakdown",
+)
+async def usageStats(
+    interaction: discord.Interaction,
+    last_days_start: Optional[int] = 0,
+    last_days_end: Optional[int] = 7,
+    user: Optional[discord.User] = None,
+) -> None:
+    await interaction.response.defer(ephemeral=True, thinking=True)
+
+    if last_days_start is None:
+        last_days_start = 0
+    if last_days_end is None:
+        last_days_end = 7
+    if last_days_start < 0 or last_days_end < 0:
+        await interaction.followup.send(
+            content="Days ago values must be zero or greater.",
+            ephemeral=True,
+        )
+        return
+    if last_days_end < last_days_start:
+        last_days_start, last_days_end = last_days_end, last_days_start
+
+    now = int(time.time())
+    start_ts = now - int(last_days_end) * 86400
+    end_ts = now - int(last_days_start) * 86400
+
+    filters = [UsageEvent.ts.between(start_ts, end_ts)]
+    if user is not None:
+        filters.append(UsageEvent.user_id == str(user.id))
+
+    total_count = UsageEvent.select().where(*filters).count()
+    if total_count == 0:
+        await interaction.followup.send(
+            content="No usage records found for that time range.",
+            ephemeral=True,
+        )
+        return
+    unique_users = (
+        UsageEvent.select(UsageEvent.user_id).where(*filters).distinct().count()
+    )
+
+    feature_counts = {"scroll": 0, "lunar": 0}
+    extra_features = []
+    feature_query = (
+        UsageEvent.select(
+            UsageEvent.feature, fn.COUNT(UsageEvent.id).alias("count")
+        )
+        .where(*filters)
+        .group_by(UsageEvent.feature)
+        .order_by(fn.COUNT(UsageEvent.id).desc())
+    )
+    for row in feature_query:
+        if row.feature in feature_counts:
+            feature_counts[row.feature] = row.count
+        else:
+            extra_features.append(f"{row.feature}: {row.count}")
+    feature_summary = (
+        f"scroll: {feature_counts['scroll']}, lunar: {feature_counts['lunar']}"
+    )
+    if extra_features:
+        feature_summary = f"{feature_summary}, " + ", ".join(extra_features)
+
+    source_counts = get_source_breakdown(
+        start_ts, end_ts, user_id=str(user.id) if user is not None else None
+    )
+    scroll_sources = source_counts.get(
+        "scroll", {"guild": 0, "user_install": 0, "unknown": 0}
+    )
+    lunar_sources = source_counts.get(
+        "lunar", {"guild": 0, "user_install": 0, "unknown": 0}
+    )
+    scroll_source_summary = (
+        f"scroll (guild {scroll_sources['guild']}, user {scroll_sources['user_install']}"
+    )
+    if scroll_sources["unknown"] > 0:
+        scroll_source_summary += f", unknown {scroll_sources['unknown']}"
+    scroll_source_summary += ")"
+    lunar_source_summary = (
+        f"lunar (guild {lunar_sources['guild']}, user {lunar_sources['user_install']}"
+    )
+    if lunar_sources["unknown"] > 0:
+        lunar_source_summary += f", unknown {lunar_sources['unknown']}"
+    lunar_source_summary += ")"
+
+    top_guild_id, top_guild_count = get_top_guild(
+        start_ts, end_ts, user_id=str(user.id) if user is not None else None
+    )
+    top_guild_label = "none"
+    if top_guild_id:
+        guild_obj = bot.get_guild(int(top_guild_id))
+        if guild_obj is not None:
+            top_guild_label = f"{guild_obj.name} ({top_guild_id})"
+        else:
+            top_guild_label = f"{top_guild_id}"
+
+    action_query = (
+        UsageEvent.select(
+            UsageEvent.feature,
+            UsageEvent.action,
+            UsageEvent.context,
+            fn.COUNT(UsageEvent.id).alias("count"),
+        )
+        .where(*filters)
+        .group_by(UsageEvent.feature, UsageEvent.action, UsageEvent.context)
+        .order_by(fn.COUNT(UsageEvent.id).desc())
+        .limit(10)
+    )
+
+    lines = [
+        "**Usage stats**",
+        f"Range: {last_days_end}-{last_days_start} days ago (<t:{start_ts}:d> - <t:{end_ts}:d>)",
+    ]
+    if user is not None:
+        lines.append(f"User: {user.mention} ({user.id})")
+    lines.append(f"Total events: {total_count}")
+    lines.append(f"Unique users: {unique_users}")
+    lines.append(f"By feature: {feature_summary}")
+    lines.append(
+        f"By install: {scroll_source_summary}, {lunar_source_summary}"
+    )
+    if top_guild_id:
+        lines.append(f"Top guild: {top_guild_label} ({top_guild_count})")
+    else:
+        lines.append("Top guild: none")
+
+    if user is None:
+        top_users = (
+            UsageEvent.select(
+                UsageEvent.user_id,
+                UsageEvent.username,
+                fn.COUNT(UsageEvent.id).alias("count"),
+            )
+            .where(UsageEvent.ts.between(start_ts, end_ts))
+            .group_by(UsageEvent.user_id, UsageEvent.username)
+            .order_by(fn.COUNT(UsageEvent.id).desc())
+            .limit(10)
+        )
+        lines.append("Top users:")
+        for row in top_users:
+            lines.append(f"- {row.username} ({row.user_id}): {row.count}")
+
+    lines.append("Top actions:")
+    for row in action_query:
+        label = f"{row.feature}/{row.action}"
+        if row.context:
+            label = f"{label} ({row.context})"
+        lines.append(f"- {label}: {row.count}")
+
+    await interaction.followup.send(content="\n".join(lines), ephemeral=True)
+
+
+@usageStats.error
+async def usageStatsError(interaction: discord.Interaction, error):
+    await not_owner_error(interaction, error)

@@ -8,6 +8,14 @@ ownerID = 109931759260430336
 DEBUGGING = False
 # indicates that the bot running is a test bot and should use test bot settings
 TEST_BOT_FLAG = False
+# Enables or disables usage logging for owner stats
+ENABLE_USAGE_LOGGING = True
+# Enables or disables scheduled usage reports for the owner
+ENABLE_USAGE_REPORTS = True
+# Interval in hours for scheduled usage reports
+USAGE_REPORT_INTERVAL_HOURS = 24
+# Optional channel ID for scheduled reports (None sends to owner DMs)
+USAGE_REPORT_CHANNEL_ID = None
 
 # Setting this to true will allow any user or guild to use bot and user app features regardless of their whitelist status
 disableWhitelisting = True
@@ -31,7 +39,7 @@ if DEBUGGING:
     selectStartDay = -9
     cacheEndDay = 2
     selectEndDay = 2
-    
+
 
 ##############################################
 # variables for using json files instead of DB

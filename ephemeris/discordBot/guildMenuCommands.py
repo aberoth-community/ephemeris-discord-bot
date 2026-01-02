@@ -52,11 +52,12 @@ async def guildScrollMenu(
             ephemeral=True,
         )
         return
+    whitelist_flag = 0 if whitelisted_users_only == 0 else whitelisted_users_only.value
     guildSettings["channels"][str(interaction.channel_id)] = {
         "useEmojis": use_emojis.value,
         "allow_filters": allow_filters.value,
         "whitelisted_users_only": (
-            0 if whitelisted_users_only == 0 else whitelisted_users_only.value
+            whitelist_flag
         ),
         "filters": [],
     }
@@ -67,6 +68,17 @@ async def guildScrollMenu(
             ephemeral=True,
         )
         return
+    log_usage(
+        interaction=interaction,
+        feature="scroll",
+        action="menu_spawn",
+        context="guild",
+        details={
+            "use_emojis": use_emojis.value,
+            "allow_filters": allow_filters.value,
+            "whitelist_only": whitelist_flag,
+        },
+    )
     embed = discord.Embed(
         title="**Select what day you would like the scroll events for**",
         description="*Glows should be accurate within a minute*",
@@ -133,10 +145,11 @@ async def guildLunarMenu(
         )
         return
 
+    whitelist_flag = 0 if whitelisted_users_only == 0 else whitelisted_users_only.value
     guildSettings["channels"][str(interaction.channel_id)] = {
         "useEmojis": user_set_emojis.value,
         "whitelisted_users_only": (
-            0 if whitelisted_users_only == 0 else whitelisted_users_only.value
+            whitelist_flag
         ),
     }
     update_guild_settings(interaction.guild_id, guildSettings)
@@ -146,6 +159,16 @@ async def guildLunarMenu(
             ephemeral=True,
         )
         return
+    log_usage(
+        interaction=interaction,
+        feature="lunar",
+        action="menu_spawn",
+        context="guild",
+        details={
+            "user_set_emojis": user_set_emojis.value,
+            "whitelist_only": whitelist_flag,
+        },
+    )
     embed = discord.Embed(
         title="**Lunar Calendar**",
         description="Night will start 42 minutes after the start of each moon phase",

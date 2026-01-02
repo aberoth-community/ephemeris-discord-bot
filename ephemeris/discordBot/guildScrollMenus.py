@@ -98,6 +98,17 @@ class GuildScrollMenu(discord.ui.View):
             )
             return
 
+        log_usage(
+            interaction=interaction,
+            feature="scroll",
+            action="button",
+            context=button.label,
+            details={
+                "filters": self.filterList or [],
+                "use_emojis": useEmojis,
+                "source": "guild",
+            },
+        )
         startDays = {"Yesterday": -1, "Today": 0, "Tomorrow": 1}
         dayList = getDayList(
             ephemeris,
@@ -210,6 +221,17 @@ class GuildDaySelMenu(discord.ui.Select):
 
         start = min(map(int, self.values))
         end = max(map(int, self.values))
+        log_usage(
+            interaction=interaction,
+            feature="scroll",
+            action="select_range",
+            context=f"{start}-{end}",
+            details={
+                "filters": self.filterList or [],
+                "use_emojis": useEmojis,
+                "source": "guild",
+            },
+        )
         dayList = getDayList(
             ephemeris,
             startDay=start,
@@ -347,6 +369,13 @@ class GuildFilterMenu(discord.ui.Select):
         for orb in self.values:
             filterOptions[orb] = True
             filterList.append(orb)
+        log_usage(
+            interaction=interaction,
+            feature="scroll",
+            action="filter_select",
+            context=filterList,
+            details={"source": "guild"},
+        )
         guildSettings["channels"][str(interaction.channel_id)]["filters"] = filterList
         update_guild_settings(interaction.guild_id, guildSettings)
 
