@@ -4,6 +4,7 @@ from discord.ext import tasks
 from .guildScrollMenus import *
 from .guildLunarMenus import *
 from .helperFuncs import splitMsg
+from .usageGraphs import build_usage_graph
 from .configFiles.usageDataBase import (
     UsageEvent,
     get_source_breakdown,
@@ -135,9 +136,11 @@ async def usage_report_task():
         now = int(time.time())
         daily_start = now - 86400
         weekly_start = now - 7 * 86400
+        graph_line = "**Graph:** last 7 days (daily)"
         lines = [
             "**Usage stats (automated)**",
             f"**Interval:** every {REPORT_INTERVAL_HOURS} hours",
+            graph_line,
             "",
         ]
         lines.extend(_format_usage_report("Daily (last 24h)", daily_start, now))
@@ -145,17 +148,40 @@ async def usage_report_task():
         lines.extend(_format_usage_report("Weekly (last 7d)", weekly_start, now))
         message = "\n".join(lines)
 
+        graph_file = None
+        buf, error = build_usage_graph(
+            start_ts=weekly_start,
+            end_ts=now,
+        )
+        if error is None and buf is not None:
+            graph_file = discord.File(fp=buf, filename="usage_report.png")
+        elif error:
+            lines[2] = f"**Graph:** unavailable ({error})"
+            message = "\n".join(lines)
+
         if USAGE_REPORT_CHANNEL_ID is not None:
             channel = bot.get_channel(int(USAGE_REPORT_CHANNEL_ID))
             if channel is None:
                 channel = await bot.fetch_channel(int(USAGE_REPORT_CHANNEL_ID))
-            for chunk in splitMsg(message):
-                await channel.send(chunk)
+            chunks = splitMsg(message)
+            if graph_file is not None:
+                await channel.send(content=chunks[0], file=graph_file)
+                for chunk in chunks[1:]:
+                    await channel.send(chunk)
+            else:
+                for chunk in chunks:
+                    await channel.send(chunk)
             return
 
         owner = await bot.fetch_user(ownerID)
-        for chunk in splitMsg(message):
-            await owner.send(chunk)
+        chunks = splitMsg(message)
+        if graph_file is not None:
+            await owner.send(content=chunks[0], file=graph_file)
+            for chunk in chunks[1:]:
+                await owner.send(chunk)
+        else:
+            for chunk in chunks:
+                await owner.send(chunk)
     except Exception as e:
         print(f"Usage report task error: {e}")
 

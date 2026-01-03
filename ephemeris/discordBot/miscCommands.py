@@ -1,6 +1,7 @@
 from peewee import fn
 from .bot import *
 from .helperFuncs import *
+from .usageGraphs import build_usage_graph
 from .configFiles.usageDataBase import (
     UsageEvent,
     get_source_breakdown,
@@ -381,12 +382,14 @@ async def setPersonalEmojis(
     last_days_start="Start of range in days ago (0 = today)",
     last_days_end="End of range in days ago (>= start)",
     user="Optional user for a specific breakdown",
+    graph="Include a daily usage graph",
 )
 async def usageStats(
     interaction: discord.Interaction,
     last_days_start: Optional[int] = 0,
     last_days_end: Optional[int] = 7,
     user: Optional[discord.User] = None,
+    graph: Optional[bool] = False,
 ) -> None:
     await interaction.response.defer(ephemeral=True, thinking=True)
 
@@ -529,8 +532,32 @@ async def usageStats(
         lines.append(f"- {label}: {row.count}")
 
     message = "\n".join(lines)
-    for chunk in splitMsg(message):
-        await interaction.followup.send(content=chunk, ephemeral=True)
+    graph_file = None
+    if graph:
+        buf, error = build_usage_graph(
+            start_ts=start_ts,
+            end_ts=end_ts,
+            user_id=str(user.id) if user is not None else None,
+            user_name=user.name if user is not None else None,
+        )
+        if error:
+            await interaction.followup.send(
+                content=error,
+                ephemeral=True,
+            )
+        else:
+            graph_file = discord.File(fp=buf, filename="usage_stats.png")
+
+    chunks = splitMsg(message)
+    if graph_file is not None:
+        await interaction.followup.send(
+            content=chunks[0], file=graph_file, ephemeral=True
+        )
+        for chunk in chunks[1:]:
+            await interaction.followup.send(content=chunk, ephemeral=True)
+    else:
+        for chunk in chunks:
+            await interaction.followup.send(content=chunk, ephemeral=True)
 
 
 @usageStats.error
