@@ -82,7 +82,7 @@ def build_usage_graph(
     ax.plot(
         labels,
         scroll_counts,
-        color="#0BB150",
+        color="#00A745",
         marker="o",
         label="Scroll",
         linewidth=2,
@@ -99,7 +99,7 @@ def build_usage_graph(
         ax.plot(
             labels,
             unique_counts,
-            color="#B3B9FF",
+            color="#C22323",
             marker="o",
             label="Unique users",
             linewidth=2,
