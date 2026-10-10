@@ -8,6 +8,7 @@ dynamic = ["version"]
 
 requires-python = ">= 3.8"
 dependencies = [
+    "aberoth_ephemeris",
     "discord.py@git+https://github.com/Rapptz/discord.py.git#egg=feature/user_apps",
     "numpy==1.26.4",
     "python-dotenv==1.0.1",

@@ -1,5 +1,4 @@
 from .discordBot import bot, ephemeris
-from .Ephemeris import Ephemeris
 import os
 import time
 from multiprocessing import Process
